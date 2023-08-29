@@ -40,6 +40,13 @@ final class Mortgage: NSManagedObject, Identifiable  {
     var propertyTaxPercentage: Double {
         100 * ( propertyTaxValue / propertyValue)
     }
+    var baseMonthlyMortgagePayment: Double {
+        calculateBaseMonthlyPaymentValue(
+            annualInterestRate: interestRatePercentage,
+            loanTerm: loanTermYears,
+            principleValue: principleValue
+        )
+    }
     var monthlyMortgagePayment: Double {
         calculateMonthlyPaymentValue(
             principleValue: principleValue,
@@ -52,7 +59,7 @@ final class Mortgage: NSManagedObject, Identifiable  {
         )
     }
     var totalInterestAccruedValue: Double {
-        Double(loanTermYears) * 12 * monthlyMortgagePayment - principleValue
+        Double(loanTermYears) * 12 * baseMonthlyMortgagePayment - principleValue
     }
     
     // formated values

@@ -68,19 +68,7 @@ func validateLoanTermValue(value: Int16) -> Bool {
 }
 
 
-
-/**
- Calculates the monthly payment value for a given set of parameters
- */
-func calculateMonthlyPaymentValue(
-    principleValue: Double,
-    annualInterestRate: Double,
-    loanTerm: Int16,
-    propertyTaxValue: Double,
-    insuranceValue: Double,
-    hoaFeesValue: Double,
-    upkeepValue: Double
-) -> Double {
+func calculateBaseMonthlyPaymentValue(annualInterestRate: Double, loanTerm: Int16, principleValue: Double) -> Double {
     /**
      Formula:
      M = P * ( r * ( 1 + r)^n ) / ( (( 1 + r )^n ) - 1  )
@@ -97,7 +85,23 @@ func calculateMonthlyPaymentValue(
     let topPart = r * pow((1 + r), n)
     let bottomPart = pow((1 + r), n) - 1
 
-    let baseMonthlyPayment = principleValue * (topPart / bottomPart)    
+    let baseMonthlyPayment = principleValue * (topPart / bottomPart)
+    return baseMonthlyPayment
+}
+
+/**
+ Calculates the monthly payment value for a given set of parameters
+ */
+func calculateMonthlyPaymentValue(
+    principleValue: Double,
+    annualInterestRate: Double,
+    loanTerm: Int16,
+    propertyTaxValue: Double,
+    insuranceValue: Double,
+    hoaFeesValue: Double,
+    upkeepValue: Double
+) -> Double {
+    let baseMonthlyPayment = calculateBaseMonthlyPaymentValue(annualInterestRate: annualInterestRate, loanTerm: loanTerm, principleValue: principleValue)
     let additionalPayments = (propertyTaxValue + insuranceValue + upkeepValue + hoaFeesValue) / 12
     
     return baseMonthlyPayment + additionalPayments
