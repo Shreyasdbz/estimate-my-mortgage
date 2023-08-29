@@ -11,7 +11,9 @@ import SwiftUI
 struct EstimateMyMortgageApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeScreen(vm: .init(provider: MortgagesProvider.shared))
+                .environment(\.managedObjectContext, MortgagesProvider.shared.viewContext)
         }
     }
 }
+
