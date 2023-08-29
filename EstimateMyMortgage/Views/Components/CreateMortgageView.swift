@@ -109,7 +109,7 @@ extension CreateMortgageView {
                      : nil
             )
             .cornerRadius(6)
-            .keyboardType(.namePhonePad)
+            .keyboardType(.default)
             .focused($isFocused)
     }
     

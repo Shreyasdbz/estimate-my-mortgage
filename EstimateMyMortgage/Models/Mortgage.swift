@@ -182,6 +182,7 @@ extension Mortgage {
         setPrimitiveValue(INITIAL_LOAN_TERM_YEARS, forKey: "loanTermYears")
         setPrimitiveValue(INITIAL_PROPERTY_TAX_VALUE, forKey: "propertyTaxValue")
         setPrimitiveValue(INITIAL_UPKEEP_VALUE, forKey: "upkeepValue")
+        setPrimitiveValue(INITIAL_CLOSING_COSTS_VALUE, forKey: "closingCostValue")
         setPrimitiveValue(INITIAL_ADDRESS, forKey: "address")
         setPrimitiveValue(INITIAL_CITY, forKey: "city")
         setPrimitiveValue(INITIAL_STATE, forKey: "state")

@@ -172,7 +172,7 @@ extension MortgageScreen {
     private var PropertyDetails: some View {
         VStack{
             HStack{
-                Text("Property details")
+                Text("Property Details")
                     .font(.title3)
                     .bold()
                 Spacer()
@@ -184,11 +184,11 @@ extension MortgageScreen {
                     Divider()
                 }
                 Group{
-                    DetailRow(key: "Property value", primaryValue: vm.mortgage.formattedPropertyValue, secondaryValue: "")
+                    DetailRow(key: "Property Value", primaryValue: vm.mortgage.formattedPropertyValue, secondaryValue: "")
                     Divider()
                     DetailRow(key: "Downpayment", primaryValue: vm.mortgage.formattedDownPaymentValue, secondaryValue: vm.mortgage.formattedDownPaymentPercentage)
                     Divider()
-                    DetailRow(key: "Closing costs", primaryValue: vm.mortgage.formattedClosingCostValue, secondaryValue: "")
+                    DetailRow(key: "Closing Costs", primaryValue: vm.mortgage.formattedClosingCostValue, secondaryValue: "")
                     Divider()
                     DetailRow(key: "Interest Rate", primaryValue: vm.mortgage.formattedInterestRate, secondaryValue: "")
                     Divider()
@@ -196,7 +196,7 @@ extension MortgageScreen {
                     Divider()
                 }
                 Group{
-                    DetailRow(key: "Homeowner's insurance", primaryValue: vm.mortgage.formattedInsuranceValue, secondaryValue: "")
+                    DetailRow(key: "Homeowner's Insurance", primaryValue: vm.mortgage.formattedInsuranceValue, secondaryValue: "")
                     Divider()
                     DetailRow(key: "Property Tax", primaryValue: vm.mortgage.formattedPropertyTaxValue, secondaryValue: vm.mortgage.formattedPropertyTaxPercentage)
                     Divider()
@@ -215,7 +215,7 @@ extension MortgageScreen {
     private var PaymentDetails: some View {
         VStack (spacing: 12){
             HStack{
-                Text("Payment breakdown")
+                Text("Payment Breakdown")
                     .font(.title3)
                     .bold()
                 Spacer()
@@ -230,7 +230,7 @@ extension MortgageScreen {
                 VStack{
                     DetailRow(key: "Principle", primaryValue: vm.mortgage.formattedPrincipleValue, secondaryValue: "")
                     Divider()
-                    DetailRow(key: "Total interest", primaryValue: vm.mortgage.formattedTotalInterestAccrued, secondaryValue: "")
+                    DetailRow(key: "Total Interest", primaryValue: vm.mortgage.formattedTotalInterestAccrued, secondaryValue: "")
                     Divider()
                     TotalRow(value: vm.mortgage.formattedTotalLoanValue)
                 }
@@ -240,7 +240,7 @@ extension MortgageScreen {
             }
             VStack{
                 HStack{
-                    Text("Purchase price")
+                    Text("Purchase Price")
                         .font(.headline)
                         .foregroundColor(.secondary)
                     Spacer()
@@ -248,7 +248,7 @@ extension MortgageScreen {
                 VStack{
                     DetailRow(key: "Downpayment", primaryValue: vm.mortgage.formattedDownPaymentValue, secondaryValue: "")
                     Divider()
-                    DetailRow(key: "Closing costs", primaryValue: vm.mortgage.formattedClosingCostValue, secondaryValue: "")
+                    DetailRow(key: "Closing Costs", primaryValue: vm.mortgage.formattedClosingCostValue, secondaryValue: "")
                     Divider()
                     TotalRow(value: vm.mortgage.formattedPurchasePrice)
                 }
@@ -271,13 +271,13 @@ extension MortgageScreen {
                         Divider()
                     }
                     Group{
-                        DetailRow(key: "Property tax", primaryValue: vm.mortgage.formattedMonthlyTaxValue, secondaryValue: "")
+                        DetailRow(key: "Property Tax", primaryValue: vm.mortgage.formattedMonthlyTaxValue, secondaryValue: "")
                         Divider()
-                        DetailRow(key: "Homeowner's insurance", primaryValue: vm.mortgage.formattedMonthlyInsuranceValue, secondaryValue: "")
+                        DetailRow(key: "Homeowner's Insurance", primaryValue: vm.mortgage.formattedMonthlyInsuranceValue, secondaryValue: "")
                         Divider()
-                        DetailRow(key: "Hoa fees", primaryValue: vm.mortgage.formattedMonthlyHoaFeesValue, secondaryValue: "")
+                        DetailRow(key: "HOA Fees", primaryValue: vm.mortgage.formattedMonthlyHoaFeesValue, secondaryValue: "")
                         Divider()
-                        DetailRow(key: "Upkeep & utilities", primaryValue: vm.mortgage.formattedMonthlyUpkeepValue, secondaryValue: "")
+                        DetailRow(key: "Upkeep & Utilities", primaryValue: vm.mortgage.formattedMonthlyUpkeepValue, secondaryValue: "")
                         Divider()
                         TotalRow(value: vm.mortgage.formattedMonthlyMortgagePayment)
                     }
@@ -301,13 +301,13 @@ extension MortgageScreen {
                         Divider()
                     }
                     Group{
-                        DetailRow(key: "Property tax", primaryValue: vm.mortgage.formattedYearlyTaxValue, secondaryValue: "")
+                        DetailRow(key: "Property Tax", primaryValue: vm.mortgage.formattedYearlyTaxValue, secondaryValue: "")
                         Divider()
-                        DetailRow(key: "Homeowner's insurance", primaryValue: vm.mortgage.formattedYearlyInsuranceValue, secondaryValue: "")
+                        DetailRow(key: "Homeowner's Insurance", primaryValue: vm.mortgage.formattedYearlyInsuranceValue, secondaryValue: "")
                         Divider()
-                        DetailRow(key: "Hoa fees", primaryValue: vm.mortgage.formattedYearlyHoaFeesValue, secondaryValue: "")
+                        DetailRow(key: "HOA Fees", primaryValue: vm.mortgage.formattedYearlyHoaFeesValue, secondaryValue: "")
                         Divider()
-                        DetailRow(key: "Upkeep & utilities", primaryValue: vm.mortgage.formattedYearlyUpkeepValue, secondaryValue: "")
+                        DetailRow(key: "Upkeep & Utilities", primaryValue: vm.mortgage.formattedYearlyUpkeepValue, secondaryValue: "")
                         Divider()
                         TotalRow(value: vm.mortgage.formattedYearlyMortgagePayment)
                     }
