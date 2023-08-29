@@ -32,6 +32,17 @@ struct HomeScreen: View {
                                             Label("Edit", systemImage: "pencil")
                                         }
                                         Button {
+                                            withAnimation(.easeInOut){
+                                                do {
+                                                    try vm.performDuplicate(mortgage)
+                                                } catch {
+                                                    print("[EMM] -- error duplicating: \(error)")
+                                                }
+                                            }
+                                        } label: {
+                                            Label("Duplicate", systemImage: "doc.on.doc")
+                                        }
+                                        Button {
                                             do {
                                                 try vm.delete(mortgage)
                                             } catch {
@@ -59,7 +70,18 @@ struct HomeScreen: View {
                                     Label("Edit", systemImage: "pencil")
                                         .tint(Material.thinMaterial)
                                 }
-                                
+                                Button {
+                                    withAnimation(.easeInOut){
+                                        do {
+                                            try vm.performDuplicate(mortgage)
+                                        } catch {
+                                            print("[EMM] -- error duplicating: \(error)")
+                                        }
+                                    }
+                                } label: {
+                                    Label("Duplicate", systemImage: "doc.on.doc")
+                                }
+                                .tint(.blue)
                             })
                             .swipeActions(allowsFullSwipe: false){
                                 Button(role: .destructive) {

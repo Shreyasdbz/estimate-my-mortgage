@@ -47,7 +47,7 @@ extension MortgageRowView {
             mark.location
         }
             .allowsHitTesting(false)
-            .frame(maxWidth: 100, maxHeight: 200)
+            .frame(maxWidth: 100, maxHeight: 400)
         }
     
     private var MortgageDetailsColumn: some View {

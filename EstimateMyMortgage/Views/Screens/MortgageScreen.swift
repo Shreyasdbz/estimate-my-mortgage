@@ -32,7 +32,11 @@ struct MortgageScreen: View {
                 }
             }
         }
-        .sheet(item: $vm.mortgageToEdit, content: { mortgage in
+        .sheet(item: $vm.mortgageToEdit, onDismiss: {
+            withAnimation(.easeInOut){
+                vm.setMap()
+            }            
+        }, content: { mortgage in
             NavigationStack{
                 CreateMortgageView(vm: .init(provider: vm.provider, mortgage: mortgage))
             }

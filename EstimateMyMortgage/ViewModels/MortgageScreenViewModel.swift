@@ -34,7 +34,7 @@ final class MortgageScreenViewModel: ObservableObject {
         self.setMap()
     }
     
-    private func setMap() {
+    func setMap() {
         let geoCoder = CLGeocoder()
         
         geoCoder.geocodeAddressString(mortgage.formattedAddressString) { placemarks, error in
