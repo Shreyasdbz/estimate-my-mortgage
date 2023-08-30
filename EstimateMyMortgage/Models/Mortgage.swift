@@ -116,6 +116,7 @@ final class Mortgage: NSManagedObject, Identifiable  {
         let total = downpaymentValue + closingCostValue
         return String(total.formatted(.currency(code: "usd")))
     }
+
     var formattedMonthlyPrincipleValue: String {
         let total = principleValue / (Double(loanTermYears) * 12)
         return String(total.formatted(.currency(code: "usd")))
@@ -125,21 +126,22 @@ final class Mortgage: NSManagedObject, Identifiable  {
         return String(total.formatted(.currency(code: "usd")))
     }
     var formattedMonthlyTaxValue: String {
-        let total = propertyTaxValue / (Double(loanTermYears) * 12)
+        let total = propertyTaxValue / 12
         return String(total.formatted(.currency(code: "usd")))
     }
     var formattedMonthlyInsuranceValue: String {
-        let total = homeInsuranceValue / (Double(loanTermYears) * 12)
+        let total = homeInsuranceValue / 12
         return String(total.formatted(.currency(code: "usd")))
     }
     var formattedMonthlyUpkeepValue: String {
-        let total = upkeepValue / (Double(loanTermYears) * 12)
+        let total = upkeepValue / 12
         return String(total.formatted(.currency(code: "usd")))
     }
     var formattedMonthlyHoaFeesValue: String {
-        let total = hoaFeesValue / (Double(loanTermYears) * 12)
+        let total = hoaFeesValue / 12
         return String(total.formatted(.currency(code: "usd")))
     }
+
     var formattedYearlyPrincipleValue: String {
         let total = principleValue / (Double(loanTermYears))
         return String(total.formatted(.currency(code: "usd")))
@@ -149,20 +151,16 @@ final class Mortgage: NSManagedObject, Identifiable  {
         return String(total.formatted(.currency(code: "usd")))
     }
     var formattedYearlyTaxValue: String {
-        let total = propertyTaxValue / (Double(loanTermYears))
-        return String(total.formatted(.currency(code: "usd")))
+        return String(propertyTaxValue.formatted(.currency(code: "usd")))
     }
     var formattedYearlyInsuranceValue: String {
-        let total = homeInsuranceValue / (Double(loanTermYears))
-        return String(total.formatted(.currency(code: "usd")))
+        return String(homeInsuranceValue.formatted(.currency(code: "usd")))
     }
     var formattedYearlyUpkeepValue: String {
-        let total = upkeepValue / (Double(loanTermYears))
-        return String(total.formatted(.currency(code: "usd")))
+        return String(upkeepValue.formatted(.currency(code: "usd")))
     }
     var formattedYearlyHoaFeesValue: String {
-        let total = hoaFeesValue / (Double(loanTermYears))
-        return String(total.formatted(.currency(code: "usd")))
+        return String(hoaFeesValue.formatted(.currency(code: "usd")))
     }
     var formattedYearlyMortgagePayment:String {
         let total = monthlyMortgagePayment * 12
