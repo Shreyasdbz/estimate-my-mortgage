@@ -86,7 +86,6 @@ extension MortgageScreen {
                 .font(.title2)
                 .bold()
                 .padding()
-            if(vm.bottomDrawerPresent != true){
                 Spacer()
                 Button {
                     withAnimation(.easeInOut) {
@@ -100,7 +99,6 @@ extension MortgageScreen {
                         .foregroundColor(.primary)
                         .padding()
                 }
-            }
         }
         .background(Material.ultraThin)
         .cornerRadius(10)

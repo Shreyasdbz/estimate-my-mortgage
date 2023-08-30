@@ -141,7 +141,7 @@ final class CreateMortgageViewModel: ObservableObject {
             try context.save()
         }
     }
-    
+
     func setMaps(){
         let geoCoder = CLGeocoder()
         

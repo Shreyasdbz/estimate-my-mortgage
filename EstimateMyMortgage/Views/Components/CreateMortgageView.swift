@@ -20,7 +20,9 @@ struct CreateMortgageView: View {
     
     @StateObject private var mapSearch = MapSearch()
     @FocusState private var isFocused: Bool
-    @State private var btnHover = false
+    @FocusState private var focusedField: Field?
+
+    @State private var locationSheetShowing:Bool = false;
     
     let BOTTOM_PADDING:CGFloat = CGFloat(400)
     
@@ -55,6 +57,9 @@ struct CreateMortgageView: View {
             }
             
         }
+        .sheet(isPresented: $locationSheetShowing, content: {
+            SheetLocationView
+        })
         .ignoresSafeArea(edges: SwiftUI.Edge.Set.bottom)
         .alert(
             vm.errorMessage ?? "Input Error",
@@ -73,14 +78,35 @@ struct CreateMortgageView: View {
                     Text("Cancel")
                 }
             }
-        }        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                
-                Button("Done") {
-                    isFocused = false
+            if(!vm.isNew){
+                ToolbarItem(placement: .confirmationAction) {
+                    Button{
+                        do{
+                            try vm.save()
+                            if(!vm.errorPresented){
+                                dismiss()
+                            }
+                        } catch {
+                            print("[EMM] -- error -- saving existing value")
+                        }
+                    } label: {
+                        Text("Save")
+                    }
                 }
             }
+        }
+        .toolbar {
+//            ToolbarItemGroup(placement: .keyboard) {
+//                Button(action: focusPreviousField) {
+//                    Image(systemName: "chevron.up")
+//                }
+//                .disabled(!canFocusPreviousField()) // remove this to loop through fields
+//                Button(action: focusNextField) {
+//                    Image(systemName: "chevron.down")
+//                }
+//                .disabled(!canFocusNextField()) // remove this to loop through fields
+//                Spacer()
+//            }
         }
         .listStyle(PlainListStyle())
         .navigationTitle(vm.isNew ? "Create new estimate" : "Update \(vm.mortgage.name)")
@@ -97,23 +123,26 @@ extension CreateMortgageView {
             .bold()
     }
     
-    private func TextInputField(placeholderText: String, binding: Binding<String>, showError: Bool) -> some View {
+    private func TextInputField(placeholderText: String, binding: Binding<String>, showError: Bool, focusField: Field) -> some View {
         TextField(placeholderText, text: binding)
             .bold()
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
             .background(Color.secondary.opacity(colorScheme == .dark ? 0.25 : 0.075))
             .overlay(showError == true ?
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(.red, lineWidth: 1)
+                     RoundedRectangle(cornerRadius: 6)
+                .stroke(.red, lineWidth: 1)
                      : nil
             )
             .cornerRadius(6)
             .keyboardType(.default)
-            .focused($isFocused)
+            .focused($focusedField, equals: focusField)
+            .onSubmit {
+                focusNextField()
+            }
     }
     
-    private func DoubleNumberInputField(placeholderText: String, binding: Binding<Double>, showError: Bool) -> some View {
+    private func DoubleNumberInputField(placeholderText: String, binding: Binding<Double>, showError: Bool, focusField: Field) -> some View {
         TextField(placeholderText, value: binding, format: .number)
             .font(.subheadline)
             .bold()
@@ -122,16 +151,19 @@ extension CreateMortgageView {
             .padding(.vertical, 7)
             .background(Color.secondary.opacity(colorScheme == .dark ? 0.25 : 0.075))
             .overlay(showError == true ?
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(.red, lineWidth: 1)
+                     RoundedRectangle(cornerRadius: 6)
+                .stroke(.red, lineWidth: 1)
                      : nil
             )
             .cornerRadius(6)
             .keyboardType(.decimalPad)
             .frame(width: 120)
-            .focused($isFocused)
+            .focused($focusedField, equals: focusField)
+            .onSubmit {
+                focusNextField()
+            }
     }
-    private func DoubleNumberInputFieldMedium(placeholderText: String, binding: Binding<Double>, showError: Bool) -> some View {
+    private func DoubleNumberInputFieldMedium(placeholderText: String, binding: Binding<Double>, showError: Bool, focusField: Field) -> some View {
         TextField(placeholderText, value: binding, format: .number)
             .font(.subheadline)
             .bold()
@@ -140,16 +172,19 @@ extension CreateMortgageView {
             .padding(.vertical, 7)
             .background(Color.secondary.opacity(colorScheme == .dark ? 0.25 : 0.075))
             .overlay(showError == true ?
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(.red, lineWidth: 1)
+                     RoundedRectangle(cornerRadius: 6)
+                .stroke(.red, lineWidth: 1)
                      : nil
             )
             .cornerRadius(6)
             .keyboardType(.decimalPad)
             .frame(width: 100)
-            .focused($isFocused)
+            .focused($focusedField, equals: focusField)
+            .onSubmit {
+                focusNextField()
+            }
     }
-    private func DoubleNumberInputFieldSmall(placeholderText: String, binding: Binding<Double>, showError: Bool) -> some View {
+    private func DoubleNumberInputFieldSmall(placeholderText: String, binding: Binding<Double>, showError: Bool, focusField: Field) -> some View {
         TextField(placeholderText, value: binding, format: .number)
             .font(.subheadline)
             .bold()
@@ -158,17 +193,20 @@ extension CreateMortgageView {
             .padding(.vertical, 7)
             .background(Color.secondary.opacity(colorScheme == .dark ? 0.25 : 0.075))
             .overlay(showError == true ?
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(.red, lineWidth: 1)
+                     RoundedRectangle(cornerRadius: 6)
+                .stroke(.red, lineWidth: 1)
                      : nil
             )
             .cornerRadius(6)
             .keyboardType(.decimalPad)
             .frame(width: 80)
-            .focused($isFocused)
+            .focused($focusedField, equals: focusField)
+            .onSubmit {
+                focusNextField()
+            }
     }
     
-    private func SmallNumberInputField(placeholderText: String, binding: Binding<Int16>, showError: Bool) -> some View {
+    private func SmallNumberInputField(placeholderText: String, binding: Binding<Int16>, showError: Bool, focusField: Field) -> some View {
         TextField(placeholderText, value: binding, format: .number)
             .font(.subheadline)
             .bold()
@@ -177,22 +215,83 @@ extension CreateMortgageView {
             .padding(.vertical, 7)
             .background(Color.secondary.opacity(colorScheme == .dark ? 0.25 : 0.075))
             .overlay(showError == true ?
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(.red, lineWidth: 1)
+                     RoundedRectangle(cornerRadius: 6)
+                .stroke(.red, lineWidth: 1)
                      : nil
             )
             .cornerRadius(6)
             .keyboardType(.numberPad)
             .frame(width: 50)
-            .focused($isFocused)
+            .focused($focusedField, equals: focusField)
+            .onSubmit {
+                focusNextField()
+            }
     }
     
     
     private var TitleInput: some View {
         VStack(alignment: .leading){
             InputFieldCaption(captionText: "TITLE")
-            TextInputField(placeholderText: "Give your mortgage a name *", binding: $vm.mortgage.name, showError: vm.nameInputError)
+            TextInputField(placeholderText: "Give your mortgage a name *", binding: $vm.mortgage.name, showError: vm.nameInputError, focusField: .name)
         }
+    }
+    
+    private var SheetLocationView: some View {
+        VStack{
+            HStack{
+                Button {
+                    locationSheetShowing = false
+                } label: {
+                    Text("Dismiss")
+                        .foregroundColor(.accentColor)
+                }
+                Spacer()
+            }.padding(.vertical)
+            HStack{
+                Text("Address input")
+                    .font(.title3)
+                    .fontWeight(.medium)
+                Spacer()
+            }
+            HStack{
+                Text("Enter the address for your property then pick one of the suggested options")
+                    .font(.headline)
+                    .fontWeight(.light)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            
+            TextInputField(placeholderText: "Locate your property", binding: $mapSearch.searchTerm, showError: vm.addressInputError, focusField: .address)
+                .padding(.vertical)
+            
+            // auto-complete results
+            if vm.mortgage.address != mapSearch.searchTerm {
+                List{
+                    ForEach(mapSearch.locationResults, id: \.self) { location in
+                        Button {
+                            performReverseGeoSearch(location: location)
+                            locationSheetShowing = false
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(location.title)
+                                    .font(.footnote)
+                                    .foregroundColor(.primary.opacity(0.7))
+                                Text(location.subtitle)
+                                    .font(.footnote)
+                                    .foregroundColor(.primary.opacity(0.5))
+                            }
+                            //                            .padding(.vertical, 3)
+                            //                            .padding(.horizontal, 2)
+                            //                            .frame(maxWidth: .infinity, alignment: .leading)
+                            //                            .cornerRadius(4)
+                        }
+                    }
+                }
+                .listStyle(PlainListStyle())
+            }
+            Spacer()
+        }
+        .padding()
     }
     
     private var LocationInput: some View {
@@ -216,32 +315,30 @@ extension CreateMortgageView {
                     .font(.footnote)
             }
             
-            TextInputField(placeholderText: "Locate your property", binding: $mapSearch.searchTerm, showError: vm.addressInputError)
-            // auto-complete results
-            if vm.mortgage.address != mapSearch.searchTerm {
-                ForEach(mapSearch.locationResults, id: \.self) { location in
+            HStack{
+                Spacer()
+                HStack{
                     Button {
-                        performReverseGeoSearch(location: location)
+                        locationSheetShowing = true
                     } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(location.title)
-                                .font(.footnote)
-                                .foregroundColor(.primary.opacity(0.7))
-                            Text(location.subtitle)
-                                .font(.footnote)
-                                .foregroundColor(.primary.opacity(0.5))
+                        HStack{
+                            Text("Set the location")
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                            Image(systemName: "chevron.right")
+                                .font(.subheadline)
+                                .fontWeight(.bold)
                         }
-                        .padding(.vertical, 3)
-                        .padding(.horizontal, 2)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .cornerRadius(4)
-                        
                     }
-                    
                 }
+                .foregroundColor(.primary)
+                .colorInvert()
+                .padding(.vertical, 5)
+                .padding(.horizontal, 10)
+                .background(Color.primary)
+                .cornerRadius(10)
+                Spacer()
             }
-            
-            
         }
         .padding()
     }
@@ -257,7 +354,7 @@ extension CreateMortgageView {
                 HStack{
                     Text("$")
                         .font(.subheadline)
-                    DoubleNumberInputField(placeholderText: "", binding: $vm.mortgage.propertyValue, showError: vm.propertyValueError)
+                    DoubleNumberInputField(placeholderText: "", binding: $vm.mortgage.propertyValue, showError: vm.propertyValueError, focusField: .propertyValue)
                 }
             }
         }
@@ -275,7 +372,7 @@ extension CreateMortgageView {
                     HStack{
                         Text("$")
                             .font(.subheadline)
-                        DoubleNumberInputField(placeholderText: "", binding: $vm.mortgage.downpaymentValue, showError: vm.downpaymentValueError)
+                        DoubleNumberInputField(placeholderText: "", binding: $vm.mortgage.downpaymentValue, showError: vm.downpaymentValueError, focusField: .downpaymentValue)
                     }
                 }
                 HStack{
@@ -285,7 +382,7 @@ extension CreateMortgageView {
                         step: 0.1
                     )
                     Spacer()
-                    DoubleNumberInputFieldSmall(placeholderText: "", binding: $vm.downpaymentPercentageSelector, showError: vm.downpaymentPercentError)
+                    DoubleNumberInputFieldSmall(placeholderText: "", binding: $vm.downpaymentPercentageSelector, showError: vm.downpaymentPercentError, focusField: .downpaymentPercentage)
                     Text("%")
                         .font(.subheadline)
                 }
@@ -311,7 +408,7 @@ extension CreateMortgageView {
                         step: 0.01
                     )
                     Spacer()
-                    DoubleNumberInputFieldSmall(placeholderText: "", binding: $vm.mortgage.interestRatePercentage, showError: vm.interestRatePercentageError)
+                    DoubleNumberInputFieldSmall(placeholderText: "", binding: $vm.mortgage.interestRatePercentage, showError: vm.interestRatePercentageError, focusField: .interestRate)
                     Text("%")
                         .font(.subheadline)
                 }
@@ -328,7 +425,7 @@ extension CreateMortgageView {
                 }
                 Spacer()
                 HStack{
-                    SmallNumberInputField(placeholderText: "", binding: $vm.mortgage.loanTermYears, showError: vm.loanTermValueError)
+                    SmallNumberInputField(placeholderText: "", binding: $vm.mortgage.loanTermYears, showError: vm.loanTermValueError, focusField: .loanTerm)
                     Text("years")
                         .font(.subheadline)
                 }
@@ -347,7 +444,7 @@ extension CreateMortgageView {
                 HStack{
                     Text("$")
                         .font(.subheadline)
-                    DoubleNumberInputFieldSmall(placeholderText: "", binding: $vm.mortgage.homeInsuranceValue, showError: false)
+                    DoubleNumberInputFieldSmall(placeholderText: "", binding: $vm.mortgage.homeInsuranceValue, showError: false, focusField: .homeInsurance)
                 }
             }
         }
@@ -365,7 +462,7 @@ extension CreateMortgageView {
                     HStack{
                         Text("$")
                             .font(.subheadline)
-                        DoubleNumberInputField(placeholderText: "", binding: $vm.mortgage.propertyTaxValue, showError: false)
+                        DoubleNumberInputField(placeholderText: "", binding: $vm.mortgage.propertyTaxValue, showError: false, focusField: .propertyTaxValue)
                     }
                 }
                 HStack{
@@ -375,7 +472,7 @@ extension CreateMortgageView {
                         step: 0.01
                     )
                     Spacer()
-                    DoubleNumberInputFieldSmall(placeholderText: "", binding: $vm.propertyTaxPercentageSelector, showError: false)
+                    DoubleNumberInputFieldSmall(placeholderText: "", binding: $vm.propertyTaxPercentageSelector, showError: false, focusField: .propertyTaxPercentage)
                     Text("%")
                         .font(.subheadline)
                 }
@@ -394,7 +491,7 @@ extension CreateMortgageView {
                 HStack{
                     Text("$")
                         .font(.subheadline)
-                    DoubleNumberInputFieldMedium(placeholderText: "", binding: $vm.mortgage.closingCostValue, showError: false)
+                    DoubleNumberInputFieldMedium(placeholderText: "", binding: $vm.mortgage.closingCostValue, showError: false, focusField: .closingCost)
                 }
             }
         }
@@ -412,7 +509,7 @@ extension CreateMortgageView {
                     HStack{
                         Text("$")
                             .font(.subheadline)
-                        DoubleNumberInputField(placeholderText: "", binding: $vm.mortgage.hoaFeesValue, showError: false)
+                        DoubleNumberInputField(placeholderText: "", binding: $vm.mortgage.hoaFeesValue, showError: false, focusField: .hoaFees)
                     }
                 }
             }
@@ -431,7 +528,7 @@ extension CreateMortgageView {
                     HStack{
                         Text("$")
                             .font(.subheadline)
-                        DoubleNumberInputField(placeholderText: "", binding: $vm.mortgage.upkeepValue, showError: false)
+                        DoubleNumberInputField(placeholderText: "", binding: $vm.mortgage.upkeepValue, showError: false, focusField: .upkeepCost)
                     }
                 }
             }
@@ -502,6 +599,33 @@ extension CreateMortgageView {
 
 extension CreateMortgageView {
     
+    private enum Field: Int, CaseIterable {
+        case name, address, propertyValue, downpaymentValue, downpaymentPercentage, interestRate, loanTerm, homeInsurance, propertyTaxValue, propertyTaxPercentage, closingCost, hoaFees, upkeepCost
+    }
+    
+    private func focusPreviousField(){
+        focusedField = focusedField.map {
+            Field(rawValue: $0.rawValue - 1) ?? .upkeepCost
+        }
+    }
+    private func focusNextField(){
+        focusedField = focusedField.map {
+            Field(rawValue: $0.rawValue + 1) ?? .name
+        }
+    }
+    
+    private func canFocusPreviousField() -> Bool {
+        guard let currentFocusedField = focusedField else {
+            return false
+        }
+        return currentFocusedField.rawValue > 0
+    }
+    private func canFocusNextField() -> Bool {
+        guard let currentFocusedField = focusedField else {
+            return false
+        }
+        return currentFocusedField.rawValue < Field.allCases.count - 1
+    }
     
     private func performReverseGeoSearch(location: MKLocalSearchCompletion) -> Void {
         let searchRequest = MKLocalSearch.Request(completion: location)
