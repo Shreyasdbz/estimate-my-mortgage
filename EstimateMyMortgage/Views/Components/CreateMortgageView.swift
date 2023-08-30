@@ -96,7 +96,7 @@ struct CreateMortgageView: View {
             }
         }
         .toolbar {
-//            ToolbarItemGroup(placement: .keyboard) {
+            ToolbarItemGroup(placement: .keyboard) {
 //                Button(action: focusPreviousField) {
 //                    Image(systemName: "chevron.up")
 //                }
@@ -105,8 +105,13 @@ struct CreateMortgageView: View {
 //                    Image(systemName: "chevron.down")
 //                }
 //                .disabled(!canFocusNextField()) // remove this to loop through fields
-//                Spacer()
-//            }
+                Spacer()
+                Button {
+                    focusedField = nil
+                } label: {
+                    Text("Done")
+                }
+            }
         }
         .listStyle(PlainListStyle())
         .navigationTitle(vm.isNew ? "Create new estimate" : "Update \(vm.mortgage.name)")

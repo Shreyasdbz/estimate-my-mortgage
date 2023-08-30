@@ -29,7 +29,7 @@ struct MortgageRowView: View {
 
             //arow
             Image(systemName: "arrow.forward.circle.fill")
-                .font(.title2)
+                .font(.subheadline)
                 .padding(.trailing, 10)
         }
         .background(Material.ultraThick)
