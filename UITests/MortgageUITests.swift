@@ -44,7 +44,21 @@ final class MortgageUITests: XCTestCase {
             return
         }
         // Numeric inputs also support hardware Return; text uses the bottom Done action.
-        if usingReturn { app.typeText("\n") } else { done.tap() }
+        if usingReturn {
+            app.typeText("\n")
+        } else {
+            // Keyboard presentation can move a centered sheet. Require a stable,
+            // hittable frame and tap its center rather than a stale activation point.
+            var previousFrame: CGRect?
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard done.exists, done.isHittable else { previousFrame = nil; return false }
+                let current = done.frame
+                defer { previousFrame = current }
+                return previousFrame == current
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
+            done.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
         let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             !self.app.buttons["estimate.keyboardDone"].exists &&
             !self.app.keyboards.firstMatch.exists && !self.app.popovers.containing(.key, identifier: "1").firstMatch.exists
