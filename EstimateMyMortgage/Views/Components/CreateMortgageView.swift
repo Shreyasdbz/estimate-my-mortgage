@@ -34,7 +34,8 @@ struct CreateMortgageView: View {
     }
 
     private var editorContent: some View {
-        ScrollViewReader { proxy in
+        let tracksNameGeometry = nameAxis == .vertical
+        return ScrollViewReader { proxy in
             VStack(spacing: 0) {
                 Form {
                     Section {
@@ -68,7 +69,7 @@ struct CreateMortgageView: View {
                                 .accessibilityLabel("Name")
                                 .accessibilityIdentifier("estimate.name")
                                 .onGeometryChange(for: CGRect.self) {
-                                    nameAxis == .vertical ? $0.frame(in: .global) : .zero
+                                    tracksNameGeometry ? $0.frame(in: .global) : .zero
                                 } action: { frame in
                                     nameFrame = frame
                                     revealNameIfNeeded(using: proxy)
@@ -143,7 +144,7 @@ struct CreateMortgageView: View {
                 }
                 .accessibilityIdentifier("estimate.form")
                 .onGeometryChange(for: CGRect.self) {
-                    nameAxis == .vertical ? $0.frame(in: .global) : .zero
+                    tracksNameGeometry ? $0.frame(in: .global) : .zero
                 } action: { frame in
                     formFrame = frame
                     revealNameIfNeeded(using: proxy)
