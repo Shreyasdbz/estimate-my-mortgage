@@ -5,6 +5,8 @@ import UIKit
 @MainActor
 final class MortgageUITests: XCTestCase {
     private var app: XCUIApplication!
+    // Matching native edges can differ after CGRect addition; this is far below one physical pixel.
+    private static let geometryTolerance: CGFloat = 0.001
 
     override func setUp() async throws {
         continueAfterFailure = false
@@ -22,15 +24,48 @@ final class MortgageUITests: XCTestCase {
         app.launch()
     }
 
-    private func create(_ name: String) {
+    private func create(_ name: String, scrollFromName: Bool = false) {
         app.buttons["newEstimate"].tap()
         let field = editorName()
-        let nativeType = field.elementType
+        scrollEditorTo(field)
         field.tap()
         field.typeText(name)
-        waitForTypedValue(name, identifier: "estimate.name", nativeType: nativeType)
+        if app.launchArguments.contains("UICTContentSizeCategoryAccessibilityXXXL") {
+            let focusedName = editorName()
+            let frame = focusedName.frame
+            let viewport = app.collectionViews["estimate.form"].frame.intersection(app.frame)
+            let done = app.buttons["estimate.keyboardDone"]
+            print("Focused Name bounds: \(frame); Form viewport: \(viewport); Done: \(done.frame); navigation: \(app.navigationBars.firstMatch.frame)")
+            screenshot("large-text-focused-name")
+            XCTAssertTrue(done.exists)
+            XCTAssertFalse(frame.isEmpty)
+            XCTAssertFalse(done.frame.isEmpty)
+            XCTAssertTrue(viewport.insetBy(dx: -Self.geometryTolerance, dy: -Self.geometryTolerance).contains(frame),
+                          "The complete focused Name must remain inside the Form")
+            XCTAssertLessThanOrEqual(frame.maxY, done.frame.minY + Self.geometryTolerance, "The focused Name must remain above the keyboard bar")
+            XCTAssertGreaterThanOrEqual(frame.minY, app.navigationBars.firstMatch.frame.maxY - Self.geometryTolerance,
+                                        "The focused Name must remain below the navigation bar")
+        }
+        if scrollFromName {
+            let form = app.collectionViews["estimate.form"]
+            // A short drag in the gutter scrolls the Form rather than selecting Name text.
+            let lower = form.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.75))
+            let upper = form.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.4))
+            lower.press(forDuration: 0.1, thenDragTo: upper, withVelocity: .slow, thenHoldForDuration: 0)
+            let property = app.textFields["estimate.property"]
+            scrollEditorTo(property)
+            XCTAssertEqual(property.value as? String, "500000")
+            XCTAssertFalse(app.buttons["estimate.keyboardDone"].exists, "Scrolling must clear editor focus")
+            XCTAssertFalse(hasVisibleKeyboard(), "Scrolling must dismiss the software keyboard")
+            screenshot("large-text-name-scroll-next-input")
+            upper.press(forDuration: 0.1, thenDragTo: lower, withVelocity: .slow, thenHoldForDuration: 0)
+        }
         dismissKeyboard()
-        XCTAssertEqual(field.value as? String, name)
+        // Verify the full value using the current native control after keyboard layout.
+        let completedName = editorName()
+        scrollEditorTo(completedName)
+        waitForTypedValue(name, identifier: "estimate.name", nativeType: completedName.elementType)
+        XCTAssertEqual(completedName.value as? String, name)
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         waitForSavedResult(name)
         list()
@@ -48,11 +83,9 @@ final class MortgageUITests: XCTestCase {
         XCTAssertEqual(result, .completed, "The identified input must contain the exact typed value")
     }
 
-    /// Name is a native text view at compact accessibility sizes and a text field otherwise.
+    /// Resolve the current native input; accessibility wrapping can change its editable type.
     private func editorName() -> XCUIElement {
         XCTAssertTrue(app.collectionViews["estimate.form"].waitForExistence(timeout: 5))
-        // Query the native editable types directly: resolving Any.elementType
-        // stalled despite the expected TextField being present in the captured hierarchy.
         let field = app.textFields["estimate.name"]
         if field.waitForExistence(timeout: 5) { return field }
         let view = app.textViews["estimate.name"]
@@ -255,11 +288,25 @@ final class MortgageUITests: XCTestCase {
         waitForTypedValue(value, identifier: identifier, nativeType: nativeType)
     }
 
+    /// Expose the entire control: native hit testing can accept an offscreen portion of a row.
     private func scrollEditorTo(_ element: XCUIElement) {
         let form = app.collectionViews["estimate.form"]
         XCTAssertTrue(form.exists)
-        for _ in 0..<5 where !element.isHittable { form.swipeUp() }
-        XCTAssertTrue(element.isHittable)
+        func fullyVisible() -> Bool {
+            guard element.exists else { return false }
+            let frame = element.frame
+            let viewport = form.frame.intersection(app.frame)
+            return !frame.isEmpty && !viewport.isEmpty && viewport.insetBy(dx: -Self.geometryTolerance, dy: -Self.geometryTolerance).contains(frame) && element.isHittable
+        }
+        for _ in 0..<5 where !fullyVisible() {
+            let viewport = form.frame.intersection(app.frame)
+            if element.exists && !element.frame.isEmpty && element.frame.minY < viewport.minY {
+                form.swipeDown()
+            } else {
+                form.swipeUp()
+            }
+        }
+        XCTAssertTrue(fullyVisible(), "The entire input must be visible before editing")
     }
 
     private func open(_ name: String) {
@@ -355,7 +402,7 @@ final class MortgageUITests: XCTestCase {
         app.terminate()
         app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
-        create("Inspect Balance")
+        create("Inspect Balance", scrollFromName: true)
         open("Inspect Balance")
         let schedule = app.buttons["amortization"]
         for _ in 0..<8 where !schedule.isHittable { app.swipeUp() }

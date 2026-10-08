@@ -9,6 +9,8 @@ struct CreateMortgageView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var vm: CreateMortgageViewModel
     @FocusState private var focusedField: MortgageEditorField?
+    @State private var nameFrame = CGRect.zero
+    @State private var formFrame = CGRect.zero
     @State private var saveError: String?
     @State private var errorPresented = false
     @State private var errorTitle = "Unable to save"
@@ -65,10 +67,16 @@ struct CreateMortgageView: View {
                                 .focused($focusedField, equals: .name)
                                 .accessibilityLabel("Name")
                                 .accessibilityIdentifier("estimate.name")
+                                .onGeometryChange(for: CGRect.self) {
+                                    nameAxis == .vertical ? $0.frame(in: .global) : .zero
+                                } action: { frame in
+                                    nameFrame = frame
+                                    revealNameIfNeeded(using: proxy)
+                                }
                             fieldError(.name)
                         }
+                        .id(MortgageEditorField.name)
                     }
-                    .id(MortgageEditorField.name)
                     Section {
                         numberField("Property price", text: $vm.draft.propertyValue, unit: "USD", field: .property)
                         LabeledContent("Down payment unit") {
@@ -134,7 +142,13 @@ struct CreateMortgageView: View {
                     }
                 }
                 .accessibilityIdentifier("estimate.form")
-                .scrollDismissesKeyboard(.interactively)
+                .onGeometryChange(for: CGRect.self) {
+                    nameAxis == .vertical ? $0.frame(in: .global) : .zero
+                } action: { frame in
+                    formFrame = frame
+                    revealNameIfNeeded(using: proxy)
+                }
+                .scrollDismissesKeyboard(.immediately)
                 if focusedField != nil {
                     HStack {
                         Spacer()
@@ -188,6 +202,20 @@ struct CreateMortgageView: View {
                 Text(saveError ?? "Please try again.")
             }
             .onChange(of: vm.draft) { _, _ in inputError = nil }
+            .onChange(of: focusedField) { _, _ in revealNameIfNeeded(using: proxy) }
+        }
+    }
+
+    /// Recenter only an obscured, focused wrapping name after actual input/keyboard layout.
+    private func revealNameIfNeeded(using proxy: ScrollViewProxy) {
+        guard focusedField == .name, nameAxis == .vertical,
+              !nameFrame.isEmpty, !formFrame.isEmpty else { return }
+        let viewport = formFrame.insetBy(dx: 0, dy: 8)
+        // A short landscape viewport may need native internal caret scrolling instead.
+        guard !viewport.isEmpty, nameFrame.height <= viewport.height, nameFrame.width <= viewport.width else { return }
+        // Native caret avoidance follows the keyboard; the form also reserves its Done bar.
+        if !viewport.contains(nameFrame) {
+            proxy.scrollTo(MortgageEditorField.name, anchor: .center)
         }
     }
 
