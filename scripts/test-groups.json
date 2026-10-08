@@ -8,7 +8,9 @@
       "MortgageUITests/testCreateEditCancelDuplicateDeleteAndRelaunch",
       "MortgageUITests/testValidationPreventsDismissalAndKeepsInvalidInput",
       "MortgageUITests/testSearchAndComparison",
-      "MortgageUITests/testSaveRevealsResultFromFilteredList"
+      "MortgageUITests/testSaveRevealsResultFromFilteredList",
+      "MortgageUITests/testLivePreviewAndSavedCost",
+      "MortgageUITests/testIncompletePreviewAndRecovery"
     ]
   },
   "ui-accessibility": {
@@ -28,7 +30,8 @@
       "MortgageUITests/testPeriodsAboutAndShareSheet",
       "MortgageUITests/testManualAddressAndSearchCancellation",
       "MortgageUITests/testLiveAppleMapsLookupAndHandoff",
-      "MortgageUITests/testIPadSelectionResetsOpenSchedule"
+      "MortgageUITests/testIPadSelectionResetsOpenSchedule",
+      "MortgageUITests/testChartInspectionAndScrolling"
     ]
   }
 }

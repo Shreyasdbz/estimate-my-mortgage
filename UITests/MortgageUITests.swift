@@ -25,15 +25,27 @@ final class MortgageUITests: XCTestCase {
     private func create(_ name: String) {
         app.buttons["newEstimate"].tap()
         let field = editorName()
+        let nativeType = field.elementType
         field.tap()
         field.typeText(name)
-        XCTAssertEqual(field.value as? String, name)
+        waitForTypedValue(name, identifier: "estimate.name", nativeType: nativeType)
         dismissKeyboard()
         XCTAssertEqual(field.value as? String, name)
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         waitForSavedResult(name)
         list()
         XCTAssertTrue(app.cells.containing(.staticText, identifier: name).firstMatch.waitForExistence(timeout: 5))
+    }
+
+    /// Observe the full delivered text after native event synthesis, rejecting unavailable or partial values.
+    private func waitForTypedValue(_ value: String, identifier: String, nativeType: XCUIElement.ElementType) {
+        let delivered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let text = self.app.descendants(matching: nativeType).matching(identifier: identifier).firstMatch.value as? String else { return false }
+            return text == value
+        }, object: nil)
+        let result = XCTWaiter.wait(for: [delivered], timeout: 15)
+        if result != .completed { screenshot("incomplete-typed-value-" + identifier) }
+        XCTAssertEqual(result, .completed, "The identified input must contain the exact typed value")
     }
 
     /// Name is a native text view at compact accessibility sizes and a text field otherwise.
@@ -223,7 +235,7 @@ final class MortgageUITests: XCTestCase {
         let input = currentField()
         XCTAssertEqual(input.elementType, nativeType, "Replacement must retain the identified native control")
         input.typeText(value)
-        XCTAssertEqual(currentField().value as? String, value)
+        waitForTypedValue(value, identifier: identifier, nativeType: nativeType)
     }
 
     private func scrollEditorTo(_ element: XCUIElement) {
@@ -249,6 +261,144 @@ final class MortgageUITests: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    /// Bring the native combined preview into view before checking its current contents.
+    private func requirePreview(_ text: String, excluding staleAmounts: [String] = []) {
+        let preview = app.descendants(matching: .any).matching(identifier: "estimate.preview").firstMatch
+        let form = app.collectionViews["estimate.form"]
+        for _ in 0..<5 where !preview.isHittable { form.swipeDown() }
+        XCTAssertTrue(preview.isHittable, "The preview must be visible before reading its amount")
+        let updated = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            let label = preview.label
+            return label.contains(text) && staleAmounts.allSatisfy { !label.contains($0) }
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [updated], timeout: 15), .completed,
+                       "The native preview must reflect the current financial input")
+    }
+
+    func testLivePreviewAndSavedCost() throws {
+        app.buttons["newEstimate"].tap()
+        let name = editorName()
+        let nativeType = name.elementType
+        let defaultCost = "$3,396.16"
+        let revisedCost = "$3,112.26"
+        requirePreview(defaultCost)
+        name.tap()
+        name.typeText("Live Preview")
+        waitForTypedValue("Live Preview", identifier: "estimate.name", nativeType: nativeType)
+        dismissKeyboard()
+        let property = app.textFields["estimate.property"]
+        scrollEditorTo(property)
+        replace(property, with: "450000")
+        screenshot("live-preview-focused-input")
+        dismissKeyboard(numericInput: true)
+        requirePreview(revisedCost, excluding: [defaultCost])
+        screenshot("live-preview-updated")
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        waitForSavedResult("Live Preview")
+        XCTAssertEqual(app.staticTexts["monthlyTotal"].label, revisedCost)
+        screenshot("live-preview-saved-result")
+    }
+
+    func testIncompletePreviewAndRecovery() throws {
+        app.buttons["newEstimate"].tap()
+        let name = editorName()
+        let nativeType = name.elementType
+        let defaultCost = "$3,396.16"
+        let revisedCost = "$3,112.26"
+        requirePreview(defaultCost)
+        name.tap()
+        name.typeText("Recovery Home")
+        waitForTypedValue("Recovery Home", identifier: "estimate.name", nativeType: nativeType)
+        dismissKeyboard()
+        let property = app.textFields["estimate.property"]
+        scrollEditorTo(property)
+        replace(property, with: "")
+        dismissKeyboard(numericInput: true)
+        requirePreview("Check the estimate details", excluding: [defaultCost, revisedCost])
+        screenshot("live-preview-incomplete")
+
+        scrollEditorTo(property)
+        replace(property, with: "450000")
+        dismissKeyboard(numericInput: true)
+        requirePreview(revisedCost)
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        waitForSavedResult("Recovery Home")
+        XCTAssertEqual(app.staticTexts["monthlyTotal"].label, revisedCost)
+        screenshot("live-preview-recovered-result")
+    }
+
+    func testChartInspectionAndScrolling() throws {
+        app.terminate()
+        app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        create("Inspect Balance")
+        open("Inspect Balance")
+        let schedule = app.buttons["amortization"]
+        for _ in 0..<8 where !schedule.isHittable { app.swipeUp() }
+        XCTAssertTrue(schedule.isHittable)
+        schedule.tap()
+        XCTAssertTrue(app.navigationBars["Amortization"].waitForExistence(timeout: 5))
+        let chart = app.descendants(matching: .any).matching(identifier: "amortization.balanceChart").firstMatch
+        XCTAssertTrue(chart.waitForExistence(timeout: 5))
+        let screen = app.frame
+        let window = try XCTUnwrap(app.windows.allElementsBoundByIndex.first(where: { $0.frame == screen }))
+        let windowFrame = window.frame
+
+        func visibleChartFrame() -> CGRect {
+            let navigationBottom = app.navigationBars["Amortization"].frame.maxY
+            let content = CGRect(x: screen.minX, y: navigationBottom, width: screen.width,
+                                 height: max(0, screen.maxY - navigationBottom))
+            let visible = chart.frame.intersection(content)
+            XCTAssertFalse(visible.isEmpty, "The gesture must begin inside the visible chart")
+            return visible
+        }
+
+        func coordinate(_ point: CGPoint) -> XCUICoordinate {
+            XCTAssertTrue(screen.contains(point))
+            let coordinate = window.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: point.x - windowFrame.minX, dy: point.y - windowFrame.minY))
+            XCTAssertEqual(coordinate.screenPoint.x, point.x, accuracy: 0.5)
+            XCTAssertEqual(coordinate.screenPoint.y, point.y, accuracy: 0.5)
+            return coordinate
+        }
+
+        let plot = visibleChartFrame()
+        coordinate(CGPoint(x: plot.minX + plot.width * 0.45, y: plot.midY)).tap()
+        let selected = app.descendants(matching: .any).matching(identifier: "amortization.selectedBalance").firstMatch
+        // Taps inspect years; vertical drags beginning in the chart must scroll the List.
+        // At the largest text size the readout can begin below the visible plot.
+        for _ in 0..<5 where !selected.isHittable {
+            let visible = visibleChartFrame()
+            let bottom = coordinate(CGPoint(x: visible.midX, y: visible.minY + visible.height * 0.8))
+            let top = coordinate(CGPoint(x: visible.midX, y: visible.minY + visible.height * 0.2))
+            bottom.press(forDuration: 0.05, thenDragTo: top)
+        }
+        XCTAssertTrue(selected.waitForExistence(timeout: 5))
+        XCTAssertTrue(selected.isHittable, "The retained selected balance must remain readable after release")
+        let label = selected.label
+        let yearPrefix = try XCTUnwrap(label.range(of: "End of year "))
+        let year = try XCTUnwrap(Int(label[yearPrefix.upperBound...].prefix(while: { $0.isNumber })))
+        XCTAssertTrue((1...30).contains(year))
+        // Independent closed-form fixture: $400,000 principal, 5.5%, 360 payments.
+        let rate = 0.055 / 12
+        let fullTermGrowth = pow(1 + rate, 360)
+        let elapsedGrowth = pow(1 + rate, Double(year * 12))
+        let balance = 400_000 * (fullTermGrowth - elapsedGrowth) / (fullTermGrowth - 1)
+        XCTAssertTrue(label.contains(balance.formatted(.currency(code: "USD"))),
+                      "The selected year must display its independently calculated balance")
+        screenshot("chart-inspected-year")
+
+        let firstYear = app.staticTexts["Year 1"]
+        for _ in 0..<5 where !firstYear.isHittable {
+            let visible = visibleChartFrame()
+            let bottom = coordinate(CGPoint(x: visible.midX, y: visible.minY + visible.height * 0.8))
+            let top = coordinate(CGPoint(x: visible.midX, y: visible.minY + visible.height * 0.2))
+            bottom.press(forDuration: 0.05, thenDragTo: top)
+        }
+        XCTAssertTrue(firstYear.isHittable, "A scroll starting in the chart must reveal the yearly schedule")
+        screenshot("chart-scroll-to-schedule")
     }
 
     func testCreateEditCancelDuplicateDeleteAndRelaunch() throws {

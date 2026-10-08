@@ -27,7 +27,7 @@ struct HomeScreen: View {
         }.sorted { left, right in
             switch sort {
             case .name: return left.name.localizedStandardCompare(right.name) == .orderedAscending
-            case .monthlyPayment: return (left.terms.calculation?.monthlyPayment ?? .infinity) < (right.terms.calculation?.monthlyPayment ?? .infinity)
+            case .monthlyPayment: return (left.terms.monthlyCostPreview ?? .infinity) < (right.terms.monthlyCostPreview ?? .infinity)
             case .propertyValue: return left.propertyValue < right.propertyValue
             }
         }
@@ -94,6 +94,7 @@ struct HomeScreen: View {
         .onChange(of: mortgages.map(\.objectID)) { _, identities in
             if let selection, !identities.contains(selection) { self.selection = nil }
         }
+        .sensoryFeedback(.success, trigger: savedSelection) { _, saved in saved != nil }
         .sheet(isPresented: $editorPresented, onDismiss: revealSavedEstimate) {
             NavigationStack {
                 CreateMortgageView(provider: vm.provider, mortgage: editingMortgage) { savedSelection = $0 }

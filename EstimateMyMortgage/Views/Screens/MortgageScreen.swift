@@ -9,6 +9,7 @@ struct MortgageScreen: View {
     @State private var editorPresented = false
     @State private var annualCosts = false
     @State private var showMap = false
+    @State private var savedEdits = 0
 
     var body: some View {
         List {
@@ -94,8 +95,11 @@ struct MortgageScreen: View {
             }
         }
         .sheet(isPresented: $editorPresented) {
-            NavigationStack { CreateMortgageView(provider: provider, mortgage: mortgage) }
+            NavigationStack {
+                CreateMortgageView(provider: provider, mortgage: mortgage) { _ in savedEdits += 1 }
+            }
         }
+        .sensoryFeedback(.success, trigger: savedEdits)
     }
 
     private func expense(_ annual: Double) -> Double { annualCosts ? annual : annual / 12 }
@@ -118,6 +122,7 @@ struct MortgageScreen: View {
 
 /// Native label/value layout adapts to available width and the preferred text size.
 struct AmountRow: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let title: String
     let value: Double
     var emphasized = false
@@ -136,12 +141,15 @@ struct AmountRow: View {
     private var amount: some View {
         Text(value, format: .currency(code: "USD"))
             .monospacedDigit().foregroundStyle(Color.primary).fixedSize(horizontal: false, vertical: true)
+            .contentTransition(reduceMotion ? .identity : .numericText(value: value))
+            .animation(reduceMotion ? nil : .snappy(duration: 0.24), value: value)
     }
 }
 
 private struct AmortizationView: View {
     let calculation: MortgageCalculation
     @State private var monthly = false
+    @State private var selectedYear: Int?
     // Axis text grows with Dynamic Type; its plot needs the same layout budget.
     @ScaledMetric(relativeTo: .caption) private var chartHeight: CGFloat = 220
 
@@ -153,7 +161,26 @@ private struct AmortizationView: View {
                     ForEach(calculation.annualSchedule) { year in
                         LineMark(x: .value("Year", year.year), y: .value("Balance", year.balance))
                     }
+                    if let selectedYear {
+                        RuleMark(x: .value("Selected year", selectedYear))
+                            .foregroundStyle(Color.secondary)
+                    }
                 }
+                .chartOverlay { proxy in
+                    GeometryReader { geometry in
+                        Rectangle().fill(.clear).contentShape(Rectangle())
+                            .onTapGesture { position in
+                                guard let frame = proxy.plotFrame else { return }
+                                let plot = geometry[frame]
+                                guard plot.contains(position),
+                                      let year = proxy.value(atX: position.x - plot.minX, as: Int.self),
+                                      (0...calculation.annualSchedule.count).contains(year) else { return }
+                                selectedYear = year
+                            }
+                            .accessibilityHidden(true)
+                    }
+                }
+                .accessibilityIdentifier("amortization.balanceChart")
                 .chartXAxis {
                     AxisMarks {
                         AxisGridLine()
@@ -173,6 +200,19 @@ private struct AmortizationView: View {
                 .chartYAxisLabel { Text("USD").foregroundStyle(Color.primary) }
                 .frame(height: chartHeight)
                 .accessibilityLabel("Loan balance decreases from \(calculation.principalValue.formatted(.currency(code: "USD"))) to zero over \(calculation.annualSchedule.count) years. Exact amounts follow below.")
+                if let selectedYear, (0...calculation.annualSchedule.count).contains(selectedYear) {
+                    let balance = selectedYear == 0 ? calculation.principalValue : calculation.annualSchedule[selectedYear - 1].balance
+                    // Direct manipulation stays immediate; the selected value remains after release.
+                    LabeledContent(selectedYear == 0 ? "Starting balance" : "End of year \(selectedYear)") {
+                        Text(balance, format: .currency(code: "USD"))
+                            .monospacedDigit().foregroundStyle(Color.primary)
+                    }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("amortization.selectedBalance")
+                } else {
+                    Text("Tap the chart to inspect a year.")
+                        .font(.footnote).foregroundStyle(Color.primary)
+                }
             }
             Section {
                 Picker("Schedule period", selection: $monthly) {

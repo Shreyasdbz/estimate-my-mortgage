@@ -61,6 +61,17 @@ struct MortgageTerms: Equatable, Sendable {
 
     var isValid: Bool { validationErrors.isEmpty }
 
+    /// Monthly loan and ownership cost for valid inputs, without building a payment schedule.
+    var monthlyCostPreview: Double? {
+        guard isValid else { return nil }
+        return monthlyOwnershipCost
+    }
+
+    fileprivate var monthlyOwnershipCost: Double {
+        fixedMonthlyPayment(principal: propertyValue - downpaymentValue, annualRate: interestRatePercentage, years: loanTermYears)
+            + (propertyTaxValue + homeInsuranceValue + hoaFeesValue + upkeepValue) / 12
+    }
+
     /// Returns nil for invalid terms. All-cash purchases retain ownership expenses and have no loan schedule.
     var calculation: MortgageCalculation? {
         guard isValid else { return nil }
@@ -103,7 +114,7 @@ struct MortgageCalculation: Equatable, Sendable {
         principalValue = terms.propertyValue - terms.downpaymentValue
         upfrontCostValue = terms.downpaymentValue + terms.closingCostValue
         baseMonthlyPayment = fixedMonthlyPayment(principal: principalValue, annualRate: terms.interestRatePercentage, years: terms.loanTermYears)
-        monthlyPayment = baseMonthlyPayment + (terms.propertyTaxValue + terms.homeInsuranceValue + terms.hoaFeesValue + terms.upkeepValue) / 12
+        monthlyPayment = terms.monthlyOwnershipCost
 
         let count = terms.loanTermYears * 12
         let monthlyRate = terms.interestRatePercentage / 1_200

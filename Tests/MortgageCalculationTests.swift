@@ -8,6 +8,7 @@ final class MortgageCalculationTests: XCTestCase {
         // Independent published-formula fixture: $300,000, 6%, 360 payments.
         XCTAssertEqual(result.baseMonthlyPayment, 1_798.6515754582706, accuracy: 0.0000001)
         XCTAssertEqual(result.monthlyPayment, 2_398.6515754582706, accuracy: 0.0000001)
+        XCTAssertEqual(try XCTUnwrap(terms.monthlyCostPreview), 2_398.6515754582706, accuracy: 0.0000001)
         XCTAssertEqual(result.totalInterest, 347_514.5671649774, accuracy: 0.0001)
         XCTAssertEqual(result.upfrontCostValue, 108_000)
         XCTAssertEqual(result.monthlySchedule.count, 360)
@@ -23,6 +24,7 @@ final class MortgageCalculationTests: XCTestCase {
         let terms = MortgageTerms(propertyValue: 120_000, downpaymentValue: 0, interestRatePercentage: 0, loanTermYears: 10, propertyTaxValue: 0, homeInsuranceValue: 0, hoaFeesValue: 0, upkeepValue: 0, closingCostValue: 0)
         let result = try XCTUnwrap(terms.calculation)
         XCTAssertEqual(result.baseMonthlyPayment, 1_000)
+        XCTAssertEqual(terms.monthlyCostPreview, 1_000)
         XCTAssertEqual(result.totalInterest, 0)
         XCTAssertEqual(result.monthlySchedule.first?.principal, 1_000)
         XCTAssertEqual(result.annualSchedule.first?.principal, 12_000)
@@ -33,6 +35,7 @@ final class MortgageCalculationTests: XCTestCase {
         let terms = MortgageTerms(propertyValue: 240_000, downpaymentValue: 240_000, interestRatePercentage: 0, loanTermYears: 30, propertyTaxValue: 2_400, homeInsuranceValue: 1_200, hoaFeesValue: 600, upkeepValue: 1_800, closingCostValue: 4_000)
         let result = try XCTUnwrap(terms.calculation)
         XCTAssertEqual(result.monthlyPayment, 500)
+        XCTAssertEqual(terms.monthlyCostPreview, 500)
         XCTAssertEqual(result.baseMonthlyPayment, 0)
         XCTAssertEqual(result.totalLoanPayments, 0)
         XCTAssertEqual(result.totalInterest, 0)
@@ -56,16 +59,19 @@ final class MortgageCalculationTests: XCTestCase {
         for price in [0, -1, Double.infinity, Double.nan] {
             terms.propertyValue = price
             XCTAssertNil(terms.calculation)
+            XCTAssertNil(terms.monthlyCostPreview)
         }
         terms = MortgageTerms()
         for rate in [-1, 50.1, Double.infinity, Double.nan] {
             terms.interestRatePercentage = rate
             XCTAssertNil(terms.calculation)
+            XCTAssertNil(terms.monthlyCostPreview)
         }
         terms = MortgageTerms()
         for years in [0, -1, 101, Int.max] {
             terms.loanTermYears = years
             XCTAssertNil(terms.calculation)
+            XCTAssertNil(terms.monthlyCostPreview)
         }
         terms = MortgageTerms()
         terms.downpaymentValue = terms.propertyValue + 1

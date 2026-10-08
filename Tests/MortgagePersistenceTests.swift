@@ -4,6 +4,31 @@ import XCTest
 
 @MainActor
 final class MortgagePersistenceTests: XCTestCase {
+    func testLivePreviewValidatesInputWithoutSavingDraft() throws {
+        let provider = MortgagesProvider(inMemory: true)
+        let editor = CreateMortgageViewModel(provider: provider)
+        XCTAssertNotNil(editor.monthlyCostPreview, "An unfinished name does not prevent a financial preview")
+        editor.draft.propertyValue = ""
+        XCTAssertNil(editor.monthlyCostPreview)
+        XCTAssertEqual(editor.draft.propertyValue, "")
+        editor.draft.propertyValue = "240000"
+        editor.draft.downpaymentUnit = .percent
+        editor.draft.downpayment = "100"
+        editor.draft.propertyTaxUnit = .percent
+        editor.draft.propertyTax = "1"
+        editor.draft.insurance = "1200"
+        editor.draft.hoa = "600"
+        editor.draft.upkeep = "1800"
+        XCTAssertEqual(editor.monthlyCostPreview, 500)
+        XCTAssertEqual(try provider.viewContext.count(for: Mortgage.all()), 0)
+        XCTAssertFalse(provider.viewContext.hasChanges)
+        XCTAssertThrowsError(try editor.save(), "Saving still requires a name")
+        editor.draft.name = "Previewed purchase"
+        let identity = try editor.save()
+        let saved = try XCTUnwrap(provider.viewContext.existingObject(with: identity) as? Mortgage)
+        XCTAssertEqual(saved.terms.calculation?.monthlyPayment, editor.monthlyCostPreview)
+    }
+
     private func create(_ provider: MortgagesProvider, name: String = "Original") throws -> Mortgage {
         let editor = CreateMortgageViewModel(provider: provider)
         editor.draft.name = name

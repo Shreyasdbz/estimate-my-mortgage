@@ -7,11 +7,11 @@ struct MortgageRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(mortgage.name).font(.headline).fixedSize(horizontal: false, vertical: true)
-            if let calculation = mortgage.terms.calculation {
-                Text(calculation.monthlyPayment, format: .currency(code: "USD"))
+            if let monthlyCost = mortgage.terms.monthlyCostPreview {
+                Text(monthlyCost, format: .currency(code: "USD"))
                     .font(.title3.weight(.semibold))
                     .monospacedDigit().fixedSize(horizontal: false, vertical: true)
-                Text(calculation.principalValue == 0 ? "per month · all-cash purchase" : "per month · \(mortgage.loanTermYears) years · \(mortgage.interestRatePercentage.formatted())%")
+                Text(mortgage.propertyValue == mortgage.downpaymentValue ? "per month · all-cash purchase" : "per month · \(mortgage.loanTermYears) years · \(mortgage.interestRatePercentage.formatted())%")
                     .font(.subheadline).fixedSize(horizontal: false, vertical: true)
             } else {
                 Label("Review estimate inputs", systemImage: "exclamationmark.triangle")

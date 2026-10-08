@@ -6,6 +6,7 @@ struct CreateMortgageView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var widthClass
     @Environment(\.dynamicTypeSize) private var textSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var vm: CreateMortgageViewModel
     @FocusState private var focusedField: MortgageEditorField?
     @State private var saveError: String?
@@ -25,6 +26,25 @@ struct CreateMortgageView: View {
         ScrollViewReader { proxy in
             VStack(spacing: 0) {
                 Form {
+                    Section {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Estimated monthly cost").font(.subheadline)
+                            if let cost = vm.monthlyCostPreview {
+                                Text(cost, format: .currency(code: "USD"))
+                                    .font(.title.weight(.semibold)).monospacedDigit()
+                                    .contentTransition(reduceMotion ? .identity : .numericText(value: cost))
+                                    .animation(reduceMotion ? nil : .snappy(duration: 0.24), value: cost)
+                            } else {
+                                Text("Check the estimate details")
+                                    .font(.body)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityIdentifier("estimate.preview")
+                    } footer: {
+                        Text("Includes ownership costs. Excludes mortgage insurance.").foregroundStyle(Color.primary)
+                    }
                     Section {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Name").font(.subheadline).foregroundStyle(Color.primary)

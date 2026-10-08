@@ -139,26 +139,7 @@ final class CreateMortgageViewModel: ObservableObject {
     func save() throws -> NSManagedObjectID {
         let name = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { throw InputError("Enter a name for this estimate.", field: .name) }
-        let property = try number(draft.propertyValue, label: "Property price", field: .property)
-        let downpayment = try number(draft.downpayment, label: "Down payment", field: .downpayment)
-        let tax = try number(draft.propertyTax, label: "Property tax", field: .tax)
-        guard let term = Int(draft.loanTerm.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-            throw InputError("Loan term must be a whole number of years.", field: .term)
-        }
-        let terms = MortgageTerms(
-            propertyValue: property,
-            downpaymentValue: draft.downpaymentUnit == .percent ? downpayment * property / 100 : downpayment,
-            interestRatePercentage: try number(draft.interestRate, label: "Interest rate", field: .interest),
-            loanTermYears: term,
-            propertyTaxValue: draft.propertyTaxUnit == .percent ? tax * property / 100 : tax,
-            homeInsuranceValue: try number(draft.insurance, label: "Home insurance", field: .insurance),
-            hoaFeesValue: try number(draft.hoa, label: "HOA fees", field: .hoa),
-            upkeepValue: try number(draft.upkeep, label: "Upkeep & utilities", field: .upkeep),
-            closingCostValue: try number(draft.closingCosts, label: "Closing costs", field: .closing)
-        )
-        if let issue = terms.validationIssues.first {
-            throw InputError(issue.message, field: MortgageEditorField(issue.field))
-        }
+        let terms = try validatedTerms()
         let savedMortgage = try provider.performTransaction { context in
             let mortgage: Mortgage
             if let objectID {
@@ -191,6 +172,38 @@ final class CreateMortgageViewModel: ObservableObject {
         objectID = savedMortgage.objectID
         originalDraft = MortgageDraft(mortgage: savedMortgage)
         return savedMortgage.objectID
+    }
+
+    /// Financial preview ignores the unfinished name and never writes to the store.
+    /// Invalid or incomplete financial input has no preview; the raw draft remains intact.
+    var monthlyCostPreview: Double? {
+        guard let terms = try? validatedTerms() else { return nil }
+        return terms.monthlyCostPreview
+    }
+
+    /// Saving and preview share parsing, unit conversion and financial validation.
+    private func validatedTerms() throws -> MortgageTerms {
+        let property = try number(draft.propertyValue, label: "Property price", field: .property)
+        let downpayment = try number(draft.downpayment, label: "Down payment", field: .downpayment)
+        let tax = try number(draft.propertyTax, label: "Property tax", field: .tax)
+        guard let term = Int(draft.loanTerm.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            throw InputError("Loan term must be a whole number of years.", field: .term)
+        }
+        let terms = MortgageTerms(
+            propertyValue: property,
+            downpaymentValue: draft.downpaymentUnit == .percent ? downpayment * property / 100 : downpayment,
+            interestRatePercentage: try number(draft.interestRate, label: "Interest rate", field: .interest),
+            loanTermYears: term,
+            propertyTaxValue: draft.propertyTaxUnit == .percent ? tax * property / 100 : tax,
+            homeInsuranceValue: try number(draft.insurance, label: "Home insurance", field: .insurance),
+            hoaFeesValue: try number(draft.hoa, label: "HOA fees", field: .hoa),
+            upkeepValue: try number(draft.upkeep, label: "Upkeep & utilities", field: .upkeep),
+            closingCostValue: try number(draft.closingCosts, label: "Closing costs", field: .closing)
+        )
+        if let issue = terms.validationIssues.first {
+            throw InputError(issue.message, field: MortgageEditorField(issue.field))
+        }
+        return terms
     }
 
     private func number(_ input: String, label: String, field: MortgageEditorField) throws -> Double {
