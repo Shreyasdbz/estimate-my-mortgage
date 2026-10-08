@@ -64,25 +64,8 @@ final class MortgageUITests: XCTestCase {
         if usingReturn {
             app.typeText("\n")
         } else {
-            func waitForDone() {
-                var previousFrame: CGRect?
-                let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                    guard done.exists, !done.frame.isEmpty, self.app.frame.contains(done.frame) else {
-                        previousFrame = nil
-                        return false
-                    }
-                    let current = done.frame
-                    defer { previousFrame = current }
-                    return previousFrame == current
-                }, object: nil)
-                let result = XCTWaiter.wait(for: [ready], timeout: 5)
-                if result != .completed { screenshot("keyboard-done-unavailable") }
-                XCTAssertEqual(result, .completed, app.debugDescription)
-            }
-            // Target stable screen bounds and prove activation through dismissal.
-            // Hosted hit readiness timed out with Done visibly above the keyboard;
-            // perform the actual touch and retain the strict dismissal checks.
-            waitForDone()
+            // Let XCTest resolve the native button's hittable point, then require
+            // dismissal. A coordinate touch alone does not prove activation.
             if let dismissPopup = numericPopupDismissalRegion() {
                 // The numeric preview's screen-bounded region is distinct from
                 // the editor backdrop, which remains while the editor is open.
@@ -96,10 +79,9 @@ final class MortgageUITests: XCTestCase {
                 let closedResult = XCTWaiter.wait(for: [closed], timeout: 3)
                 if closedResult != .completed { screenshot("numeric-popup-after-outside-tap") }
                 XCTAssertEqual(closedResult, .completed, app.debugDescription)
-                if done.exists { waitForDone() }
             }
             if done.exists {
-                tapScreenCenter(done, requiringHitQuery: false)
+                done.tap()
             }
         }
         let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
@@ -137,15 +119,24 @@ final class MortgageUITests: XCTestCase {
     }
 
     /// Touch the visible control's screen bounds without using its activation point.
-    private func tapScreenCenter(_ element: XCUIElement, requiringHitQuery: Bool = true) {
-        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            element.exists && (!requiringHitQuery || element.isHittable) &&
-            !element.frame.isEmpty && self.app.frame.contains(element.frame)
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, app.debugDescription)
-        let frame = element.frame
+    private func tapScreenCenter(_ element: XCUIElement) {
         let screen = app.frame
-        XCTAssertTrue(screen.contains(CGPoint(x: frame.midX, y: frame.midY)))
+        var targetFrame: CGRect?
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard element.exists, element.isHittable else { return false }
+            // Capture one frame per poll and reuse it for the touch. Resolving the
+            // same button repeatedly adds native snapshot work without testing activation.
+            let frame = element.frame
+            targetFrame = frame
+            return !frame.isEmpty && screen.contains(frame)
+        }, object: nil)
+        let result = XCTWaiter.wait(for: [ready], timeout: 5)
+        if result != .completed {
+            print("Unavailable control \(element.identifier): bounds \(String(describing: targetFrame)), app bounds \(screen)")
+            screenshot("control-unavailable-" + element.identifier)
+        }
+        XCTAssertEqual(result, .completed, app.debugDescription)
+        guard result == .completed, let frame = targetFrame else { return }
         app.coordinate(withNormalizedOffset: .zero)
             .withOffset(CGVector(dx: frame.midX - screen.minX, dy: frame.midY - screen.minY)).tap()
     }
@@ -358,7 +349,7 @@ final class MortgageUITests: XCTestCase {
             // Match the exact controls and verified appearances; other findings still fail.
             let version = ProcessInfo.processInfo.operatingSystemVersion
             let appearance = self.app.launchEnvironment["EMM_TEST_APPEARANCE"]
-            if version.majorVersion == 27, version.minorVersion == 0,
+            if version.majorVersion == 27, version.minorVersion == 0, version.patchVersion == 0,
                issue.auditType == .contrast, issue.element?.elementType == .button,
                let element = issue.element,
                (element.identifier == "estimate.cancel" && element.label == "Cancel" && ["light", "dark"].contains(appearance)) ||

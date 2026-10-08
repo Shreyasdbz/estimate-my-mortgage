@@ -23,84 +23,101 @@ struct CreateMortgageView: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            Form {
-                Section {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Name").font(.subheadline).foregroundStyle(Color.primary)
-                        TextField("", text: $vm.draft.name, axis: nameAxis)
-                            .lineLimit(1...3)
-                            .frame(minHeight: 44)
-                            .textInputAutocapitalization(.words)
-                            .autocorrectionDisabled()
-                            .focused($focusedField, equals: .name)
-                            .accessibilityLabel("Name")
-                            .accessibilityIdentifier("estimate.name")
-                        fieldError(.name)
-                    }
-                }
-                .id(MortgageEditorField.name)
-                Section {
-                    numberField("Property price", text: $vm.draft.propertyValue, unit: "USD", field: .property)
-                    LabeledContent("Down payment unit") {
-                        Picker("Down payment unit", selection: Binding(
-                            get: { vm.draft.downpaymentUnit },
-                            set: { unit in changeUnit { try vm.changeDownpaymentUnit(to: unit) } }
-                        )) {
-                            ForEach(AmountInputUnit.allCases) { unit in Text(unit.rawValue).tag(unit) }
+            VStack(spacing: 0) {
+                Form {
+                    Section {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Name").font(.subheadline).foregroundStyle(Color.primary)
+                            TextField("", text: $vm.draft.name, axis: nameAxis)
+                                .lineLimit(1...3)
+                                .frame(minHeight: 44)
+                                .textInputAutocapitalization(.words)
+                                .autocorrectionDisabled()
+                                .focused($focusedField, equals: .name)
+                                .accessibilityLabel("Name")
+                                .accessibilityIdentifier("estimate.name")
+                            fieldError(.name)
                         }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
-                        .tint(Color.primary)
-                        .accessibilityIdentifier("estimate.downpaymentUnit")
                     }
-                    numberField("Down payment", text: $vm.draft.downpayment,
-                                unit: vm.draft.downpaymentUnit.rawValue, field: .downpayment)
-                    numberField("Annual interest rate", text: $vm.draft.interestRate, unit: "%", field: .interest)
-                    numberField("Loan term", text: $vm.draft.loanTerm, unit: "years", field: .term, keyboard: .numberPad)
-                } header: {
-                    Text("Purchase and loan").foregroundStyle(Color.primary)
-                } footer: {
-                    Text("Fixed rates; 0% interest and all-cash purchases supported.").foregroundStyle(Color.primary)
-                }
-                Section {
-                    LabeledContent("Property tax unit") {
-                        Picker("Property tax unit", selection: Binding(
-                            get: { vm.draft.propertyTaxUnit },
-                            set: { unit in changeUnit { try vm.changePropertyTaxUnit(to: unit) } }
-                        )) {
-                            ForEach(AmountInputUnit.allCases) { unit in Text(unit.rawValue).tag(unit) }
+                    .id(MortgageEditorField.name)
+                    Section {
+                        numberField("Property price", text: $vm.draft.propertyValue, unit: "USD", field: .property)
+                        LabeledContent("Down payment unit") {
+                            Picker("Down payment unit", selection: Binding(
+                                get: { vm.draft.downpaymentUnit },
+                                set: { unit in changeUnit { try vm.changeDownpaymentUnit(to: unit) } }
+                            )) {
+                                ForEach(AmountInputUnit.allCases) { unit in Text(unit.rawValue).tag(unit) }
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                            .tint(Color.primary)
+                            .accessibilityIdentifier("estimate.downpaymentUnit")
                         }
-                        .pickerStyle(.menu)
-                        .labelsHidden()
-                        .tint(Color.primary)
-                        .accessibilityIdentifier("estimate.taxUnit")
+                        numberField("Down payment", text: $vm.draft.downpayment,
+                                    unit: vm.draft.downpaymentUnit.rawValue, field: .downpayment)
+                        numberField("Annual interest rate", text: $vm.draft.interestRate, unit: "%", field: .interest)
+                        numberField("Loan term", text: $vm.draft.loanTerm, unit: "years", field: .term, keyboard: .numberPad)
+                    } header: {
+                        Text("Purchase and loan").foregroundStyle(Color.primary)
+                    } footer: {
+                        Text("Fixed rates; 0% interest and all-cash purchases supported.").foregroundStyle(Color.primary)
                     }
-                    numberField("Property tax", text: $vm.draft.propertyTax,
-                                unit: vm.draft.propertyTaxUnit.rawValue, field: .tax)
-                    numberField("Home insurance", text: $vm.draft.insurance, unit: "USD / year", field: .insurance)
-                    numberField("HOA fees", text: $vm.draft.hoa, unit: "USD / year", field: .hoa)
-                    numberField("Upkeep & utilities", text: $vm.draft.upkeep, unit: "USD / year", field: .upkeep)
-                } header: {
-                    Text("Annual ownership costs").foregroundStyle(Color.primary)
-                } footer: {
-                    Text("All amounts are annual. Tax % applies to the property price.").foregroundStyle(Color.primary)
+                    Section {
+                        LabeledContent("Property tax unit") {
+                            Picker("Property tax unit", selection: Binding(
+                                get: { vm.draft.propertyTaxUnit },
+                                set: { unit in changeUnit { try vm.changePropertyTaxUnit(to: unit) } }
+                            )) {
+                                ForEach(AmountInputUnit.allCases) { unit in Text(unit.rawValue).tag(unit) }
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                            .tint(Color.primary)
+                            .accessibilityIdentifier("estimate.taxUnit")
+                        }
+                        numberField("Property tax", text: $vm.draft.propertyTax,
+                                    unit: vm.draft.propertyTaxUnit.rawValue, field: .tax)
+                        numberField("Home insurance", text: $vm.draft.insurance, unit: "USD / year", field: .insurance)
+                        numberField("HOA fees", text: $vm.draft.hoa, unit: "USD / year", field: .hoa)
+                        numberField("Upkeep & utilities", text: $vm.draft.upkeep, unit: "USD / year", field: .upkeep)
+                    } header: {
+                        Text("Annual ownership costs").foregroundStyle(Color.primary)
+                    } footer: {
+                        Text("All amounts are annual. Tax % applies to the property price.").foregroundStyle(Color.primary)
+                    }
+                    Section(header: Text("One-time costs").foregroundStyle(Color.primary)) {
+                        numberField("Closing costs", text: $vm.draft.closingCosts, unit: "USD", field: .closing)
+                    }
+                    Section {
+                        AddressInput(address: $vm.draft.address, city: $vm.draft.city,
+                                     state: $vm.draft.state, zip: $vm.draft.zip, focus: $focusedField)
+                            .id(MortgageEditorField.address)
+                    } header: {
+                        Text("Property address").foregroundStyle(Color.primary)
+                    } footer: {
+                        Text("Optional.").foregroundStyle(Color.primary)
+                    }
                 }
-                Section(header: Text("One-time costs").foregroundStyle(Color.primary)) {
-                    numberField("Closing costs", text: $vm.draft.closingCosts, unit: "USD", field: .closing)
-                }
-                Section {
-                    AddressInput(address: $vm.draft.address, city: $vm.draft.city,
-                                 state: $vm.draft.state, zip: $vm.draft.zip, focus: $focusedField)
-                        .id(MortgageEditorField.address)
-                } header: {
-                    Text("Property address").foregroundStyle(Color.primary)
-                } footer: {
-                    Text("Optional.").foregroundStyle(Color.primary)
+                .accessibilityIdentifier("estimate.form")
+                .scrollDismissesKeyboard(.interactively)
+                if focusedField != nil {
+                    HStack {
+                        Spacer()
+                        Button { focusedField = nil } label: {
+                            Text("Done")
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                        .tint(Color.primary)
+                        .accessibilityIdentifier("estimate.keyboardDone")
+                    }
+                    .padding(.horizontal)
+                    .background(.bar)
                 }
             }
-            .accessibilityIdentifier("estimate.form")
             .presentationDetents([.large])
-            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(vm.isNew ? "New estimate" : "Edit estimate")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -116,23 +133,6 @@ struct CreateMortgageView: View {
                     Button("Save", role: saveRole, action: save)
                         .tint(.indigo)
                         .accessibilityIdentifier("estimate.save")
-                }
-            }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if focusedField != nil {
-                    HStack {
-                        Spacer()
-                        Button { focusedField = nil } label: {
-                            Text("Done")
-                                .frame(minWidth: 44, minHeight: 44)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.borderless)
-                        .tint(Color.primary)
-                        .accessibilityIdentifier("estimate.keyboardDone")
-                    }
-                    .padding(.horizontal)
-                    .background(.bar)
                 }
             }
             .interactiveDismissDisabled(vm.hasChanges)
