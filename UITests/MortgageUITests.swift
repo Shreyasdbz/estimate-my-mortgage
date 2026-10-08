@@ -23,7 +23,7 @@ final class MortgageUITests: XCTestCase {
         XCTAssertEqual(field.value as? String, name)
         dismissKeyboard()
         XCTAssertEqual(field.value as? String, name)
-        tapScreenCenter(app.buttons["estimate.save"])
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         waitForSavedResult(name)
         list()
         XCTAssertTrue(app.cells.containing(.staticText, identifier: name).firstMatch.waitForExistence(timeout: 5))
@@ -194,7 +194,10 @@ final class MortgageUITests: XCTestCase {
             guard let text = currentField().value as? String else { return false }
             return text.isEmpty || text == placeholder
         }, object: nil)
-        let result = XCTWaiter.wait(for: [cleared], timeout: 5)
+        // Hosted Name queries can exhaust five seconds despite a visibly empty input.
+        // Give that identified control another bounded snapshot opportunity.
+        let clearAllowance: TimeInterval = identifier == "estimate.name" ? 15 : 5
+        let result = XCTWaiter.wait(for: [cleared], timeout: clearAllowance)
         if result != .completed { screenshot("incomplete-field-selection") }
         XCTAssertEqual(result, .completed, "Field must be empty before replacement: \(identifier)")
         guard result == .completed, !value.isEmpty else { return }
@@ -243,7 +246,7 @@ final class MortgageUITests: XCTestCase {
         app.buttons["editEstimate"].tap()
         replace(editorName(), with: "Updated Home")
         dismissKeyboard()
-        tapScreenCenter(app.buttons["estimate.save"])
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         waitForSavedResult("Updated Home")
         app.terminate()
         app.launch()
@@ -261,7 +264,7 @@ final class MortgageUITests: XCTestCase {
 
     func testValidationPreventsDismissalAndKeepsInvalidInput() throws {
         app.buttons["newEstimate"].tap()
-        tapScreenCenter(app.buttons["estimate.save"])
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
         app.alerts.buttons["OK"].tap()
         let name = editorName()
@@ -269,13 +272,13 @@ final class MortgageUITests: XCTestCase {
         name.typeText("Invalid input")
         replace(app.textFields["estimate.property"], with: "0")
         dismissKeyboard(usingReturn: true)
-        tapScreenCenter(app.buttons["estimate.save"])
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
         app.alerts.buttons["OK"].tap()
         XCTAssertEqual(app.textFields["estimate.property"].value as? String, "0")
         replace(app.textFields["estimate.property"], with: "")
         dismissKeyboard(usingReturn: true)
-        tapScreenCenter(app.buttons["estimate.save"])
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
         app.alerts.buttons["OK"].tap()
         XCTAssertTrue(app.buttons["estimate.keyboardDone"].waitForExistence(timeout: 5))
@@ -348,7 +351,7 @@ final class MortgageUITests: XCTestCase {
         scrollEditorTo(tax)
         XCTAssertEqual(tax.value as? String, "3")
         screenshot("native-units")
-        tapScreenCenter(app.buttons["estimate.save"])
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.navigationBars["Zinnia Cash Purchase"].exists)
         XCTAssertTrue(app.staticTexts["All-cash purchase"].exists)
@@ -476,7 +479,7 @@ final class MortgageUITests: XCTestCase {
         screenshot("address-search")
         app.navigationBars["Find address"].buttons["Cancel"].tap()
         XCTAssertEqual(address.value as? String, "1 Apple Park Way, Cupertino, CA 95014")
-        tapScreenCenter(app.buttons["estimate.save"])
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         waitForSavedResult("Cupertino Home")
         open("Cupertino Home")
         let location = app.staticTexts["1 Apple Park Way, Cupertino, CA 95014"]
@@ -506,7 +509,7 @@ final class MortgageUITests: XCTestCase {
         let address = app.descendants(matching: .any)["estimate.address"].firstMatch
         XCTAssertTrue(address.waitForExistence(timeout: 30))
         XCTAssertTrue((address.value as? String ?? "").contains("Cupertino"))
-        tapScreenCenter(app.buttons["estimate.save"])
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         waitForSavedResult("Cupertino Home")
         open("Cupertino Home")
         let map = app.buttons["Show Property Map"]
@@ -669,7 +672,7 @@ final class MortgageUITests: XCTestCase {
         app.buttons["editEstimateFromList"].tap()
         replace(editorName(), with: "Birch Condo")
         dismissKeyboard()
-        tapScreenCenter(app.buttons["estimate.save"])
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.navigationBars["Birch Condo"].exists)
         XCTAssertTrue(app.staticTexts["monthlyTotal"].exists)
