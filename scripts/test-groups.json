@@ -7,7 +7,8 @@
     "tests": [
       "MortgageUITests/testCreateEditCancelDuplicateDeleteAndRelaunch",
       "MortgageUITests/testValidationPreventsDismissalAndKeepsInvalidInput",
-      "MortgageUITests/testSearchAndComparison",
+      "MortgageUITests/testSearchFiltersSavedEstimates",
+      "MortgageUITests/testComparisonOfSavedEstimates",
       "MortgageUITests/testSaveRevealsResultFromFilteredList",
       "MortgageUITests/testLivePreviewAndSavedCost",
       "MortgageUITests/testIncompletePreviewAndRecovery"
@@ -27,6 +28,7 @@
     "target": "EstimateMyMortgageUITests",
     "tests": [
       "MortgageUITests/testNativeUnitsAndSorting",
+      "MortgageUITests/testCommaDecimalAndWholeYearEntry",
       "MortgageUITests/testPeriodsAboutAndShareSheet",
       "MortgageUITests/testManualAddressAndSearchCancellation",
       "MortgageUITests/testLiveAppleMapsLookupAndHandoff",

@@ -51,12 +51,13 @@ final class MortgageUITests: XCTestCase {
     /// Name is a native text view at compact accessibility sizes and a text field otherwise.
     private func editorName() -> XCUIElement {
         XCTAssertTrue(app.collectionViews["estimate.form"].waitForExistence(timeout: 5))
-        let field = app.descendants(matching: .any)
-            .matching(identifier: "estimate.name").firstMatch
-        XCTAssertTrue(field.waitForExistence(timeout: 5))
-        let type = field.elementType
-        XCTAssertTrue(type == .textField || type == .textView, "Name must be an editable native control")
-        return field
+        // Query the native editable types directly: resolving Any.elementType
+        // stalled despite the expected TextField being present in the captured hierarchy.
+        let field = app.textFields["estimate.name"]
+        if field.waitForExistence(timeout: 5) { return field }
+        let view = app.textViews["estimate.name"]
+        XCTAssertTrue(view.waitForExistence(timeout: 5), "Name must be an editable native control")
+        return view
     }
 
     /// Check the fresh editor and expected result rather than a cached input query.
@@ -93,14 +94,22 @@ final class MortgageUITests: XCTestCase {
             // Recorded native taps landed below the visible button in centered
             // iPad sheets. Use screen bounds and require actual dismissal.
             if numericInput {
+                let screen = app.frame
+                let fullWidthKeyboard = app.keyboards.allElementsBoundByIndex.contains {
+                    let frame = $0.frame
+                    return !frame.isEmpty && screen.intersects(frame) && frame.width >= screen.width - 1
+                }
                 // The native numeric popover can consume the first outside touch
                 // while its remote accessibility tree is unavailable. Touch the
-                // inert editor title to close it, then deliberately activate Done.
-                let title = app.navigationBars.matching(NSPredicate(
-                    format: "identifier IN %@", ["New estimate", "Edit estimate"]
-                )).firstMatch.staticTexts.firstMatch
-                tapScreenCenter(title, requireHittable: false)
-                XCTAssertTrue(done.waitForExistence(timeout: 5))
+                // inert title unless an onscreen full-width keyboard is observed.
+                // Unknown/narrow keyboard states retain that existing path.
+                if !fullWidthKeyboard {
+                    let title = app.navigationBars.matching(NSPredicate(
+                        format: "identifier IN %@", ["New estimate", "Edit estimate"]
+                    )).firstMatch.staticTexts.firstMatch
+                    tapScreenCenter(title, requireHittable: false)
+                    XCTAssertTrue(done.waitForExistence(timeout: 5))
+                }
             }
             if done.exists {
                 tapScreenCenter(done, requireHittable: false)
@@ -187,8 +196,13 @@ final class MortgageUITests: XCTestCase {
         let target = anchor.coordinate(withNormalizedOffset: .zero)
             .withOffset(CGVector(dx: frame.midX - anchorFrame.minX, dy: frame.midY - anchorFrame.minY))
         let point = target.screenPoint
-        XCTAssertEqual(point.x, frame.midX, accuracy: 0.5)
-        XCTAssertEqual(point.y, frame.midY, accuracy: 0.5)
+        // The exercised landscape-left screenPoint uses the portrait screen basis;
+        // app/window bounds above use the rotated viewport. Check both actual axes.
+        let expectedPoint = XCUIDevice.shared.orientation == .landscapeLeft
+            ? CGPoint(x: screen.height - frame.midY, y: frame.midX)
+            : CGPoint(x: frame.midX, y: frame.midY)
+        XCTAssertEqual(point.x, expectedPoint.x, accuracy: 0.5)
+        XCTAssertEqual(point.y, expectedPoint.y, accuracy: 0.5)
         target.tap()
         XCTAssertEqual(app.state, .runningForeground)
     }
@@ -273,7 +287,12 @@ final class MortgageUITests: XCTestCase {
             let label = preview.label
             return label.contains(text) && staleAmounts.allSatisfy { !label.contains($0) }
         }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [updated], timeout: 15), .completed,
+        let result = XCTWaiter.wait(for: [updated], timeout: 15)
+        if result != .completed {
+            screenshot("preview-mismatch")
+            print("Preview label: \(preview.label); expected amount: \(text)")
+        }
+        XCTAssertEqual(result, .completed,
                        "The native preview must reflect the current financial input")
     }
 
@@ -438,7 +457,11 @@ final class MortgageUITests: XCTestCase {
         let name = editorName()
         name.tap()
         name.typeText("Invalid input")
-        replace(app.textFields["estimate.property"], with: "0")
+        waitForTypedValue("Invalid input", identifier: "estimate.name", nativeType: name.elementType)
+        dismissKeyboard()
+        let property = app.textFields["estimate.property"]
+        scrollEditorTo(property)
+        replace(property, with: "0")
         dismissKeyboard(usingReturn: true)
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
@@ -460,7 +483,7 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["No estimates yet"].exists)
     }
 
-    func testSearchAndComparison() throws {
+    func testSearchFiltersSavedEstimates() throws {
         create("Cedar Home")
         create("Birch Condo")
         let search = app.searchFields.firstMatch
@@ -475,6 +498,56 @@ final class MortgageUITests: XCTestCase {
         // On iPad the first toolbar tap otherwise only resigns search focus.
         open("Cedar Home")
         list()
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.exists)
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Birch Condo").firstMatch.exists)
+    }
+
+    func testCommaDecimalAndWholeYearEntry() throws {
+        app.terminate()
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "de_DE"]
+        app.launch()
+        app.buttons["newEstimate"].tap()
+        let name = editorName()
+        name.tap()
+        name.typeText("Comma decimal")
+        waitForTypedValue("Comma decimal", identifier: "estimate.name", nativeType: name.elementType)
+        dismissKeyboard()
+        let interest = app.textFields["estimate.interest"]
+        scrollEditorTo(interest)
+        replace(interest, with: "6,25")
+        screenshot("comma-decimal-focused-input")
+        dismissKeyboard(numericInput: true)
+        XCTAssertEqual(interest.value as? String, "6,25")
+        let term = app.textFields["estimate.term"]
+        scrollEditorTo(term)
+        replace(term, with: "30,5")
+        dismissKeyboard(usingReturn: true)
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
+        app.alerts.buttons["OK"].tap()
+        XCTAssertEqual(term.value as? String, "30,5")
+        replace(term, with: "30")
+        dismissKeyboard(usingReturn: true)
+        // Independent fixed-rate fixture: $400,000 loan, 6.25%, 360 payments,
+        // plus the default $13,500 annual ownership costs.
+        let rate = 0.0625 / 12
+        let cost = 400_000 * rate / (1 - pow(1 + rate, -360)) + 13_500.0 / 12
+        // Match the launch's English language and German region, including native US$ disambiguation.
+        let expected = cost.formatted(.currency(code: "USD").locale(Locale(identifier: "en_DE")))
+        requirePreview(expected)
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        waitForSavedResult("Comma decimal")
+        XCTAssertEqual(app.staticTexts["monthlyTotal"].label, expected)
+        screenshot("comma-decimal-saved-result")
+        app.buttons["editEstimate"].tap()
+        scrollEditorTo(interest)
+        XCTAssertEqual(interest.value as? String, "6,25")
+        XCTAssertEqual(term.value as? String, "30")
+    }
+
+    func testComparisonOfSavedEstimates() throws {
+        create("Cedar Home")
+        create("Birch Condo")
         app.buttons["Estimate Actions"].tap()
         app.buttons["Compare Estimates"].tap()
         XCTAssertTrue(app.navigationBars["Compare"].waitForExistence(timeout: 3))
@@ -502,7 +575,12 @@ final class MortgageUITests: XCTestCase {
         let name = editorName()
         name.tap()
         name.typeText("Zinnia Cash Purchase")
-        replace(app.textFields["estimate.property"], with: "250000")
+        waitForTypedValue("Zinnia Cash Purchase", identifier: "estimate.name", nativeType: name.elementType)
+        dismissKeyboard()
+        // The preview moves Property below Name; finish entry and expose its input before editing.
+        let property = app.textFields["estimate.property"]
+        scrollEditorTo(property)
+        replace(property, with: "250000")
         dismissKeyboard(numericInput: true)
         XCTAssertEqual(app.textFields["estimate.property"].value as? String, "250000")
         app.buttons["estimate.downpaymentUnit"].tap()
@@ -581,6 +659,30 @@ final class MortgageUITests: XCTestCase {
         for _ in 0..<3 { app.swipeUp() }
         screenshot("purchase-and-loan")
         app.buttons["editEstimate"].tap()
+        screenshot("native-editor-initial")
+        if app.frame.width >= 600 {
+            // Native audits sampled the partly offscreen annual-cost label/footer.
+            // Expose the entire section's final input and footer before the full audit.
+            try accessibilityAudit(for: [.textClipped, .hitRegion])
+            let form = app.collectionViews["estimate.form"]
+            let start = form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            // Hold to prevent momentum; the footer enters the native AX tree only after scrolling.
+            start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -140)),
+                        withVelocity: .slow, thenHoldForDuration: 0.2)
+            let upkeepLabel = app.staticTexts["Upkeep & utilities (USD / year)"]
+            let upkeep = app.textFields["estimate.upkeep"]
+            let footer = app.staticTexts["All amounts are annual. Tax % applies to the property price."]
+            screenshot("native-editor-audit")
+            XCTAssertTrue(upkeepLabel.exists)
+            XCTAssertTrue(upkeep.exists)
+            XCTAssertFalse(upkeepLabel.frame.isEmpty)
+            XCTAssertFalse(upkeep.frame.isEmpty)
+            XCTAssertTrue(footer.exists)
+            XCTAssertFalse(footer.frame.isEmpty)
+            XCTAssertTrue(form.frame.contains(upkeepLabel.frame), "Audit the entire Upkeep label: \(upkeepLabel.frame) inside \(form.frame)")
+            XCTAssertTrue(form.frame.contains(upkeep.frame), "Audit the entire Upkeep input: \(upkeep.frame) inside \(form.frame)")
+            XCTAssertTrue(form.frame.contains(footer.frame), "Audit the entire annual-cost footer: \(footer.frame) inside \(form.frame)")
+        }
         try accessibilityAudit()
         let property = app.textFields["estimate.property"]
         property.tap()
@@ -810,6 +912,23 @@ final class MortgageUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 5), .completed)
         screenshot("landscape-details")
         try accessibilityAudit()
+        app.buttons["editEstimate"].tap()
+        replace(editorName(), with: "Landscape draft")
+        dismissKeyboard()
+        screenshot("landscape-editor")
+        try accessibilityAudit(for: [.textClipped, .hitRegion])
+        XCUIDevice.shared.orientation = .portrait
+        let portrait = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            let frame = self.app.windows.firstMatch.frame
+            return frame.height > frame.width
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [portrait], timeout: 5), .completed)
+        XCTAssertEqual(editorName().value as? String, "Landscape draft")
+        screenshot("portrait-editor-retained-draft")
+        tapScreenCenter(app.buttons["estimate.cancel"], requireHittable: false)
+        app.buttons["Discard changes"].tap()
+        XCTAssertTrue(app.navigationBars["Landscape Home"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["editEstimate"].exists)
     }
 
     func testScreenshotsNativeFlows() throws {

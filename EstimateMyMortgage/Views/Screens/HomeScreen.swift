@@ -96,9 +96,7 @@ struct HomeScreen: View {
         }
         .sensoryFeedback(.success, trigger: savedSelection) { _, saved in saved != nil }
         .sheet(isPresented: $editorPresented, onDismiss: revealSavedEstimate) {
-            NavigationStack {
-                CreateMortgageView(provider: vm.provider, mortgage: editingMortgage) { savedSelection = $0 }
-            }
+            CreateMortgageView(provider: vm.provider, mortgage: editingMortgage) { savedSelection = $0 }
         }
         .sheet(isPresented: $comparisonPresented) {
             NavigationStack { CompareEstimatesView(mortgages: Array(mortgages)) }

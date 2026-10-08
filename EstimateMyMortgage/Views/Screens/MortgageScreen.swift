@@ -95,9 +95,7 @@ struct MortgageScreen: View {
             }
         }
         .sheet(isPresented: $editorPresented) {
-            NavigationStack {
-                CreateMortgageView(provider: provider, mortgage: mortgage) { _ in savedEdits += 1 }
-            }
+            CreateMortgageView(provider: provider, mortgage: mortgage) { _ in savedEdits += 1 }
         }
         .sensoryFeedback(.success, trigger: savedEdits)
     }

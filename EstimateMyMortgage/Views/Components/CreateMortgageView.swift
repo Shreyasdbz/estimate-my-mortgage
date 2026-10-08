@@ -23,6 +23,15 @@ struct CreateMortgageView: View {
     }
 
     var body: some View {
+        // Give the long iPad form native page dimensions; compact and iOS 17 keep system sizing.
+        if #available(iOS 18.0, *), widthClass == .regular {
+            NavigationStack { editorContent }.presentationSizing(.page)
+        } else {
+            NavigationStack { editorContent }
+        }
+    }
+
+    private var editorContent: some View {
         ScrollViewReader { proxy in
             VStack(spacing: 0) {
                 Form {
@@ -106,8 +115,11 @@ struct CreateMortgageView: View {
                     } footer: {
                         Text("All amounts are annual. Tax % applies to the property price.").foregroundStyle(Color.primary)
                     }
-                    Section(header: Text("One-time costs").foregroundStyle(Color.primary)) {
+                    Section {
                         numberField("Closing costs", text: $vm.draft.closingCosts, unit: "USD", field: .closing)
+                    } header: {
+                        Text("One-time costs").foregroundStyle(Color.primary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Section {
                         AddressInput(address: $vm.draft.address, city: $vm.draft.city,
@@ -185,7 +197,8 @@ struct CreateMortgageView: View {
                 .foregroundStyle(Color.primary)
             TextField("", text: text)
                 .frame(minHeight: 44)
-                .keyboardType(keyboard)
+                // Avoid a separate iPad numeric popover obscuring the input labels.
+                .keyboardType(widthClass == .regular ? .numbersAndPunctuation : keyboard)
                 .submitLabel(.done)
                 .onSubmit { focusedField = nil }
                 .focused($focusedField, equals: field)
@@ -244,7 +257,5 @@ struct CreateMortgageView: View {
 }
 
 #Preview {
-    NavigationStack {
-        CreateMortgageView(provider: .preview)
-    }
+    CreateMortgageView(provider: .preview)
 }
