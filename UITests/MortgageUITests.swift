@@ -849,8 +849,19 @@ final class MortgageUITests: XCTestCase {
         }
         handoff.tap()
         XCTAssertTrue(maps.wait(for: .runningForeground, timeout: 10))
+        // Maps may ask for location on first launch. The address handoff does
+        // not need it; dismiss only this permission request on the test simulator.
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let locationRequest = springboard.alerts.matching(NSPredicate(
+            format: "label CONTAINS[c] %@ AND label CONTAINS[c] %@", "Maps", "location"
+        )).firstMatch
+        if locationRequest.waitForExistence(timeout: 3) {
+            let denyLocation = locationRequest.buttons["Don’t Allow"]
+            XCTAssertTrue(denyLocation.exists)
+            denyLocation.tap()
+        }
         app.activate()
-        XCTAssertEqual(app.state, .runningForeground)
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
         XCTAssertTrue(app.navigationBars["Cupertino Home"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
         maps.terminate()
