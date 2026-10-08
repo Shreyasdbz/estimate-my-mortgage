@@ -1,44 +1,55 @@
-name: iOS starter workflow
+name: iOS 27 build and tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build and Test default scheme using any available iPhone simulator
-    runs-on: macos-latest
-
+  test:
+    runs-on: xcode-27
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [iPhone, iPad]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set Default Scheme
+      - uses: actions/checkout@v7.0.1
+      - name: Verify Xcode 27
         run: |
-          scheme_list=$(xcodebuild -list -json | tr -d "\n")
-          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
-          echo $default | cat >default
-          echo Using default scheme: $default
-      - name: Build
+          xcodebuild -version
+          xcodebuild -version | head -1 | grep -q '^Xcode 27\.'
+      - name: Select an iOS 27 simulator
+        id: simulator
         env:
-          scheme: ${{ 'default' }}
-          platform: ${{ 'iOS Simulator' }}
+          DEVICE_FAMILY: ${{ matrix.device }}
         run: |
-          # xcrun xctrace returns via stderr, not the expected stdout (see https://developer.apple.com/forums/thread/663959)
-          device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}' | sed -e "s/ Simulator$//"`
-          if [ $scheme = default ]; then scheme=$(cat default); fi
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
-          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          xcodebuild build-for-testing -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device"
-      - name: Test
-        env:
-          scheme: ${{ 'default' }}
-          platform: ${{ 'iOS Simulator' }}
-        run: |
-          # xcrun xctrace returns via stderr, not the expected stdout (see https://developer.apple.com/forums/thread/663959)
-          device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}' | sed -e "s/ Simulator$//"`
-          if [ $scheme = default ]; then scheme=$(cat default); fi
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
-          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          xcodebuild test-without-building -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device"
+          xcrun simctl list devices available --json > "$RUNNER_TEMP/devices.json"
+          python3 - <<'PY'
+          import json, os
+          with open(os.environ['RUNNER_TEMP'] + '/devices.json') as source:
+              devices = json.load(source)['devices']
+          matches = [device for runtime, rows in devices.items() if runtime.endswith('iOS-27-0') for device in rows if device['name'].startswith(os.environ['DEVICE_FAMILY']) and device['isAvailable']]
+          if not matches:
+              raise SystemExit('No available iOS 27 simulator for ' + os.environ['DEVICE_FAMILY'])
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('uuid=' + matches[0]['udid'] + '\n')
+          PY
+      - name: Build and test
+        run: ./scripts/test-ios.sh '${{ steps.simulator.outputs.uuid }}' "$RUNNER_TEMP/Tests.xcresult"
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: test-results-${{ matrix.device }}
+          path: ${{ runner.temp }}/Tests.xcresult
+          retention-days: 14

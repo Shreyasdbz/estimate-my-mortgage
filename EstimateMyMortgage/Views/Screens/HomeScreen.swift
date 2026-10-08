@@ -1,171 +1,147 @@
-//
-//  HomeScreen.swift
-//  EstimateMyMortgage
-//
-//  Created by Shreyas Sane on 8/24/23.
-//
-
 import SwiftUI
+import CoreData
 
 struct HomeScreen: View {
-    
-    @FetchRequest(fetchRequest: Mortgage.all()) private var mortgageList
-    @ObservedObject var vm: HomeScreenViewModel
-    
-    
+    @Environment(\.dynamicTypeSize) private var textSize
+    @FetchRequest(fetchRequest: Mortgage.all()) private var mortgages
+    @StateObject private var vm: HomeScreenViewModel
+    @State private var selection: NSManagedObjectID?
+    @State private var compactColumn: NavigationSplitViewColumn = .sidebar
+    @State private var savedSelection: NSManagedObjectID?
+    @State private var query = ""
+    @State private var sort: EstimateSort = .name
+    @State private var editorPresented = false
+    @State private var editingMortgage: Mortgage?
+    @State private var deletingMortgage: Mortgage?
+    @State private var errorMessage: String?
+    @State private var comparisonPresented = false
+    @State private var aboutPresented = false
+
+    init(provider: MortgagesProvider) {
+        _vm = StateObject(wrappedValue: HomeScreenViewModel(provider: provider))
+    }
+
+    private var visibleMortgages: [Mortgage] {
+        mortgages.filter {
+            query.isEmpty || "\($0.name) \($0.formattedAddressString)".localizedStandardContains(query)
+        }.sorted { left, right in
+            switch sort {
+            case .name: return left.name.localizedStandardCompare(right.name) == .orderedAscending
+            case .monthlyPayment: return (left.terms.calculation?.monthlyPayment ?? .infinity) < (right.terms.calculation?.monthlyPayment ?? .infinity)
+            case .propertyValue: return left.propertyValue < right.propertyValue
+            }
+        }
+    }
+
     var body: some View {
-        NavigationStack{
-            VStack{
-                if mortgageList.isEmpty {
-                    NoMortgagesView()
-                } else{
-                    List {
-                        ForEach(mortgageList) { mortgage in
-                            ZStack{
-                                MortgageRowView(vm: .init(mortgage: mortgage))
-                                    .contextMenu{
-                                        Button {
-                                            withAnimation(.easeInOut){
-                                                vm.mortgageToEdit = mortgage
-                                            }
-                                        } label: {
-                                            Label("Edit", systemImage: "pencil")
-                                        }
-                                        Button {
-                                            withAnimation(.easeInOut){
-                                                do {
-                                                    try vm.performDuplicate(mortgage)
-                                                } catch {
-                                                    print("[EMM] -- error duplicating: \(error)")
-                                                }
-                                            }
-                                        } label: {
-                                            Label("Duplicate", systemImage: "doc.on.doc")
-                                        }
-                                        Button {
-                                            do {
-                                                try vm.delete(mortgage)
-                                            } catch {
-                                                print("[EMM] -- error deleting: \(error)")
-                                            }
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
-                                    }
-                                    .padding(.bottom, 5)
-                                NavigationLink {
-                                    MortgageScreen(vm: .init(mortgage: mortgage, provider: vm.provider))
-                                } label: {
-                                    EmptyView()
-                                }
-                                .opacity(0)
-                                
-                            }
-                            .swipeActions(edge: .leading, allowsFullSwipe: false, content: {
-                                Button {
-                                    withAnimation(.easeInOut){
-                                        vm.mortgageToEdit = mortgage
-                                    }
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                        .tint(Material.thinMaterial)
-                                }
-                                Button {
-                                    withAnimation(.easeInOut){
-                                        do {
-                                            try vm.performDuplicate(mortgage)
-                                        } catch {
-                                            print("[EMM] -- error duplicating: \(error)")
-                                        }
-                                    }
-                                } label: {
-                                    Label("Duplicate", systemImage: "doc.on.doc")
-                                }
-                                .tint(.blue)
-                            })
-                            .swipeActions(allowsFullSwipe: false){
-                                Button(role: .destructive) {
-                                    do {
-                                        try vm.delete(mortgage)
-                                    } catch {
-                                        print("[EMM] -- delete error: \(error)")
-                                    }
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-                            .listRowSeparator(.hidden)
-                        }
+        NavigationSplitView(preferredCompactColumn: $compactColumn) {
+            List(selection: $selection) {
+                ForEach(visibleMortgages) { mortgage in
+                    NavigationLink(value: mortgage.objectID) {
+                        MortgageRowView(mortgage: mortgage)
                     }
-                    .listStyle(PlainListStyle())
+                    .contextMenu {
+                        Button("Edit", systemImage: "pencil") { edit(mortgage) }
+                            .accessibilityIdentifier("editEstimateFromList")
+                        Button("Duplicate", systemImage: "doc.on.doc") { duplicate(mortgage) }
+                        Button("Delete", systemImage: "trash", role: .destructive) { deletingMortgage = mortgage }
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button("Edit", systemImage: "pencil") { edit(mortgage) }.tint(.blue)
+                        Button("Duplicate", systemImage: "doc.on.doc") { duplicate(mortgage) }.tint(.indigo)
+                    }
+                    .swipeActions(allowsFullSwipe: false) {
+                        Button("Delete", systemImage: "trash", role: .destructive) { deletingMortgage = mortgage }
+                    }
                 }
             }
+            .overlay {
+                if mortgages.isEmpty {
+                    NoMortgagesView { edit(nil) }
+                } else if visibleMortgages.isEmpty {
+                    ContentUnavailableView.search(text: query)
+                }
+            }
+            .searchable(text: $query, prompt: "Search")
+            .navigationTitle("Estimates")
+            .navigationSplitViewColumnWidth(min: 280, ideal: textSize.isAccessibilitySize ? 480 : 320, max: 560)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button{
-                        let newEmpty = Mortgage.empty(context: vm.provider.newContext)
-                        withAnimation(.easeInOut){
-                            vm.mortgageToEdit = newEmpty
+                    Button("New Estimate", systemImage: "plus") { edit(nil) }
+                        .accessibilityIdentifier("newEstimate")
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu("Estimate Actions", systemImage: "ellipsis") {
+                        Picker("Sort by", selection: $sort) {
+                            ForEach(EstimateSort.allCases) { Text($0.rawValue).tag($0) }
                         }
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.title)
+                        Button("Compare Estimates", systemImage: "square.split.2x1") { comparisonPresented = true }
+                            .disabled(mortgages.count < 2)
+                        Button("About & Privacy", systemImage: "info.circle") { aboutPresented = true }
                     }
                 }
             }
-            .sheet(item: $vm.mortgageToEdit, onDismiss: {
-                withAnimation(.easeInOut){
-                    vm.mortgageToEdit = nil
+        } detail: {
+            NavigationStack {
+                if let mortgage = mortgages.first(where: { $0.objectID == selection }) {
+                    MortgageScreen(mortgage: mortgage, provider: vm.provider)
+                } else {
+                    ContentUnavailableView("Select an estimate", systemImage: "house", description: Text("See payment details and the loan's amortization schedule."))
                 }
-            }, content: { mortgage in
-                NavigationStack {
-                    CreateMortgageView(vm: .init(provider: vm.provider, mortgage: mortgage))
-                }
-            })
-            .navigationTitle("Mortgage Estimates")
+            }
+            .id(selection)
         }
+        .onChange(of: mortgages.map(\.objectID)) { _, identities in
+            if let selection, !identities.contains(selection) { self.selection = nil }
+        }
+        .sheet(isPresented: $editorPresented, onDismiss: revealSavedEstimate) {
+            NavigationStack {
+                CreateMortgageView(provider: vm.provider, mortgage: editingMortgage) { savedSelection = $0 }
+            }
+        }
+        .sheet(isPresented: $comparisonPresented) {
+            NavigationStack { CompareEstimatesView(mortgages: Array(mortgages)) }
+        }
+        .sheet(isPresented: $aboutPresented) {
+            NavigationStack { AboutView() }
+        }
+        .confirmationDialog("Delete estimate?", isPresented: Binding(get: { deletingMortgage != nil }, set: { if !$0 { deletingMortgage = nil } }), titleVisibility: .visible) {
+            Button("Delete Estimate", role: .destructive) {
+                guard let mortgage = deletingMortgage else { return }
+                do {
+                    try vm.delete(mortgage)
+                    if selection == mortgage.objectID { selection = nil }
+                } catch { errorMessage = error.localizedDescription }
+                deletingMortgage = nil
+            }
+        } message: { Text("This permanently removes the saved estimate from this device.") }
+        .alert("Couldn't Update Estimates", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            Button("OK", role: .cancel) { errorMessage = nil }
+        } message: { Text(errorMessage ?? "") }
+    }
+
+    private func edit(_ mortgage: Mortgage?) {
+        savedSelection = nil
+        editingMortgage = mortgage
+        editorPresented = true
+    }
+
+    /// Navigate after the sheet closes so compact navigation and dismissal do not compete.
+    private func revealSavedEstimate() {
+        guard let identity = savedSelection else { return }
+        query = ""
+        selection = identity
+        compactColumn = .detail
+        savedSelection = nil
+    }
+
+    private func duplicate(_ mortgage: Mortgage) {
+        do { try vm.performDuplicate(mortgage) }
+        catch { errorMessage = error.localizedDescription }
     }
 }
 
-
-extension HomeScreen {
-    
-    private var AddNewButton: some View {
-        Button {
-            withAnimation(.easeInOut){
-                vm.mortgageToEdit = Mortgage.empty(context: vm.provider.newContext)
-            }
-        } label: {
-            HStack{
-                Image(systemName: "plus.circle.fill")
-                Text("Create New")
-                    .fontWeight(.bold)
-            }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .foregroundColor(.primary)
-            .colorInvert()
-            .background(.primary)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .shadow(radius: 2)
-        }
-        
-    }
-}
-
-struct HomeScreen_Previews: PreviewProvider {
-    static var previews: some View {
-        let preview = MortgagesProvider.shared
-        HomeScreen(vm: .init(provider: preview))
-            .environment(\.managedObjectContext, preview.viewContext)
-            .previewDisplayName("Mortgages with data")
-            .onAppear{
-                Mortgage.makePreview(count: 10, in: preview.viewContext)
-            }
-        
-        let emptyPreview = MortgagesProvider.shared
-        HomeScreen(vm: .init(provider: emptyPreview))
-            .environment(\.managedObjectContext, emptyPreview.viewContext)
-            .previewDisplayName("Mortgages without data")
-    }
+private enum EstimateSort: String, CaseIterable, Identifiable {
+    case name = "Name", monthlyPayment = "Monthly cost", propertyValue = "Property value"
+    var id: Self { self }
 }

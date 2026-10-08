@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Estimate My Mortgage app icon</title>
+  <desc>An original house silhouette with an equals sign cut out, on indigo.</desc>
+  <defs>
+    <mask id="calculation" maskUnits="userSpaceOnUse">
+      <rect width="1024" height="1024" fill="#FFFFFF"/>
+      <rect x="380" y="526" width="264" height="48" rx="24" fill="#000000"/>
+      <rect x="380" y="638" width="264" height="48" rx="24" fill="#000000"/>
+    </mask>
+  </defs>
+  <rect id="background" width="1024" height="1024" fill="#5856D6"/>
+  <path id="house" mask="url(#calculation)" fill="#FFFFFF" d="M214 486 L480 248 Q512 220 544 248 L810 486 Q825 500 811 516 L786 545 Q774 558 760 546 L738 526 L738 770 Q738 802 706 802 L318 802 Q286 802 286 770 L286 526 L264 546 Q250 558 238 545 L212 516 Q198 500 214 486 Z"/>
+</svg>

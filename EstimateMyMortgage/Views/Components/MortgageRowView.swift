@@ -1,96 +1,26 @@
-//
-//  MortgageRowView.swift
-//  EstimateMyMortgage
-//
-//  Created by Shreyas Sane on 8/24/23.
-//
-
 import SwiftUI
-import MapKit
-import CoreLocation
 
+/// A saved estimate's loan assumptions and total monthly ownership budget.
 struct MortgageRowView: View {
-    
-    @ObservedObject var vm: MortgageRowViewViewModel
-    
+    @ObservedObject var mortgage: Mortgage
+
     var body: some View {
-        HStack{
-            // map view
-            MortgageMapView
-
-            // details view
-            Spacer()
-            MortgageDetailsColumn
-                .onAppear {
-                    vm.setMap()
-                }
-                .padding(.vertical, 2)
-            Spacer()
-
-            //arow
-            Image(systemName: "arrow.forward.circle.fill")
-                .font(.subheadline)
-                .padding(.trailing, 10)
-        }
-        .background(Material.ultraThick)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .shadow(radius: 2)
-    }
-}
-
-extension MortgageRowView {
-    
-    private var MortgageMapView: some View {
-                        
-        Map(coordinateRegion: $vm.mapRegion,
-            annotationItems: vm.markers) { mark in
-            mark.location
-        }
-            .allowsHitTesting(false)
-            .frame(maxWidth: 100, maxHeight: 400)
-        }
-    
-    private var MortgageDetailsColumn: some View {
-        VStack(alignment: .leading){
-            // title
-            Text(vm.mortgage.name)
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            // details rows
-            VStack(spacing: 5) {
-                MortgageDetailsRow(key: "Property value", value: vm.mortgage.formattedPropertyValue)
-                MortgageDetailsRow(key: "Downpayment", value: vm.mortgage.formattedDownPaymentPercentage)
-                MortgageDetailsRow(key: "Loan term", value: vm.mortgage.formattedLoanTerm)
-                MortgageDetailsRow(key: "Interest rate", value: vm.mortgage.formattedInterestRate)
+        VStack(alignment: .leading, spacing: 6) {
+            Text(mortgage.name).font(.headline).fixedSize(horizontal: false, vertical: true)
+            if let calculation = mortgage.terms.calculation {
+                Text(calculation.monthlyPayment, format: .currency(code: "USD"))
+                    .font(.title3.weight(.semibold))
+                    .monospacedDigit().fixedSize(horizontal: false, vertical: true)
+                Text(calculation.principalValue == 0 ? "per month · all-cash purchase" : "per month · \(mortgage.loanTermYears) years · \(mortgage.interestRatePercentage.formatted())%")
+                    .font(.subheadline).foregroundStyle(Color.primary).fixedSize(horizontal: false, vertical: true)
+            } else {
+                Label("Review estimate inputs", systemImage: "exclamationmark.triangle")
+                    .font(.subheadline).foregroundStyle(Color.primary).fixedSize(horizontal: false, vertical: true)
             }
-
-            // total row
-            Text(vm.mortgage.formattedMonthlyMortgagePayment)
-                .font(.title3)
+            Text("Property price: \(mortgage.propertyValue.formatted(.currency(code: "USD").precision(.fractionLength(0))))")
+                .font(.caption).foregroundStyle(Color.primary).fixedSize(horizontal: false, vertical: true)
         }
-    }
-    
-    private func MortgageDetailsRow(key: String, value: String) -> some View {
-        HStack{
-            Text(key)
-                .font(.footnote)
-
-            Spacer()
-
-            Text(value)
-                .font(.footnote)
-                .padding(.horizontal, 3)
-                .padding(.vertical, 3)
-                .background(Color.secondary.opacity(0.125))
-                .cornerRadius(4)
-        }
-    }
-}
-
-struct MortgageRowView_Previews: PreviewProvider {
-    
-    static var previews: some View {
-        MortgageRowView(vm: .init(mortgage: .preview()))
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
     }
 }
