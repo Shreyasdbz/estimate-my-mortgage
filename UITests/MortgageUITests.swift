@@ -170,6 +170,14 @@ final class MortgageUITests: XCTestCase {
 
     private func replace(_ field: XCUIElement, with value: String) {
         XCTAssertTrue(field.waitForExistence(timeout: 5))
+        let identifier = field.identifier
+        guard !identifier.isEmpty else {
+            XCTFail("Replacement requires an identified input")
+            return
+        }
+        func currentField() -> XCUIElement {
+            app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+        }
         let placeholder = field.placeholderValue
         field.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
         guard let current = field.value as? String else {
@@ -180,18 +188,21 @@ final class MortgageUITests: XCTestCase {
             // The trailing input edge places the caret after these short fixture values.
             field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
         }
-        // Native snapshots can lag the completed deletion. Require an actual empty
-        // value before typing; an unavailable value never counts as cleared.
+        // Resolve the current identified control after keyboard/layout changes.
+        // Require a real empty value; an unavailable value never counts as cleared.
         let cleared = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard let text = field.value as? String else { return false }
+            guard let text = currentField().value as? String else { return false }
             return text.isEmpty || text == placeholder
         }, object: nil)
         let result = XCTWaiter.wait(for: [cleared], timeout: 5)
         if result != .completed { screenshot("incomplete-field-selection") }
-        XCTAssertEqual(result, .completed, "Field must be empty before replacement: \(field.identifier)")
+        XCTAssertEqual(result, .completed, "Field must be empty before replacement: \(identifier)")
         guard result == .completed, !value.isEmpty else { return }
-        field.typeText(value)
-        XCTAssertEqual(field.value as? String, value)
+        let input = currentField()
+        let type = input.elementType
+        XCTAssertTrue(type == .textField || type == .textView, "Replacement must target an editable native control")
+        input.typeText(value)
+        XCTAssertEqual(currentField().value as? String, value)
     }
 
     private func scrollEditorTo(_ element: XCUIElement) {
