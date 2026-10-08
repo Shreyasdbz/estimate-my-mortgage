@@ -224,6 +224,11 @@ final class MortgagePersistenceTests: XCTestCase {
             let provider = MortgagesProvider(storeURL: storeURL)
             XCTAssertNil(provider.loadError)
             _ = try create(provider, name: "Persisted")
+            // Explicitly close the first connection before reopening the store;
+            // Core Data may retain it beyond the autorelease pool's lifetime.
+            let coordinator = try XCTUnwrap(provider.viewContext.persistentStoreCoordinator)
+            provider.viewContext.reset()
+            for store in coordinator.persistentStores { try coordinator.remove(store) }
         }
         try autoreleasepool {
             let restarted = MortgagesProvider(storeURL: storeURL)
