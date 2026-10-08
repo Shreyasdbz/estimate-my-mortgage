@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 /// End-to-end journeys use a unique on-disk store inside the simulator app container.
 @MainActor
@@ -7,6 +8,12 @@ final class MortgageUITests: XCTestCase {
 
     override func setUp() async throws {
         continueAfterFailure = false
+        // Skip the existing iPad-only journey before unnecessary app-launch work.
+        // Unknown idioms still reach that journey's actual split-view width check.
+        if name.contains("testIPadSelectionResetsOpenSchedule"),
+           UIDevice.current.userInterfaceIdiom == .phone {
+            throw XCTSkip("Split-view selection requires iPad.")
+        }
         XCUIDevice.shared.orientation = .portrait
         app = XCUIApplication()
         app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
@@ -131,12 +138,15 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(element.waitForExistence(timeout: 5))
         let identifier = element.identifier
         let screen = app.frame
-        // Resolve the potentially slow system-root snapshot before button geometry;
+        // Resolve the foreground app's viewport window before button geometry;
         // otherwise a native sheet can move while an old target frame is retained.
-        let system = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let systemFrame = system.frame
-        let anchor = systemFrame == screen ? system : app!
-        let anchorFrame = systemFrame == screen ? systemFrame : screen
+        guard let anchor = app.windows.allElementsBoundByIndex.first(where: { $0.frame == screen }) else {
+            screenshot("viewport-window-unavailable")
+            XCTFail("A native app window must match the visible viewport")
+            return
+        }
+        let anchorFrame = anchor.frame
+        XCTAssertEqual(anchorFrame, screen)
         var targetFrame: CGRect?
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             // Capture geometry before asking for native hit testing so a rejected
@@ -158,9 +168,8 @@ final class MortgageUITests: XCTestCase {
         if identifier == "estimate.keyboardDone" || identifier == "estimate.save" {
             print("\(identifier) screen bounds: \(frame)")
         }
-        // Resolve physical screen touches through the existing system root when
-        // its geometry matches the app. It stays in the background; no activation
-        // or app action injection is used. Different root bounds keep the app root.
+        // Keep physical touches owned by the foreground app's actual window.
+        // Window coordinates remain dynamic, so verify the point before touching.
         let target = anchor.coordinate(withNormalizedOffset: .zero)
             .withOffset(CGVector(dx: frame.midX - anchorFrame.minX, dy: frame.midY - anchorFrame.minY))
         let point = target.screenPoint
@@ -177,8 +186,15 @@ final class MortgageUITests: XCTestCase {
             XCTFail("Replacement requires an identified input")
             return
         }
+        let nativeType = field.elementType
+        guard nativeType == .textField || nativeType == .textView else {
+            XCTFail("Replacement must target an editable native control")
+            return
+        }
+        // Width and Dynamic Type remain fixed during replacement, so the input's
+        // observed native type can identify fresh controls without matching wrappers.
         func currentField() -> XCUIElement {
-            app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+            app.descendants(matching: nativeType).matching(identifier: identifier).firstMatch
         }
         let placeholder = field.placeholderValue
         field.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
@@ -196,16 +212,14 @@ final class MortgageUITests: XCTestCase {
             guard let text = currentField().value as? String else { return false }
             return text.isEmpty || text == placeholder
         }, object: nil)
-        // Hosted Name queries can exhaust five seconds despite a visibly empty input.
-        // Give that identified control another bounded snapshot opportunity.
-        let clearAllowance: TimeInterval = identifier == "estimate.name" ? 15 : 5
-        let result = XCTWaiter.wait(for: [cleared], timeout: clearAllowance)
+        // Hosted Name and numeric queries exhausted five seconds despite empty input.
+        // Give each identified control another bounded snapshot opportunity.
+        let result = XCTWaiter.wait(for: [cleared], timeout: 15)
         if result != .completed { screenshot("incomplete-field-selection") }
         XCTAssertEqual(result, .completed, "Field must be empty before replacement: \(identifier)")
         guard result == .completed, !value.isEmpty else { return }
         let input = currentField()
-        let type = input.elementType
-        XCTAssertTrue(type == .textField || type == .textView, "Replacement must target an editable native control")
+        XCTAssertEqual(input.elementType, nativeType, "Replacement must retain the identified native control")
         input.typeText(value)
         XCTAssertEqual(currentField().value as? String, value)
     }
