@@ -113,7 +113,9 @@ struct CreateMortgageView: View {
                     } header: {
                         Text("Annual ownership costs").foregroundStyle(Color.primary)
                     } footer: {
-                        Text("All amounts are annual. Tax % applies to the property price.").foregroundStyle(Color.primary)
+                        Text("All amounts are annual. Tax % applies to the property price.")
+                            .foregroundStyle(Color.primary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Section {
                         numberField("Closing costs", text: $vm.draft.closingCosts, unit: "USD", field: .closing)
@@ -191,19 +193,31 @@ struct CreateMortgageView: View {
 
     private func numberField(_ title: String, text: Binding<String>, unit: String,
                              field: MortgageEditorField, keyboard: UIKeyboardType = .decimalPad) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("\(title) (\(unit))")
-                .font(.subheadline)
-                .foregroundStyle(Color.primary)
-            TextField("", text: text)
-                .frame(minHeight: 44)
-                // Avoid a separate iPad numeric popover obscuring the input labels.
-                .keyboardType(widthClass == .regular ? .numbersAndPunctuation : keyboard)
-                .submitLabel(.done)
-                .onSubmit { focusedField = nil }
-                .focused($focusedField, equals: field)
-                .accessibilityLabel("\(title), \(unit)")
-                .accessibilityIdentifier("estimate.\(String(describing: field))")
+        let label = Text("\(title) (\(unit))")
+            .font(.subheadline).foregroundStyle(Color.primary)
+        let input = TextField("", text: text)
+            // Keep an adequate touch target even when the numeric value is empty.
+            .frame(minWidth: 44, minHeight: 44)
+            .foregroundStyle(Color.primary)
+            // Avoid a separate iPad numeric popover obscuring the input labels.
+            .keyboardType(widthClass == .regular ? .numbersAndPunctuation : keyboard)
+            .submitLabel(.done)
+            .onSubmit { focusedField = nil }
+            .focused($focusedField, equals: field)
+            .accessibilityLabel("\(title), \(unit)")
+            .accessibilityIdentifier("estimate.\(String(describing: field))")
+        return VStack(alignment: .leading, spacing: 6) {
+            // Native label/value rows use the iPad's width; large text keeps stacked inputs.
+            if widthClass == .regular && !textSize.isAccessibilitySize {
+                LabeledContent {
+                    input.multilineTextAlignment(.trailing)
+                } label: {
+                    label
+                }
+            } else {
+                label
+                input
+            }
             fieldError(field)
         }
         .id(field)

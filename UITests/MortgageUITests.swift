@@ -225,7 +225,10 @@ final class MortgageUITests: XCTestCase {
             app.descendants(matching: nativeType).matching(identifier: identifier).firstMatch
         }
         let placeholder = field.placeholderValue
-        field.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        // A proportional inset can land before short, trailing-aligned values on iPad.
+        // Touch just inside the actual edge to place the caret after the fixture text.
+        field.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+            .withOffset(CGVector(dx: -1, dy: 0)).tap()
         guard let current = field.value as? String else {
             XCTFail("Field value is unavailable: \(field.identifier)")
             return
@@ -661,14 +664,9 @@ final class MortgageUITests: XCTestCase {
         app.buttons["editEstimate"].tap()
         screenshot("native-editor-initial")
         if app.frame.width >= 600 {
-            // Native audits sampled the partly offscreen annual-cost label/footer.
-            // Expose the entire section's final input and footer before the full audit.
+            // The native wide layout must expose the complete annual-cost section.
             try accessibilityAudit(for: [.textClipped, .hitRegion])
             let form = app.collectionViews["estimate.form"]
-            let start = form.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            // Hold to prevent momentum; the footer enters the native AX tree only after scrolling.
-            start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -140)),
-                        withVelocity: .slow, thenHoldForDuration: 0.2)
             let upkeepLabel = app.staticTexts["Upkeep & utilities (USD / year)"]
             let upkeep = app.textFields["estimate.upkeep"]
             let footer = app.staticTexts["All amounts are annual. Tax % applies to the property price."]
