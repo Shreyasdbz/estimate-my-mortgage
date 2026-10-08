@@ -24,15 +24,16 @@ struct CreateMortgageView: View {
     var body: some View {
         ScrollViewReader { proxy in
             Form {
-                Section(header: Text("Estimate").foregroundStyle(Color.primary)) {
+                Section {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Name").font(.subheadline).foregroundStyle(Color.primary)
-                        TextField("Name", text: $vm.draft.name, axis: nameAxis)
+                        TextField("", text: $vm.draft.name, axis: nameAxis)
                             .lineLimit(1...3)
                             .frame(minHeight: 44)
                             .textInputAutocapitalization(.words)
                             .autocorrectionDisabled()
                             .focused($focusedField, equals: .name)
+                            .accessibilityLabel("Name")
                             .accessibilityIdentifier("estimate.name")
                         fieldError(.name)
                     }

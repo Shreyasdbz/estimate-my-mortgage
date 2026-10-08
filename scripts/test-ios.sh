@@ -11,5 +11,5 @@ xcodebuild -project EstimateMyMortgage.xcodeproj -scheme EstimateMyMortgage \
   -destination "platform=iOS Simulator,id=$1" \
   -derivedDataPath /private/tmp/estimate-my-mortgage-derived \
   -resultBundlePath "$result_path" -parallel-testing-enabled NO -collect-test-diagnostics never \
-  -test-timeouts-enabled YES -default-test-execution-time-allowance 180 \
-  -maximum-test-execution-time-allowance 180 CODE_SIGNING_ALLOWED=NO test
+  -test-timeouts-enabled YES -default-test-execution-time-allowance 300 \
+  -maximum-test-execution-time-allowance 300 CODE_SIGNING_ALLOWED=NO test

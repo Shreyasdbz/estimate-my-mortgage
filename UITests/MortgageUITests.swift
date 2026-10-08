@@ -37,7 +37,7 @@ final class MortgageUITests: XCTestCase {
     private func dismissKeyboard(usingReturn: Bool = false) {
         let done = app.buttons["estimate.keyboardDone"]
         guard done.exists else {
-            if app.keyboards.firstMatch.exists || app.popovers.containing(.key, identifier: "1").firstMatch.exists {
+            if app.keyboards.firstMatch.exists || app.popovers.containing(.key, identifier: nil).firstMatch.exists {
                 screenshot("keyboard-done-unavailable")
                 XCTFail("The editor keyboard has no Done control")
             }
@@ -47,21 +47,32 @@ final class MortgageUITests: XCTestCase {
         if usingReturn {
             app.typeText("\n")
         } else {
-            // Keyboard presentation can move a centered sheet. Require a stable,
-            // hittable frame and tap its center rather than a stale activation point.
-            var previousFrame: CGRect?
-            let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                guard done.exists, done.isHittable else { previousFrame = nil; return false }
-                let current = done.frame
-                defer { previousFrame = current }
-                return previousFrame == current
-            }, object: nil)
-            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed)
-            done.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            let numericPopover = app.popovers.containing(.key, identifier: nil).firstMatch
+            if numericPopover.exists {
+                // Native iPad numeric popovers consume the first outside tap.
+                done.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                let closed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: numericPopover)
+                XCTAssertEqual(XCTWaiter.wait(for: [closed], timeout: 3), .completed)
+            }
+            if done.exists {
+                // Keyboard presentation can move a centered sheet. Require a stable,
+                // hittable frame and tap its center rather than a stale activation point.
+                var previousFrame: CGRect?
+                let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                    guard done.exists, done.isHittable else { previousFrame = nil; return false }
+                    let current = done.frame
+                    defer { previousFrame = current }
+                    return previousFrame == current
+                }, object: nil)
+                let result = XCTWaiter.wait(for: [ready], timeout: 5)
+                if result != .completed { screenshot("keyboard-done-not-hittable") }
+                XCTAssertEqual(result, .completed, app.debugDescription)
+                done.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            }
         }
         let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             !self.app.buttons["estimate.keyboardDone"].exists &&
-            !self.app.keyboards.firstMatch.exists && !self.app.popovers.containing(.key, identifier: "1").firstMatch.exists
+            !self.app.keyboards.firstMatch.exists && !self.app.popovers.containing(.key, identifier: nil).firstMatch.exists
         }, object: nil)
         let result = XCTWaiter.wait(for: [dismissed], timeout: 3)
         if result != .completed { screenshot("keyboard-after-done") }
