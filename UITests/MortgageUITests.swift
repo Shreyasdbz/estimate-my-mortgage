@@ -97,7 +97,9 @@ final class MortgageUITests: XCTestCase {
         // Native snapshots have separate costs. Require every dismissed state
         // independently so one hierarchy query cannot consume another's allowance.
         let requirements: [(String, TimeInterval, () -> Bool)] = [
-            ("focus control", 5, { !done.exists }),
+            // A hosted lookup exhausted five seconds after the Done bar disappeared.
+            // Preserve the absence requirement with another bounded snapshot allowance.
+            ("focus control", 15, { !done.exists }),
             ("software keyboard", 5, {
                 !self.app.keyboards.allElementsBoundByIndex.contains(where: self.isOnscreen)
             }),
@@ -574,7 +576,7 @@ final class MortgageUITests: XCTestCase {
         screenshot("ipad-selection")
     }
 
-    func testDarkAppearanceAndLargestText() throws {
+    func testDarkAppearanceNativeInput() throws {
         app.terminate()
         app.launchEnvironment["EMM_TEST_APPEARANCE"] = "dark"
         app.launch()
@@ -587,6 +589,13 @@ final class MortgageUITests: XCTestCase {
         dismissKeyboard(numericInput: true)
         XCTAssertEqual(regularProperty.value as? String, "500000")
         app.terminate()
+    }
+
+    func testDarkAppearanceAndLargestText() throws {
+        // Largest text already uses an independent store and launch. Keep its
+        // audits separate from the regular-size journey's execution budget.
+        app.terminate()
+        app.launchEnvironment["EMM_TEST_APPEARANCE"] = "dark"
         app.launchEnvironment["EMM_TEST_STORE"] = UUID().uuidString
         app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()

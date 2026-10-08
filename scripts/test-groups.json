@@ -15,6 +15,7 @@
     "target": "EstimateMyMortgageUITests",
     "tests": [
       "MortgageUITests/testAccessibilityAudit",
+      "MortgageUITests/testDarkAppearanceNativeInput",
       "MortgageUITests/testDarkAppearanceAndLargestText",
       "MortgageUITests/testLandscapeLayout",
       "MortgageUITests/testScreenshotsNativeFlows"
