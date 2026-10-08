@@ -1,0 +1,33 @@
+{
+  "units": {
+    "target": "EstimateMyMortgageTests"
+  },
+  "ui-core": {
+    "target": "EstimateMyMortgageUITests",
+    "tests": [
+      "MortgageUITests/testCreateEditCancelDuplicateDeleteAndRelaunch",
+      "MortgageUITests/testValidationPreventsDismissalAndKeepsInvalidInput",
+      "MortgageUITests/testSearchAndComparison",
+      "MortgageUITests/testSaveRevealsResultFromFilteredList"
+    ]
+  },
+  "ui-accessibility": {
+    "target": "EstimateMyMortgageUITests",
+    "tests": [
+      "MortgageUITests/testAccessibilityAudit",
+      "MortgageUITests/testDarkAppearanceAndLargestText",
+      "MortgageUITests/testLandscapeLayout",
+      "MortgageUITests/testScreenshotsNativeFlows"
+    ]
+  },
+  "ui-navigation": {
+    "target": "EstimateMyMortgageUITests",
+    "tests": [
+      "MortgageUITests/testNativeUnitsAndSorting",
+      "MortgageUITests/testPeriodsAboutAndShareSheet",
+      "MortgageUITests/testManualAddressAndSearchCancellation",
+      "MortgageUITests/testLiveAppleMapsLookupAndHandoff",
+      "MortgageUITests/testIPadSelectionResetsOpenSchedule"
+    ]
+  }
+}

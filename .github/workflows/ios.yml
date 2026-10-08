@@ -15,13 +15,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  groups:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      groups: ${{ steps.groups.outputs.groups }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Validate and read test groups
+        id: groups
+        run: |
+          groups=$(python3 scripts/test-groups.py --list-groups)
+          echo "groups=$groups" >> "$GITHUB_OUTPUT"
   test:
+    needs: groups
     runs-on: xcode-27
     timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
         device: [iPhone, iPad]
+        group: ${{ fromJSON(needs.groups.outputs.groups) }}
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
     steps:
@@ -49,10 +63,10 @@ jobs:
       - name: Wait for simulator readiness
         run: xcrun simctl bootstatus '${{ steps.simulator.outputs.uuid }}' -b
       - name: Build and test
-        run: ./scripts/test-ios.sh '${{ steps.simulator.outputs.uuid }}' "$RUNNER_TEMP/Tests.xcresult"
+        run: ./scripts/test-ios.sh '${{ steps.simulator.outputs.uuid }}' "$RUNNER_TEMP/Tests.xcresult" '${{ matrix.group }}'
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:
-          name: test-results-${{ matrix.device }}
+          name: test-results-${{ matrix.device }}-${{ matrix.group }}
           path: ${{ runner.temp }}/Tests.xcresult
           retention-days: 14

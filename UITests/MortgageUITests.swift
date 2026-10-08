@@ -31,13 +31,13 @@ final class MortgageUITests: XCTestCase {
 
     /// Name is a native text view at compact accessibility sizes and a text field otherwise.
     private func editorName() -> XCUIElement {
-        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            self.app.collectionViews["estimate.form"].exists &&
-            (self.app.textFields["estimate.name"].exists || self.app.textViews["estimate.name"].exists)
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 5), .completed, app.debugDescription)
-        let field = app.textFields["estimate.name"]
-        return field.exists ? field : app.textViews["estimate.name"]
+        XCTAssertTrue(app.collectionViews["estimate.form"].waitForExistence(timeout: 5))
+        let field = app.descendants(matching: .any)
+            .matching(identifier: "estimate.name").firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        let type = field.elementType
+        XCTAssertTrue(type == .textField || type == .textView, "Name must be an editable native control")
+        return field
     }
 
     /// Check the fresh editor and expected result rather than a cached input query.
@@ -87,12 +87,23 @@ final class MortgageUITests: XCTestCase {
                 tapScreenCenter(done, requireHittable: false)
             }
         }
-        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            !self.app.buttons["estimate.keyboardDone"].exists && !self.hasVisibleKeyboard()
-        }, object: nil)
-        let result = XCTWaiter.wait(for: [dismissed], timeout: 5)
-        if result != .completed { screenshot("keyboard-after-done") }
-        XCTAssertEqual(result, .completed, app.debugDescription)
+        // Native snapshots have separate costs. Require every dismissed state
+        // independently so one hierarchy query cannot consume another's allowance.
+        let requirements: [(String, () -> Bool)] = [
+            ("focus control", { !done.exists }),
+            ("software keyboard", {
+                !self.app.keyboards.allElementsBoundByIndex.contains(where: self.isOnscreen)
+            }),
+            ("numeric preview", { !self.hasVisibleNumericPreview() })
+        ]
+        for (name, condition) in requirements {
+            let dismissed = XCTNSPredicateExpectation(
+                predicate: NSPredicate { _, _ in condition() }, object: nil
+            )
+            let result = XCTWaiter.wait(for: [dismissed], timeout: 5)
+            if result != .completed { screenshot("keyboard-after-done-" + name) }
+            XCTAssertEqual(result, .completed, "Undismissed \(name): \(app.debugDescription)")
+        }
         // Focus dismissal relays out the native Form. Verify its return separately
         // so slow accessibility snapshots cannot consume the dismissal allowance.
         XCTAssertTrue(app.collectionViews["estimate.form"].waitForExistence(timeout: 5))
