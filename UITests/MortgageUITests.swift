@@ -51,7 +51,7 @@ final class MortgageUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 5), .completed, app.debugDescription)
     }
 
-    private func dismissKeyboard(usingReturn: Bool = false) {
+    private func dismissKeyboard(usingReturn: Bool = false, numericInput: Bool = false) {
         let done = app.buttons["estimate.keyboardDone"]
         guard done.exists else {
             if hasVisibleKeyboard() {
@@ -64,33 +64,31 @@ final class MortgageUITests: XCTestCase {
         if usingReturn {
             app.typeText("\n")
         } else {
-            // Let XCTest resolve the native button's hittable point, then require
-            // dismissal. A coordinate touch alone does not prove activation.
-            if let dismissPopup = numericPopupDismissalRegion() {
-                // The numeric preview's screen-bounded region is distinct from
-                // the editor backdrop, which remains while the editor is open.
-                // Dismiss through the native outside-tap region, away from the
-                // centered editor and its numeric preview, before targeting Done.
-                // The regular software keyboard may remain until Done clears focus.
-                dismissPopup.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
-                let closed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                    self.numericPopupDismissalRegion(requireHittable: false) == nil
-                }, object: nil)
-                let closedResult = XCTWaiter.wait(for: [closed], timeout: 3)
-                if closedResult != .completed { screenshot("numeric-popup-after-outside-tap") }
-                XCTAssertEqual(closedResult, .completed, app.debugDescription)
+            // Recorded native taps landed below the visible button in centered
+            // iPad sheets. Use screen bounds and require actual dismissal.
+            if numericInput {
+                // The native numeric popover can consume the first outside touch
+                // while its remote accessibility tree is unavailable. Touch the
+                // inert editor title to close it, then deliberately activate Done.
+                let title = app.navigationBars.matching(NSPredicate(
+                    format: "identifier IN %@", ["New estimate", "Edit estimate"]
+                )).firstMatch.staticTexts.firstMatch
+                tapScreenCenter(title, requireHittable: false)
+                XCTAssertTrue(done.waitForExistence(timeout: 5))
             }
             if done.exists {
-                done.tap()
+                tapScreenCenter(done, requireHittable: false)
             }
         }
         let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            !self.app.buttons["estimate.keyboardDone"].exists &&
-            !self.hasVisibleKeyboard() && self.app.collectionViews["estimate.form"].exists
+            !self.app.buttons["estimate.keyboardDone"].exists && !self.hasVisibleKeyboard()
         }, object: nil)
-        let result = XCTWaiter.wait(for: [dismissed], timeout: 3)
+        let result = XCTWaiter.wait(for: [dismissed], timeout: 5)
         if result != .completed { screenshot("keyboard-after-done") }
         XCTAssertEqual(result, .completed, app.debugDescription)
+        // Focus dismissal relays out the native Form. Verify its return separately
+        // so slow accessibility snapshots cannot consume the dismissal allowance.
+        XCTAssertTrue(app.collectionViews["estimate.form"].waitForExistence(timeout: 5))
     }
 
     /// Native keyboard windows may remain in the hierarchy below the screen after dismissal.
@@ -108,22 +106,12 @@ final class MortgageUITests: XCTestCase {
         app.keyboards.allElementsBoundByIndex.contains(where: isOnscreen) || hasVisibleNumericPreview()
     }
 
-    /// Exclude the editor's larger backdrop from the numeric popup's outside-tap region.
-    private func numericPopupDismissalRegion(requireHittable: Bool = true) -> XCUIElement? {
-        let screen = app.frame
-        return app.otherElements.matching(identifier: "PopoverDismissRegion")
-            .allElementsBoundByIndex.last {
-                let frame = $0.frame
-                return !frame.isEmpty && screen.contains(frame) && (!requireHittable || $0.isHittable)
-            }
-    }
-
     /// Touch the visible control's screen bounds without using its activation point.
-    private func tapScreenCenter(_ element: XCUIElement) {
+    private func tapScreenCenter(_ element: XCUIElement, requireHittable: Bool = true) {
         let screen = app.frame
         var targetFrame: CGRect?
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard element.exists, element.isHittable else { return false }
+            guard element.exists, !requireHittable || element.isHittable else { return false }
             // Capture one frame per poll and reuse it for the touch. Resolving the
             // same button repeatedly adds native snapshot work without testing activation.
             let frame = element.frame
@@ -137,8 +125,24 @@ final class MortgageUITests: XCTestCase {
         }
         XCTAssertEqual(result, .completed, app.debugDescription)
         guard result == .completed, let frame = targetFrame else { return }
-        app.coordinate(withNormalizedOffset: .zero)
-            .withOffset(CGVector(dx: frame.midX - screen.minX, dy: frame.midY - screen.minY)).tap()
+        if element.identifier == "estimate.keyboardDone" {
+            screenshot("focused-input-before-done")
+            print("Done screen bounds: \(frame)")
+        }
+        // Resolve physical screen touches through the existing system root when
+        // its geometry matches the app. It stays in the background; no activation
+        // or app action injection is used. Different root bounds keep the app root.
+        let system = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let systemFrame = system.frame
+        let anchor = systemFrame == screen ? system : app!
+        let anchorFrame = systemFrame == screen ? systemFrame : screen
+        let target = anchor.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: frame.midX - anchorFrame.minX, dy: frame.midY - anchorFrame.minY))
+        let point = target.screenPoint
+        XCTAssertEqual(point.x, frame.midX, accuracy: 0.5)
+        XCTAssertEqual(point.y, frame.midY, accuracy: 0.5)
+        target.tap()
+        XCTAssertEqual(app.state, .runningForeground)
     }
 
     private func replace(_ field: XCUIElement, with value: String) {
@@ -294,13 +298,13 @@ final class MortgageUITests: XCTestCase {
         name.tap()
         name.typeText("Zinnia Cash Purchase")
         replace(app.textFields["estimate.property"], with: "250000")
-        dismissKeyboard()
+        dismissKeyboard(numericInput: true)
         XCTAssertEqual(app.textFields["estimate.property"].value as? String, "250000")
         app.buttons["estimate.downpaymentUnit"].tap()
         app.buttons["%"].tap()
         XCTAssertEqual(app.textFields["estimate.downpayment"].value as? String, "40")
         replace(app.textFields["estimate.downpayment"], with: "100")
-        dismissKeyboard()
+        dismissKeyboard(numericInput: true)
         XCTAssertEqual(app.textFields["estimate.downpayment"].value as? String, "100")
         let taxUnit = app.buttons["estimate.taxUnit"]
         scrollEditorTo(taxUnit)
@@ -376,11 +380,17 @@ final class MortgageUITests: XCTestCase {
         let property = app.textFields["estimate.property"]
         property.tap()
         screenshot("numeric-focused-input")
-        dismissKeyboard()
+        dismissKeyboard(numericInput: true)
         XCTAssertEqual(property.value as? String, "500000")
         tapScreenCenter(app.buttons["estimate.cancel"])
         let closed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: property)
         XCTAssertEqual(XCTWaiter.wait(for: [closed], timeout: 5), .completed)
+        let schedule = app.buttons["amortization"]
+        for _ in 0..<4 where !schedule.isHittable { app.swipeUp() }
+        XCTAssertTrue(schedule.isHittable)
+        schedule.tap()
+        XCTAssertTrue(app.navigationBars["Amortization"].waitForExistence(timeout: 5))
+        try accessibilityAudit()
     }
 
     func testPeriodsAboutAndShareSheet() throws {
@@ -492,7 +502,7 @@ final class MortgageUITests: XCTestCase {
         let regularProperty = app.textFields["estimate.property"]
         regularProperty.tap()
         screenshot("dark-normal-focused-input")
-        dismissKeyboard()
+        dismissKeyboard(numericInput: true)
         XCTAssertEqual(regularProperty.value as? String, "500000")
         app.terminate()
         app.launchEnvironment["EMM_TEST_STORE"] = UUID().uuidString
@@ -510,6 +520,22 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(heading.isHittable)
         XCTAssertLessThanOrEqual(heading.frame.maxY, app.windows.firstMatch.frame.maxY)
         screenshot("dark-large-text-costs")
+        let schedule = app.buttons["amortization"]
+        for _ in 0..<8 where !schedule.isHittable { app.swipeUp() }
+        XCTAssertTrue(schedule.isHittable)
+        schedule.tap()
+        XCTAssertTrue(app.navigationBars["Amortization"].waitForExistence(timeout: 5))
+        screenshot("dark-large-text-amortization")
+        try accessibilityAudit(for: [.textClipped, .hitRegion])
+        let monthlyPeriod = app.buttons["Monthly"]
+        for _ in 0..<4 where !monthlyPeriod.isHittable { app.swipeUp() }
+        XCTAssertTrue(monthlyPeriod.isHittable)
+        monthlyPeriod.tap()
+        let firstMonth = app.staticTexts["Month 1"]
+        for _ in 0..<4 where !firstMonth.exists { app.swipeUp() }
+        XCTAssertTrue(firstMonth.waitForExistence(timeout: 5))
+        screenshot("dark-large-text-monthly-amortization")
+        app.navigationBars["Amortization"].buttons.firstMatch.tap()
         app.buttons["editEstimate"].tap()
         screenshot("dark-large-text-editor")
         try accessibilityAudit()
@@ -520,7 +546,7 @@ final class MortgageUITests: XCTestCase {
         let done = app.buttons["estimate.keyboardDone"]
         XCTAssertGreaterThanOrEqual(done.frame.width, 44)
         XCTAssertGreaterThanOrEqual(done.frame.height, 44)
-        dismissKeyboard()
+        dismissKeyboard(numericInput: true)
         XCTAssertEqual(property.value as? String, "450000")
         let downpayment = app.textFields["estimate.downpayment"]
         scrollEditorTo(downpayment)
@@ -559,7 +585,6 @@ final class MortgageUITests: XCTestCase {
         schedule.tap()
         XCTAssertTrue(app.navigationBars["Amortization"].waitForExistence(timeout: 3))
         screenshot("amortization")
-        try accessibilityAudit()
         app.buttons["Monthly"].tap()
         XCTAssertTrue(app.staticTexts["Month 1"].exists)
         screenshot("monthly-amortization")

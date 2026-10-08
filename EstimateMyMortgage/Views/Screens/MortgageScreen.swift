@@ -142,6 +142,8 @@ struct AmountRow: View {
 private struct AmortizationView: View {
     let calculation: MortgageCalculation
     @State private var monthly = false
+    // Axis text grows with Dynamic Type; its plot needs the same layout budget.
+    @ScaledMetric(relativeTo: .caption) private var chartHeight: CGFloat = 220
 
     var body: some View {
         List {
@@ -163,12 +165,13 @@ private struct AmortizationView: View {
                     AxisMarks {
                         AxisGridLine()
                         AxisTick()
-                        AxisValueLabel().foregroundStyle(Color.primary)
+                        AxisValueLabel(format: FloatingPointFormatStyle<Double>.number.notation(.compactName))
+                            .foregroundStyle(Color.primary)
                     }
                 }
                 .chartXAxisLabel { Text("Loan year").foregroundStyle(Color.primary) }
                 .chartYAxisLabel { Text("USD").foregroundStyle(Color.primary) }
-                .frame(height: 220)
+                .frame(height: chartHeight)
                 .accessibilityLabel("Loan balance decreases from \(calculation.principalValue.formatted(.currency(code: "USD"))) to zero over \(calculation.annualSchedule.count) years. Exact amounts follow below.")
             }
             Section {
