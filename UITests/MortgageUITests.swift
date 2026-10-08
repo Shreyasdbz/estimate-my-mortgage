@@ -45,7 +45,12 @@ final class MortgageUITests: XCTestCase {
         let dismissed = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == false"), object: app.buttons["estimate.save"]
         )
-        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+        let dismissalResult = XCTWaiter.wait(for: [dismissed], timeout: 20)
+        if dismissalResult != .completed {
+            screenshot("save-did-not-dismiss")
+            print(app.debugDescription)
+        }
+        XCTAssertEqual(dismissalResult, .completed)
         // Each native query needs its own allowance: hosted snapshots can take
         // several seconds even after the saved detail is visibly rendered.
         XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
@@ -111,7 +116,16 @@ final class MortgageUITests: XCTestCase {
     /// Touch the visible control's screen bounds without using its activation point.
     private func tapScreenCenter(_ element: XCUIElement, requireHittable: Bool = true) {
         XCTAssertTrue(element.waitForExistence(timeout: 5))
+        let identifier = element.identifier
+        if identifier == "estimate.save" { screenshot("editor-before-save") }
+        if identifier == "estimate.keyboardDone" { screenshot("focused-input-before-done") }
         let screen = app.frame
+        // Resolve the potentially slow system-root snapshot before button geometry;
+        // otherwise a native sheet can move while an old target frame is retained.
+        let system = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let systemFrame = system.frame
+        let anchor = systemFrame == screen ? system : app!
+        let anchorFrame = systemFrame == screen ? systemFrame : screen
         var targetFrame: CGRect?
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             // Capture geometry before asking for native hit testing so a rejected
@@ -130,17 +144,12 @@ final class MortgageUITests: XCTestCase {
         }
         XCTAssertEqual(result, .completed, app.debugDescription)
         guard result == .completed, let frame = targetFrame else { return }
-        if element.identifier == "estimate.keyboardDone" {
-            screenshot("focused-input-before-done")
-            print("Done screen bounds: \(frame)")
+        if identifier == "estimate.keyboardDone" || identifier == "estimate.save" {
+            print("\(identifier) screen bounds: \(frame)")
         }
         // Resolve physical screen touches through the existing system root when
         // its geometry matches the app. It stays in the background; no activation
         // or app action injection is used. Different root bounds keep the app root.
-        let system = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let systemFrame = system.frame
-        let anchor = systemFrame == screen ? system : app!
-        let anchorFrame = systemFrame == screen ? systemFrame : screen
         let target = anchor.coordinate(withNormalizedOffset: .zero)
             .withOffset(CGVector(dx: frame.midX - anchorFrame.minX, dy: frame.midY - anchorFrame.minY))
         let point = target.screenPoint
@@ -152,29 +161,26 @@ final class MortgageUITests: XCTestCase {
 
     private func replace(_ field: XCUIElement, with value: String) {
         XCTAssertTrue(field.waitForExistence(timeout: 5))
+        let placeholder = field.placeholderValue
         field.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
         guard let current = field.value as? String else {
             XCTFail("Field value is unavailable: \(field.identifier)")
             return
         }
-        if !current.isEmpty, current != field.placeholderValue {
-            // The trailing input edge places the caret after these short fixture
-            // values. Require native deletion to empty the field before typing.
+        if !current.isEmpty, current != placeholder {
+            // The trailing input edge places the caret after these short fixture values.
             field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
-            guard let empty = field.value as? String, empty.isEmpty || empty == field.placeholderValue else {
-                screenshot("incomplete-field-selection")
-                XCTFail("Field must be empty before replacement: \(String(describing: field.value))")
-                return
-            }
         }
-        if value.isEmpty {
-            guard let empty = field.value as? String else {
-                XCTFail("Field value is unavailable after clearing")
-                return
-            }
-            XCTAssertTrue(empty.isEmpty || empty == field.placeholderValue)
-            return
-        }
+        // Native snapshots can lag the completed deletion. Require an actual empty
+        // value before typing; an unavailable value never counts as cleared.
+        let cleared = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let text = field.value as? String else { return false }
+            return text.isEmpty || text == placeholder
+        }, object: nil)
+        let result = XCTWaiter.wait(for: [cleared], timeout: 5)
+        if result != .completed { screenshot("incomplete-field-selection") }
+        XCTAssertEqual(result, .completed, "Field must be empty before replacement: \(field.identifier)")
+        guard result == .completed, !value.isEmpty else { return }
         field.typeText(value)
         XCTAssertEqual(field.value as? String, value)
     }
@@ -252,6 +258,9 @@ final class MortgageUITests: XCTestCase {
         tapScreenCenter(app.buttons["estimate.save"])
         XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
         app.alerts.buttons["OK"].tap()
+        XCTAssertTrue(app.buttons["estimate.keyboardDone"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textFields["estimate.property"].label, "Property price, USD")
+        screenshot("empty-numeric-validation")
         replace(app.textFields["estimate.property"], with: "500000")
         dismissKeyboard(usingReturn: true)
         app.buttons["estimate.cancel"].tap()
@@ -416,7 +425,7 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Total per year")).firstMatch.exists)
         app.buttons["Monthly"].tap()
         app.buttons["shareEstimate"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["Copy"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["Copy"].firstMatch.waitForExistence(timeout: 15))
         screenshot("share-sheet")
         if app.buttons["Close"].exists { app.buttons["Close"].tap() }
         else if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }

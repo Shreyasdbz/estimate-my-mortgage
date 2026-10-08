@@ -163,7 +163,7 @@ struct CreateMortgageView: View {
             Text("\(title) (\(unit))")
                 .font(.subheadline)
                 .foregroundStyle(Color.primary)
-            TextField(title, text: text)
+            TextField("", text: text)
                 .frame(minHeight: 44)
                 .keyboardType(keyboard)
                 .submitLabel(.done)
