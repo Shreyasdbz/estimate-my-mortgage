@@ -42,13 +42,15 @@ final class MortgageUITests: XCTestCase {
 
     /// Check the fresh editor and expected result rather than a cached input query.
     private func waitForSavedResult(_ name: String) {
-        let saved = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            !self.app.buttons["estimate.save"].exists &&
-            self.app.buttons["editEstimate"].exists &&
-            self.app.navigationBars[name].exists &&
-            self.app.staticTexts["monthlyTotal"].exists
-        }, object: nil)
-        XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 5), .completed, app.debugDescription)
+        let dismissed = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"), object: app.buttons["estimate.save"]
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+        // Each native query needs its own allowance: hosted snapshots can take
+        // several seconds even after the saved detail is visibly rendered.
+        XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars[name].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["monthlyTotal"].waitForExistence(timeout: 5))
     }
 
     private func dismissKeyboard(usingReturn: Bool = false, numericInput: Bool = false) {
@@ -108,17 +110,20 @@ final class MortgageUITests: XCTestCase {
 
     /// Touch the visible control's screen bounds without using its activation point.
     private func tapScreenCenter(_ element: XCUIElement, requireHittable: Bool = true) {
+        XCTAssertTrue(element.waitForExistence(timeout: 5))
         let screen = app.frame
         var targetFrame: CGRect?
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard element.exists, !requireHittable || element.isHittable else { return false }
-            // Capture one frame per poll and reuse it for the touch. Resolving the
-            // same button repeatedly adds native snapshot work without testing activation.
+            // Capture geometry before asking for native hit testing so a rejected
+            // control has useful bounds in its failure evidence.
             let frame = element.frame
             targetFrame = frame
-            return !frame.isEmpty && screen.contains(frame)
+            return !frame.isEmpty && screen.contains(frame) &&
+                (!requireHittable || element.isHittable)
         }, object: nil)
-        let result = XCTWaiter.wait(for: [ready], timeout: 5)
+        // Hosted traces contain 13-second frame lookups and transient zero frames.
+        // Keep this bounded, independently of the existence and action checks.
+        let result = XCTWaiter.wait(for: [ready], timeout: 20)
         if result != .completed {
             print("Unavailable control \(element.identifier): bounds \(String(describing: targetFrame)), app bounds \(screen)")
             screenshot("control-unavailable-" + element.identifier)
@@ -382,9 +387,20 @@ final class MortgageUITests: XCTestCase {
         screenshot("numeric-focused-input")
         dismissKeyboard(numericInput: true)
         XCTAssertEqual(property.value as? String, "500000")
-        tapScreenCenter(app.buttons["estimate.cancel"])
-        let closed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: property)
-        XCTAssertEqual(XCTWaiter.wait(for: [closed], timeout: 5), .completed)
+        // The hosted audit capture shows this native button unobscured while its
+        // hittability lookup stalls. Test its real screen target and outcome.
+        tapScreenCenter(app.buttons["estimate.cancel"], requireHittable: false)
+        for identifier in ["estimate.cancel", "estimate.form"] {
+            let closed = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "exists == false"),
+                object: app.descendants(matching: .any)[identifier].firstMatch
+            )
+            XCTAssertEqual(XCTWaiter.wait(for: [closed], timeout: 5), .completed)
+        }
+        XCTAssertTrue(app.navigationBars["Accessible Home"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
+        // Cancel preserves the detail's scroll position; its top payment row may
+        // be outside the native List hierarchy. Exercise the visible schedule next.
         let schedule = app.buttons["amortization"]
         for _ in 0..<4 where !schedule.isHittable { app.swipeUp() }
         XCTAssertTrue(schedule.isHittable)
