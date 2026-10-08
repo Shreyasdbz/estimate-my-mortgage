@@ -1,6 +1,6 @@
 # Estimate My Mortgage
 
-A native iPhone and iPad app for saving and comparing fixed-rate mortgage estimates in US dollars. Version 2.0 uses SwiftUI forms, system navigation, SF Symbols, semantic colors and Dynamic Type. Building with the iOS 27 SDK adopts the current system appearance; iOS 17 and later remain supported.
+A native iPhone and iPad app for saving and comparing fixed-rate mortgage estimates in US dollars. Version 2.0 uses SwiftUI forms, system navigation, SF Symbols, semantic colors and Dynamic Type. Building with the iOS 27 SDK adopts the current system appearance. The deployment target remains iOS 17; verified runtime coverage is recorded in the delivery report.
 
 The app supports creating, editing, duplicating, deleting, searching, sorting, comparing and sharing estimates. Saving from the list opens the calculated result. Detail views include monthly and yearly ownership costs, cash at closing, loan totals, an amortization chart and monthly/yearly schedules. Optional Apple Maps address search and property maps have manual-entry and failure states.
 

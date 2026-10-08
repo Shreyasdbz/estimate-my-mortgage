@@ -1,0 +1,744 @@
+{
+  "toolchain": "Xcode 27.0 (27A266a)",
+  "runtime": "iOS 27.0 (24A434)",
+  "reviewedAppRevision": "6b8f9163d72b15ed562d65475ee29b0756d0a307",
+  "assetCount": 64,
+  "notes": [
+    "All updated screenshots and recordings use synthetic estimates or a public Apple Park address.",
+    "Individual source cases passed; some source bundles contain unrelated failed cases.",
+    "The two largest-text iPad detail and costs captures show the same cost-breakdown frame.",
+    "Bundle basenames identify local evidence; full result bundles and private provenance are not committed.",
+    "Walkthroughs run at ordinary speed with boundary-only trims, end after Cancel returns to details, and exclude the final Home Screen transition. Every frame decoded successfully; visual review sampled interaction boundaries.",
+    "Empty numeric validation captures retain the current blank placeholder and inline error. The native iPad floating keypad partly covers the price label."
+  ],
+  "assets": [
+    {
+      "file": "before.png",
+      "sha256": "a55b6c003a762bea4eecd280528559bd12314fa61cacabd071d83dcfd9b9d776",
+      "source": "Original blank repository capture; retained without modification.",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "ipad-about-privacy.png",
+      "sha256": "51168f61adbf0153230d8954b52d7a8a597b858bd6875da0cd4bd5a0bfa50bab",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testPeriodsAboutAndShareSheet()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-address-results.png",
+      "sha256": "d992d37707d02eadf6cf0a837788e54906dce8ab2f9d08e9bbc27416f3e475e0",
+      "sourceBundle": "emm-current-live-ipad.xcresult",
+      "test": "MortgageUITests/testLiveAppleMapsLookupAndHandoff()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-address-search.png",
+      "sha256": "a55396735d24fba441c8788b8c3fb4c4bd3ce74f540609b68b6aec09ab7ad627",
+      "sourceBundle": "emm-popup-barrier-ipad.xcresult",
+      "test": "MortgageUITests/testManualAddressAndSearchCancellation()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-all-cash-details.png",
+      "sha256": "395170e4faa08970561cf3f04866282b717228c0d2be577537281023e6695b54",
+      "sourceBundle": "emm-popup-barrier-ipad.xcresult",
+      "test": "MortgageUITests/testNativeUnitsAndSorting()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-amortization.png",
+      "sha256": "1f58a7e3fa051a89b9fda279f2589d491de0bc521003c97e22fe5c75aceca62e",
+      "sourceBundle": "emm-scaled-native-chart-ipad.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-comparison-all-cash.png",
+      "sha256": "408b3a60ded9297b08e75dc0847a5559e7f77c512f4ce79b9a25c2d056a49a02",
+      "sourceBundle": "emm-popup-barrier-ipad.xcresult",
+      "test": "MortgageUITests/testNativeUnitsAndSorting()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-comparison-loan-terms.png",
+      "sha256": "2fc7f3a2a997185a5d239a39b4f369ff8fe6270834bb53b4181119de00477f17",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testSearchAndComparison()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-comparison.png",
+      "sha256": "712cf6d31b071c310e5100765de3b5c9146368dbc3b62ee662f89fd5a15e66b2",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testSearchAndComparison()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-dark-large-text-amortization.png",
+      "sha256": "e3aabc280f7d083abb6e642571d6d78d4fd78920d368874c7f6feb5c6bc13166",
+      "sourceBundle": "emm-scaled-native-chart-ipad.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-dark-large-text-costs.png",
+      "sha256": "7f0e18a8711c7c03c2f021629a56231df9eca364cbefc3742c14c74454035838",
+      "sourceBundle": "emm-popup-barrier-ipad.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-dark-large-text-details.png",
+      "sha256": "7f0e18a8711c7c03c2f021629a56231df9eca364cbefc3742c14c74454035838",
+      "sourceBundle": "emm-popup-barrier-ipad.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-dark-large-text-editor.png",
+      "sha256": "1afee4d89d1e98f3dadddb99376c002d8633bd8489d95588922283425ca16627",
+      "sourceBundle": "emm-sibling-done-ipad.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-dark-large-text-focused-input.png",
+      "sha256": "f853a5060fb8d386d5aa8bee7c49aef086accb30029ea257622f69883457d51a",
+      "sourceBundle": "emm-sibling-done-ipad.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-dark-large-text-monthly-amortization.png",
+      "sha256": "a70a37e217d0ca7482d06758751a72df394accd89508384172220681069a415f",
+      "sourceBundle": "emm-scaled-native-chart-ipad.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-dark-normal-focused-input.png",
+      "sha256": "979aa81fd2200ae8578e9c19aeffd61db79510c5f4ce32ae10783c06dc61a059",
+      "sourceBundle": "emm-sibling-done-ipad.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-empty-numeric-validation.png",
+      "sha256": "2c955831a11757236dbed9091c9e4fc89f0394316fa4e61f7cb85c10f04ad19e",
+      "sourceBundle": "emm-final-native-readiness-ipad.xcresult",
+      "test": "MortgageUITests/testValidationPreventsDismissalAndKeepsInvalidInput()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-empty-state.png",
+      "sha256": "ce1e23cb6951ab982399938cb5920c0b5cf8ddb1edc57b1cf835ed41be7e52a0",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-estimates.png",
+      "sha256": "0abe709be85e688af3e0dedfc8d2a4f410f0bb8c0261cdf8a8bdadeee0592454",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-home-screen-icon.png",
+      "sha256": "2061b5447fb65c52ce46625519f452ea35a1258b44d26b349242385241aea1ab",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-journey.mp4",
+      "sha256": "2b5e0fbdc9df5ef47da6aa2c096474021ad5db85f553b0455285a4456e9de53a",
+      "sourceBundle": "emm-final-isolated-ipad.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "testDurationSeconds": 47.0525119304657,
+      "durationSeconds": 41,
+      "dimensions": [
+        960,
+        1280
+      ],
+      "trim": {
+        "startSeconds": 3.8,
+        "endSeconds": 44.8,
+        "internalCuts": false,
+        "speedMultiplier": 1,
+        "excludesFinalHomeScreen": true
+      },
+      "decodedFrameCount": 797,
+      "rawDecodedFrameCount": 1023,
+      "decodeErrors": 0,
+      "review": "Every frame decoded; visual inspection sampled interaction and trim boundaries. No continuous-playback or every-feature claim."
+    },
+    {
+      "file": "ipad-landscape-details.png",
+      "sha256": "cdd65e4b84c1ec4fea1e095a9125cc88dd2e3ef70755382e86f4c920383bb5e4",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testLandscapeLayout()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-monthly-amortization.png",
+      "sha256": "9fd9c392f02e4dc6bc58f1b586facd7768ba874c48531fe7e24cf4736a054234",
+      "sourceBundle": "emm-scaled-native-chart-ipad.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-native-editor.png",
+      "sha256": "46211ed49dfb048f43ec68e23307add248caedaa50ca195c4b657b45bca96011",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-native-units.png",
+      "sha256": "d312f19c258616024dea5ae02c6ff85e696cb259a3c1a2f2196b957da9769160",
+      "sourceBundle": "emm-popup-barrier-ipad.xcresult",
+      "test": "MortgageUITests/testNativeUnitsAndSorting()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-numeric-focused-input.png",
+      "sha256": "0ff915da1a3b06b021c0813aa7c5bff3ca386d2938b23cdc9bbaa097fc365c2b",
+      "sourceBundle": "emm-popup-barrier-ipad.xcresult",
+      "test": "MortgageUITests/testAccessibilityAudit()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-payment-details.png",
+      "sha256": "25c25d46296b5e07b1f5cb804df815447b6e2ac5f6b967f21475cb3c5161ac95",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-property-map.png",
+      "sha256": "d27817d10727530c764e2b1a0de06dfc37690c26e5a5bca235a94d1505d32bd2",
+      "sourceBundle": "emm-current-live-ipad.xcresult",
+      "test": "MortgageUITests/testLiveAppleMapsLookupAndHandoff()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-purchase-and-loan.png",
+      "sha256": "083f91836dd62cf2186a1d0b3464c9afe28aa0d9ea96a6f80f49f26f0e90ba82",
+      "sourceBundle": "emm-popup-barrier-ipad.xcresult",
+      "test": "MortgageUITests/testAccessibilityAudit()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-selection.png",
+      "sha256": "59a4af2ec509b752a6a730df0cd79ab76a5bd7bd4addcb965975a8fa633696a9",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testIPadSelectionResetsOpenSchedule()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-share-sheet.png",
+      "sha256": "035cadfce7aa0eb41cdd176bf0860d3f111aa17b5083172311aacbfa06bf635b",
+      "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
+      "test": "MortgageUITests/testPeriodsAboutAndShareSheet()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-verified-native-toolbar-contrast-dark.png",
+      "sha256": "047883135a74dbe0ceca7cd607c55efb9be17acf17c5f5aefe53aba58298d2c0",
+      "sourceBundle": "emm-popup-barrier-ipad.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "ipad-verified-native-toolbar-contrast-light.png",
+      "sha256": "f15fe87d6088fa134657f4d01139e7654c74e32bfbe01717c8b3ffe9deaf67e4",
+      "sourceBundle": "emm-popup-barrier-ipad.xcresult",
+      "test": "MortgageUITests/testAccessibilityAudit()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ]
+    },
+    {
+      "file": "iphone-about-privacy.png",
+      "sha256": "1fc9e3883385a0f0b34145af5dc7ff3439020723956bf19274ccaecbe72be39c",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testPeriodsAboutAndShareSheet()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-address-results.png",
+      "sha256": "ba4ca018196e033c30fc39b9a8ac244614743fa93f9a1052daa9ef6ba1fcc473",
+      "sourceBundle": "emm-delivery-current-maps-phone.xcresult",
+      "test": "MortgageUITests/testLiveAppleMapsLookupAndHandoff()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-address-search.png",
+      "sha256": "3aa73c82e6bc5a64cd5f96b7379f59f17784b5026a268b92a35dc73404c5811f",
+      "sourceBundle": "emm-delivery-screen-touch-phone.xcresult",
+      "test": "MortgageUITests/testManualAddressAndSearchCancellation()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-all-cash-details.png",
+      "sha256": "fc37655a88336565db2cfacb32df885d29c3e86051520ccfef7bd24f2f5b8266",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testNativeUnitsAndSorting()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-amortization.png",
+      "sha256": "6ccb9833c6404c05342aa9a100dfdcb9d0ba34fdb43fbbfe188abe8cd3d93f6b",
+      "sourceBundle": "emm-scaled-native-chart-phone.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-comparison-all-cash.png",
+      "sha256": "60cfbdd1273bfc93eaab3b5b77cb0c7b79aec60cc313ba56f1d3e75ae498dab6",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testNativeUnitsAndSorting()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-comparison-loan-terms.png",
+      "sha256": "42c0f77bd6db4a95ccdab357a5504b371090a3939a78f7ca0d333e4ca8ae3a5b",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testSearchAndComparison()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-comparison.png",
+      "sha256": "22131ec73734b6614d4adb31360c30f6fed52c46e3533ea2b71e5046cdf70a0d",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testSearchAndComparison()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-dark-large-text-amortization.png",
+      "sha256": "2c9b6454b75cc88d44f00521e566dcbe124f3429a378f5d921d454f565154531",
+      "sourceBundle": "emm-scaled-native-chart-phone.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-dark-large-text-costs.png",
+      "sha256": "6f60b2119bcec25b47a068b0159d4736fb1e688583fd15496edff49ee2aa4ec9",
+      "sourceBundle": "emm-delivery-screen-touch-phone.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-dark-large-text-details.png",
+      "sha256": "293db4a9acaa761da00321015a331d88a6b2da52523ba02a6593b6605ce55ae8",
+      "sourceBundle": "emm-delivery-screen-touch-phone.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-dark-large-text-editor.png",
+      "sha256": "0a19508a6951d099bfb1754b6eb1ac8dfc04ef44b09e465d30097afe4a4ead8b",
+      "sourceBundle": "emm-sibling-done-phone.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-dark-large-text-focused-input.png",
+      "sha256": "00b430d9fbd0718d5e1ecce05bc9d737af606c78f2666def620cee976498769e",
+      "sourceBundle": "emm-sibling-done-phone.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-dark-large-text-monthly-amortization.png",
+      "sha256": "c8c027fc802946ad6178fcce8fd568c0e1ffd528bb31a1b9c7e5390ccd46bf88",
+      "sourceBundle": "emm-scaled-native-chart-phone.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-dark-normal-focused-input.png",
+      "sha256": "522ee4e7381fba6b907d608f0846f1acc64f6a0ac64d6065975b5892b94b12e4",
+      "sourceBundle": "emm-sibling-done-phone.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-empty-numeric-validation.png",
+      "sha256": "4d6d1f4bcef0a564b33573c759d5391019fe6dc8f7c27243f23ec6756cbcfa3e",
+      "sourceBundle": "emm-final-native-readiness-phone.xcresult",
+      "test": "MortgageUITests/testValidationPreventsDismissalAndKeepsInvalidInput()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-empty-state.png",
+      "sha256": "96807c77d7c9ded7d3a59a03df32a53ed5add6feb88ec2c2701a9d1c4bf39695",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-estimates.png",
+      "sha256": "35f1a68febdbacd330a4acd75e332b0db4e2a90e0eff66440a4e1bd7306f8154",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-home-screen-icon.png",
+      "sha256": "f5451b91b9af1bcacd856d21e6ab417630da503bb7cc2e0fe515e7183996dd7c",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-journey.mp4",
+      "sha256": "e24d636a6939a66f9a9601fc7cfae63ff2b3c504c7d0a91af47722174c4fa93e",
+      "sourceBundle": "emm-final-address-and-media-phone.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "testDurationSeconds": 46.6329699754715,
+      "durationSeconds": 40.1,
+      "dimensions": [
+        588,
+        1280
+      ],
+      "trim": {
+        "startSeconds": 4.5,
+        "endSeconds": 44.6,
+        "internalCuts": false,
+        "speedMultiplier": 1,
+        "excludesFinalHomeScreen": true
+      },
+      "decodedFrameCount": 1312,
+      "rawDecodedFrameCount": 1465,
+      "decodeErrors": 0,
+      "review": "Every frame decoded; visual inspection sampled interaction and trim boundaries. No continuous-playback or every-feature claim."
+    },
+    {
+      "file": "iphone-landscape-details.png",
+      "sha256": "119818c1af29cd0ad482663a4679d0444a7fe279c0a7d0551fd7d44806b28bc0",
+      "sourceBundle": "emm-delivery-screen-touch-phone.xcresult",
+      "test": "MortgageUITests/testLandscapeLayout()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-monthly-amortization.png",
+      "sha256": "fe969049effbfe26c8b748fe6799b10ee057985b9dacc9d82631374d77f287d0",
+      "sourceBundle": "emm-scaled-native-chart-phone.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-native-editor.png",
+      "sha256": "abb2e36a14bb1b1016aba4ec4353f07d3f0a0bcb65fd800a76271c407f630b99",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-native-units.png",
+      "sha256": "2091914278637c68dcdbb50fe4f082240b56c0a5f479e795247d6f6eaa71533a",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testNativeUnitsAndSorting()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-numeric-focused-input.png",
+      "sha256": "39357f035cda776c07680ef89f492ba7014a17ef3ddd4d41c76b08cd1de2c729",
+      "sourceBundle": "emm-delivery-screen-touch-phone.xcresult",
+      "test": "MortgageUITests/testAccessibilityAudit()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-payment-details.png",
+      "sha256": "32c4a62927152806924f8ac85cdd4dbeec78d6383c6d7a47301756b45c0c0b89",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testScreenshotsNativeFlows()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-property-map.png",
+      "sha256": "42e02ac571e211fcf21ab97a80ff453fb6e05a11b09461eedc60d3d78739bbb7",
+      "sourceBundle": "emm-delivery-current-maps-phone.xcresult",
+      "test": "MortgageUITests/testLiveAppleMapsLookupAndHandoff()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-purchase-and-loan.png",
+      "sha256": "fb0c748ad42875218e8356e8e5c6643f84754eadb152aa348d7f66027144fb79",
+      "sourceBundle": "emm-delivery-screen-touch-phone.xcresult",
+      "test": "MortgageUITests/testAccessibilityAudit()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-share-sheet.png",
+      "sha256": "3d8591b1cabc8743a17200e0ceaf9507d529fbd9b9287509161a39494a5d49b0",
+      "sourceBundle": "emm-native-region-phone.xcresult",
+      "test": "MortgageUITests/testPeriodsAboutAndShareSheet()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-verified-native-toolbar-contrast-dark.png",
+      "sha256": "1a5773d3b3840b3f9b73d95d3532f368c54817325ac35fa4a8107cbbb34a208a",
+      "sourceBundle": "emm-delivery-screen-touch-phone.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "iphone-verified-native-toolbar-contrast-light.png",
+      "sha256": "15f8d6ac997ea1b16732901abfb4097fa4b10f6173c60cb03e12fd07396bd0a1",
+      "sourceBundle": "emm-delivery-screen-touch-phone.xcresult",
+      "test": "MortgageUITests/testAccessibilityAudit()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ]
+    }
+  ]
+}

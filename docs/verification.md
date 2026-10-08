@@ -1,6 +1,6 @@
 # Version 2.0 verification — 8 October 2026
 
-The app is rebuilt with Xcode 27.0 (27A266a), Swift 6 and the iOS 27 SDK. It retains the existing bundle identifier, Core Data entity and attributes, SQLite filename and annual expense units. The deployment target is iOS 17. The app icon uses a simplified original house motif with native asset-catalog Default, Dark and Tinted variants.
+The app is rebuilt with Xcode 27.0 (27A266a), Swift 6 and the iOS 27 SDK. It retains the existing bundle identifier, Core Data entity and attributes, default SQLite path and annual expense units. The schema contents are unchanged from pre-modernization revision `20180ee`. The deployment target is iOS 17. The app icon uses a simplified original house motif with native asset-catalog Default, Dark and Tinted variants.
 
 ## Design and engineering audit
 
@@ -15,7 +15,7 @@ Separate agents reviewed calculation, persistence and UI behavior from engineeri
 | Address entry and search | One full-address field composes legacy components without mutating them until editing. Native Apple Maps search has short-query guidance, loading/error states and canceled debounce/resolution requests. |
 | Detail and ownership costs | Native monthly/yearly control, ownership expenses, closing cash and lifetime loan totals. Semantic primary text contrast and native LabeledContent adapt labels/values to available width and Dynamic Type. |
 | Comparison | Stable object identities and unavailable-record guards; estimates grouped by metric; equal costs identified at displayed currency precision. |
-| Amortization | Native Charts balance plot with primary-color axes and monthly/yearly schedules. Independent conservation, remaining-balance and extreme-rate/term checks. |
+| Amortization | Native Charts balance plot with primary-color axes, compact balance labels and chart height that scales with Dynamic Type. Monthly/yearly schedules and independent conservation, remaining-balance and extreme-rate/term checks. |
 | Map and Maps handoff | Explicit lookup, native map with an 800 m neighborhood starting region, loading/error/retry, native request cancellation and Open in Maps. No fabricated default location. |
 | Sharing | Native system share sheet with a textual estimate summary and stated calculation limits. |
 | About and privacy | Native version, local-storage, Apple Maps, backups and sharing disclosures. Privacy manifest included in the built app. |
@@ -33,33 +33,43 @@ xcodebuild -project EstimateMyMortgage.xcodeproj -scheme EstimateMyMortgage \
   -derivedDataPath /private/tmp/MortgageRelease CODE_SIGNING_ALLOWED=NO build
 ```
 
-The shared scheme runs calculation/persistence and UI targets. Each UI journey launches with a unique disposable on-disk store; the release build ignores this debug-only seam. The tests do not erase the normal user store. Name replacement uses the visible native Select All edit menu, verifies deletion, then asserts the exact replacement value before continuing. Numeric replacement places the caret at the trailing input edge, deletes the existing characters, requires an empty value, then asserts the exact replacement. Validation also checks empty input and hardware Return. Editor scrolling targets the Form inside the sheet, including centered iPad sheets. Test execution is bounded to 300 seconds per case to allow for observed 60-second XCTest animation-notification waits; explicit control-readiness and keyboard-dismissal expectations use five- and three-second timeout allowances; diagnostic collection is disabled after an observed simulator-diagnostics collection hang, while result bundles, failures and requested attachments remain enabled. GitHub Actions has separate iOS 27 iPhone/iPad jobs, waits for simulator boot readiness and retains result bundles for 14 days. Documentation-only pushes skip the simulator workflow; pull requests still run it. Each job allows 35 minutes; individual cases remain bounded to 300 seconds.
+The shared scheme runs calculation/persistence and UI targets. UI journeys use unique disposable on-disk stores; Release ignores the debug-only store seam. Field replacement requires an available empty value within five seconds before typing and asserts the exact replacement. Persistent input labels and accessible names remain when numeric placeholders are empty. Native action checks use fresh screen geometry, keyboard/focus dismissal and editor preservation. Current checks allow 15 seconds for share-sheet Copy and 20 seconds for the Save button to disappear; these are test readiness checks, not changes to saving. Cases are bounded to 300 seconds. Result bundles and requested attachments remain enabled; diagnostic collection is disabled after an observed collection hang. GitHub Actions runs separate iPhone/iPad jobs, waits for simulator boot, retains bundles for 14 days and allows 35 minutes per job. Documentation-only pushes skip the simulator workflow; pull requests still run it.
 
 ## Runtime results and media
 
-The [first hosted run](https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37729584666) did not pass: iPhone numeric replacement appended to the existing value, and iPad exceeded its job budget with an additional landscape contrast report. The numeric driver and simulator readiness changes above address test boundaries. The follow-up workflow verifies the app changes; its current status is available from GitHub Actions. The selected sidebar subtitle already uses primary text and measured 13.76:1 in local captures; the hosted finding remains subject to rerun and capture review.
+The current pushed revision is [`6b8f9163d72b15ed562d65475ee29b0756d0a307`](https://github.com/Shreyasdbz/estimate-my-mortgage/commit/6b8f9163d72b15ed562d65475ee29b0756d0a307). Its [hosted verification run](https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37792134818) remains outstanding.
 
-Completed local suites on iOS 27.0 (24A434):
+The preceding [hosted run](https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37784586318), on `a8fc6ca`, failed: iPhone had 33 passes, one failure and two skips; iPad had 33 passes, two failures and one skip. The phone Copy lookup expired before the control appeared about eight to nine seconds after opening the sheet. The iPad failures involved a five-second Save-absence check and an immediate name-clearing snapshot. The actual Save outcome is unknown because that failure has no video evidence. The current revision includes Maps handoff cleanup, empty numeric placeholders with permanent labels, and bounded native input/readiness checks; the table distinguishes its focused proof from earlier complete runs.
 
-| Device | Result | Local result bundle |
+| Check | Verified result | Evidence basename |
 | --- | --- | --- |
-| iPhone 17 Pro | 34 passed, 2 skips (live Maps and iPad-only), 0 failures | `/private/tmp/emm-final-whole-phone.xcresult` |
-| iPad Pro 13-inch (M5), before touch-menu refinement | 34 passed, 1 live Maps skip, 1 hardware-selection timeout | `/private/tmp/emm-final-whole-ipad.xcresult` |
-| Touch-menu edit/cancel/relaunch and filtered-save journeys, before bottom Done refinement | iPhone: 2 passed; iPad: 2 passed; 0 failures on either device | `/private/tmp/emm-touch-name-phone.xcresult` and `/private/tmp/emm-touch-name-ipad.xcresult` |
-| Final bottom Done, native units/sort, invalid/empty inputs and manual address | iPhone: 4 passed; iPad: 4 passed; 0 failures | `/private/tmp/emm-native-bar-phone.xcresult` and `/private/tmp/emm-native-bar-ipad.xcresult` |
-| Generic iOS device, final bottom Done Release | Build succeeded; signing disabled | `/private/tmp/emm-final-native-bar-release.log` |
+| Final native accessibility and filtered-save regressions | Two cases passed on each device, zero failures. | `emm-final-anchor-phone.xcresult`, `emm-final-anchor-ipad.xcresult` |
+| Current input, sharing and validation regressions | iPhone: five passed. iPad: four passed, one dark/largest-text case exceeded 300 seconds; sharing, filtered save and validation passed after XCTest restarted. | `emm-final-native-readiness-phone.xcresult`, `emm-final-native-readiness-ipad.xcresult` |
+| Maps cleanup, iPhone | Three passed: live Maps, manual address/canceled search and units/sorting. | `emm-shipping-maps-cleanup-phone.xcresult` |
+| Earlier complete local suites | iPhone on `a8fc6ca`: 35 passed, one iPad-only skip. Offline iPad before the empty-input wait correction: 34 passed, one failure, one live-Maps skip. | `emm-shipping-full-phone.xcresult`, `emm-shipping-offline-full-ipad.xcresult` |
+| iOS 26 compatibility subset | 27 passed: all 23 calculation/persistence tests plus create/edit/cancel/delete/relaunch, units/sorting, validation and screenshot journeys. | `emm-final-compatibility-26.xcresult` |
+| Current production Release | Build succeeded; version 2.0, deployment target iOS 17, signing disabled. | `emm-final-blank-field-release.log` |
 
-Each complete suite includes nine calculation tests, 14 persistence/editor tests and 13 UI journeys. The complete iPhone run above predates the bottom Done refinement and is offline; the final focused results include that refinement. An earlier complete iPhone run passed 35 tests with one iPad-only skip in `/private/tmp/emm-acceptance-phone.xcresult`, including actual Apple Maps suggestions, address resolution, a property map and a foreground Maps handoff. A separate iPad live Maps journey passed after reboot in `/private/tmp/emm-ipad-recovery-final.xcresult`, although its older editing tests timed out. Enable this optional integration check with `TEST_RUNNER_EMM_LIVE_MAPS=1 ./scripts/test-ios.sh SIMULATOR_UUID RESULT_PATH`. Offline CI skips this provider-dependent journey. The hosted workflow runs both complete suites; its results and retained artifacts are available from [GitHub Actions](https://github.com/Shreyasdbz/estimate-my-mortgage/actions).
+The scheme contains nine calculation tests, 14 persistence/editor tests and 13 UI journeys. Offline CI skips live Apple Maps; iPhone skips the iPad-only selection journey. Enable live Maps with `TEST_RUNNER_EMM_LIVE_MAPS=1 ./scripts/test-ios.sh SIMULATOR_UUID RESULT_PATH`. Earlier isolated passes and interrupted runs do not establish a green complete suite for the current revision.
 
-UI journeys exercise creation, editing, cancellation, validation, duplicate/delete confirmation, relaunch persistence, search, sort, unit conversion, all-cash estimates, comparison, monthly/yearly costs and schedules, sharing, About/privacy, manual address entry and canceled search. The filtered-save journey keeps search active, uses the list context-menu Edit action, verifies the saved result, then checks the cleared filter and actual list row after returning. The iPad-only journey confirms that switching estimates resets an open schedule. Portrait, landscape, light and dark appearance, and the largest accessibility text category are captured. Contrast, text-clipping and hit-region audits run on regular-text detail/editor, landscape and amortization screens, and the largest-text editor. The largest-text detail uses clipping and hit-region audits plus rendered contrast review: the native contrast auditor inconsistently samples partially offscreen rows and sometimes supplies no element. A recorded Cost breakdown report extended beyond the 874-point iPhone viewport; its visible white-on-black glyphs measured 21:1, and the test scrolls the heading fully into view for a separate capture. Scrolled purchase, comparison and disclosure sections are reviewed from rendered captures rather than passing occluded content to the contrast auditor.
+Long XCTest animation-notification waits were observed before an actual Done callback. Independent source review found no app-owned explanation; an SDK cause has not been established. The current iPad dark-text timeout remains an unresolved execution failure. Production contains no temporary sheet-sizing experiment or OSLog tracing.
 
-The iOS 27.0 auditor reports contrast failures for native glass Cancel/Save controls despite measured rendered contrast: Cancel 19.66:1 in light and 11.18:1 in dark; Save 5.26:1 in light, 6.30:1 on dark iPhone and 6.25:1 on dark iPad. The test exception matches only those exact button identifiers, labels, OS version and verified appearances, retaining captures. Other findings still fail. Final rendered review also found native form values at 3.44:1; explicit primary value text and native labeled menu pickers now measure 21:1 in the retained light captures. Seven iPad large-text clipping reports were resolved by using native LabeledContent instead of manually stacked amount rows; they are not suppressed.
+The largest-text chart now scales its 220-point base height with `@ScaledMetric(relativeTo: .caption)` and uses native compact balance-axis labels. Eight chart PNGs from passed cases are in the gallery and reconciled manifest. Labels do not overlap, and the phone's largest chart scrolls to its bottom and schedule control.
 
-Name replacement uses the visible native Select All edit menu, requires it to be hittable, verifies deletion and asserts the exact replacement. Name input is single-line in regular layouts and wraps at accessibility text sizes in compact layouts. Numeric fields support hardware Return without saving. A conditional bottom Done action uses a native Button with primary text and a minimum 44-point label and touch region; its visibility follows the existing single focus owner. Dismissal checks require both the software keyboard and numeric popover to disappear and preserve the entered value. Vertical Name/address fields use Done to avoid inserting a newline. The comparison journey finishes search through native list navigation before opening its toolbar menu, because the first toolbar tap while search had focus dismissed focus rather than opening the menu.
+The UI suite covers creation, editing, cancel/discard, validation, duplicate/delete, relaunch persistence, filtering and sorting, unit conversion, all-cash estimates, comparison, monthly/yearly costs and schedules, sharing, About/privacy, manual address entry and canceled search. Filtered saves reveal the result and clear search; iPad selection changes reset an open schedule. Captures cover portrait, landscape, light/dark appearance and the largest accessibility text category. These describe the test and capture scope, not a final complete-suite outcome.
 
-Local runs retain unattributed SwiftUI “Invalid frame dimension (negative or non-finite)” warnings, generally at initial editor field focus. Source inspection and isolated toolbar/name-field probes did not identify their cause. Successful interaction runs, layout audits and rendered captures are recorded separately; this diagnostic remains unresolved and is not being attributed to an SDK defect without proof. The unpublished maintenance follow-up is to isolate the warning at editor focus, identify the responsible layout calculation and rerun the editing/accessibility journeys without the diagnostic; no tracker item has been published. These automated audits and screenshots do not establish physical-device performance or a complete assistive-technology certification.
+Contrast, clipping and hit-region audits cover regular detail/editor, landscape and amortization screens, and the largest-text editor. Largest-text detail uses clipping/hit-region checks plus rendered contrast review because the native contrast auditor can sample partially offscreen rows; a visible white-on-black Cost breakdown heading measured 21:1. Selected-sidebar and form-value contrast defects were corrected through native selection foreground and primary value text. Native LabeledContent resolved the iPad amount-row clipping reports without suppressing them.
 
-The [36-second iPhone walkthrough](media/iphone-journey.mp4) and [37-second iPad walkthrough](media/ipad-journey.mp4) record native creation, navigation, payment details and schedules; only setup/idle time is trimmed. Screenshots are exported from the completed local test attachments, using synthetic estimate names and a public Apple Park address.
+The only contrast exception matches native Cancel/Save identifiers and labels on exactly iOS 27.0.0 in verified light/dark appearances. Rendered Cancel contrast measured 19.66:1 in light and 11.18:1 in dark; Save measured 5.26:1 in light and 6.25–6.30:1 in dark. Captures are retained, and other findings still fail. These checks do not certify every assistive-technology interaction or physical-device performance. The current Release build has no source compiler errors; its App Intents metadata-extraction warning is expected because the app has no AppIntents dependency. Earlier unattributed invalid-frame warnings were not reproduced in the final focused checks; no maintenance tracker item has been published.
+
+Both walkthroughs show two synthetic estimates, navigation, payment details, the current yearly/monthly charts and editor cancellation returning to details. They exclude the final Home Screen transition. Only boundary setup/idle time is trimmed, at ordinary speed with no internal cuts. Every raw and exported frame decoded successfully; visual inspection sampled interaction and trim boundaries, without a continuous-playback claim.
+
+| Walkthrough | Delivered size and duration | Raw trim range | Exported frames decoded |
+| --- | --- | --- | --- |
+| [iPhone](media/iphone-journey.mp4) | 588 × 1280; 40.1 seconds | 4.5–44.6 seconds | 1,312 |
+| [iPad](media/ipad-journey.mp4) | 960 × 1280; 41 seconds | 3.8–44.8 seconds | 797 |
+
+The [media manifest](media/manifest.json) reconciles all 64 delivered assets: 62 PNGs and two movies, with no missing or duplicate entries. Delivered hashes and dimensions match retained provenance; all 63 updated assets have a specific Passed test-case node verified in their source result bundles. The original blank repository image retains its original attribution. Screenshots use synthetic estimates or a public Apple Park address, and some source bundles contain unrelated failed cases. The two largest-text iPad detail/cost images show the same frame. The public manifest contains source-bundle basenames rather than private paths or device identifiers; media proof does not establish final CI success.
 
 | Surface | iPhone | iPad |
 | --- | --- | --- |
@@ -67,6 +77,10 @@ The [36-second iPhone walkthrough](media/iphone-journey.mp4) and [37-second iPad
 | Saved estimates | [Capture](media/iphone-estimates.png) | [Capture](media/ipad-estimates.png) |
 | Payment details | [Capture](media/iphone-payment-details.png) | [Capture](media/ipad-payment-details.png) |
 | Native editor | [Capture](media/iphone-native-editor.png) | [Capture](media/ipad-native-editor.png) |
+| Focused numeric input | [Capture](media/iphone-numeric-focused-input.png) | [Capture](media/ipad-numeric-focused-input.png) |
+| Dark focused input | [Capture](media/iphone-dark-normal-focused-input.png) | [Capture](media/ipad-dark-normal-focused-input.png) |
+| Dark, largest text: focused input | [Capture](media/iphone-dark-large-text-focused-input.png) | [Capture](media/ipad-dark-large-text-focused-input.png) |
+| Empty numeric input and inline validation | [Capture](media/iphone-empty-numeric-validation.png) | [Capture](media/ipad-empty-numeric-validation.png) |
 | Unit conversion | [Capture](media/iphone-native-units.png) | [Capture](media/ipad-native-units.png) |
 | Comparison | [Capture](media/iphone-comparison.png) | [Capture](media/ipad-comparison.png) |
 | All-cash result | [Capture](media/iphone-all-cash-details.png) | [Capture](media/ipad-all-cash-details.png) |
@@ -74,6 +88,8 @@ The [36-second iPhone walkthrough](media/iphone-journey.mp4) and [37-second iPad
 | Built Home Screen icon | [Capture](media/iphone-home-screen-icon.png) | [Capture](media/ipad-home-screen-icon.png) |
 | Annual schedule | [Capture](media/iphone-amortization.png) | [Capture](media/ipad-amortization.png) |
 | Monthly schedule | [Capture](media/iphone-monthly-amortization.png) | [Capture](media/ipad-monthly-amortization.png) |
+| Dark, largest text: annual schedule | [Capture](media/iphone-dark-large-text-amortization.png) | [Capture](media/ipad-dark-large-text-amortization.png) |
+| Dark, largest text: monthly schedule | [Capture](media/iphone-dark-large-text-monthly-amortization.png) | [Capture](media/ipad-dark-large-text-monthly-amortization.png) |
 | Address search | [Capture](media/iphone-address-search.png) | [Capture](media/ipad-address-search.png) |
 | Apple Maps results | [Capture](media/iphone-address-results.png) | [Capture](media/ipad-address-results.png) |
 | Property map | [Capture](media/iphone-property-map.png) | [Capture](media/ipad-property-map.png) |
@@ -85,9 +101,11 @@ The [36-second iPhone walkthrough](media/iphone-journey.mp4) and [37-second iPad
 | Landscape | [Capture](media/iphone-landscape-details.png) | [Capture](media/ipad-landscape-details.png) |
 | Split-view selection reset | — | [Capture](media/ipad-selection.png) |
 
+The empty-input captures show the caret, persistent field label and inline validation message. The native floating iPad keypad covers part of the property-price label in its capture; the image retains that actual state.
+
 [Light iPhone toolbar contrast capture](media/iphone-verified-native-toolbar-contrast-light.png), [dark iPhone capture](media/iphone-verified-native-toolbar-contrast-dark.png), [light iPad capture](media/ipad-verified-native-toolbar-contrast-light.png), [dark iPad capture](media/ipad-verified-native-toolbar-contrast-dark.png).
 
-[Original app screenshot](media/before.png)
+[Original blank repository capture](media/before.png)
 
 ## Platform sources
 
@@ -98,4 +116,4 @@ The [36-second iPhone walkthrough](media/iphone-journey.mp4) and [37-second iPad
 - [MapKit](https://developer.apple.com/documentation/mapkit): optional address search, geocoding and Maps handoff.
 - [GitHub Xcode 27 runner image](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md): workflow toolchain and simulator availability.
 
-Simulator checks establish local behavior; signed device distribution, App Store submission and actual lender schedules are separate outcomes. No App Store publication is performed by this repository change.
+iOS 17 runtime behavior, signed device distribution, physical-device performance, App Store submission and actual lender schedules remain separate verification outcomes. No App Store publication is performed by this repository change.
