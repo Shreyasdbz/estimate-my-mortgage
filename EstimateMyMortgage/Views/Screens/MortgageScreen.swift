@@ -111,7 +111,7 @@ struct MortgageScreen: View {
         Total ownership estimate: \(calculation.monthlyPayment.formatted(.currency(code: "USD"))) / month
         Cash at closing: \(calculation.upfrontCostValue.formatted(.currency(code: "USD")))
         Total loan interest: \(calculation.totalInterest.formatted(.currency(code: "USD")))
-        Assumes constant costs. Excludes mortgage insurance. Estimate only; not a lender quote.
+        Amounts in USD. Assumes constant costs. Excludes mortgage insurance. Estimate only; not a lender quote.
         """
     }
 }
