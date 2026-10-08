@@ -432,6 +432,7 @@ final class MortgageUITests: XCTestCase {
         app.navigationBars["Find address"].buttons["Cancel"].tap()
         XCTAssertEqual(address.value as? String, "1 Apple Park Way, Cupertino, CA 95014")
         tapScreenCenter(app.buttons["estimate.save"])
+        waitForSavedResult("Cupertino Home")
         open("Cupertino Home")
         let location = app.staticTexts["1 Apple Park Way, Cupertino, CA 95014"]
         for _ in 0..<5 where !location.exists { app.swipeUp() }
@@ -461,6 +462,7 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(address.waitForExistence(timeout: 30))
         XCTAssertTrue((address.value as? String ?? "").contains("Cupertino"))
         tapScreenCenter(app.buttons["estimate.save"])
+        waitForSavedResult("Cupertino Home")
         open("Cupertino Home")
         let map = app.buttons["Show Property Map"]
         for _ in 0..<5 where !map.isHittable { app.swipeUp() }
