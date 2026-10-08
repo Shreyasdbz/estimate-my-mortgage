@@ -487,11 +487,21 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(handoff.waitForExistence(timeout: 30))
         for _ in 0..<3 where !handoff.isHittable { app.swipeUp() }
         screenshot("property-map")
-        handoff.tap()
         let maps = XCUIApplication(bundleIdentifier: "com.apple.Maps")
+        // The handoff opens an external app on this test's simulator. Clean it up
+        // even after an assertion fails so subsequent journeys inherit no Maps process.
+        addTeardownBlock { @MainActor () async throws -> Void in
+            maps.terminate()
+            XCTAssertTrue(maps.wait(for: .notRunning, timeout: 5))
+        }
+        handoff.tap()
         XCTAssertTrue(maps.wait(for: .runningForeground, timeout: 10))
         app.activate()
-        XCTAssertTrue(app.buttons["editEstimate"].exists)
+        XCTAssertEqual(app.state, .runningForeground)
+        XCTAssertTrue(app.navigationBars["Cupertino Home"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
+        maps.terminate()
+        XCTAssertTrue(maps.wait(for: .notRunning, timeout: 5))
     }
 
     func testIPadSelectionResetsOpenSchedule() throws {
