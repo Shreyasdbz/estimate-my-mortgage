@@ -117,8 +117,6 @@ final class MortgageUITests: XCTestCase {
     private func tapScreenCenter(_ element: XCUIElement, requireHittable: Bool = true) {
         XCTAssertTrue(element.waitForExistence(timeout: 5))
         let identifier = element.identifier
-        if identifier == "estimate.save" { screenshot("editor-before-save") }
-        if identifier == "estimate.keyboardDone" { screenshot("focused-input-before-done") }
         let screen = app.frame
         // Resolve the potentially slow system-root snapshot before button geometry;
         // otherwise a native sheet can move while an old target frame is retained.
