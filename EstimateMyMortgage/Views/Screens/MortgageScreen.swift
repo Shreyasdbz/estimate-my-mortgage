@@ -161,7 +161,8 @@ private struct AmortizationView: View {
                     ForEach(calculation.annualSchedule) { year in
                         LineMark(x: .value("Year", year.year), y: .value("Balance", year.balance))
                     }
-                    if let selectedYear {
+                    // Editing this estimate can shorten its term while the schedule stays open.
+                    if let selectedYear, (0...calculation.annualSchedule.count).contains(selectedYear) {
                         RuleMark(x: .value("Selected year", selectedYear))
                             .foregroundStyle(Color.secondary)
                     }
