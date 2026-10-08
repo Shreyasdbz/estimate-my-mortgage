@@ -22,7 +22,8 @@ final class MortgageUITests: XCTestCase {
         field.tap()
         field.typeText(name)
         XCTAssertEqual(field.value as? String, name)
-        if app.buttons["Done"].exists { app.buttons["Done"].tap() }
+        dismissKeyboard()
+        XCTAssertEqual(field.value as? String, name)
         app.buttons["estimate.save"].tap()
         let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: field)
         XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed, app.debugDescription)
@@ -33,26 +34,72 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(app.cells.containing(.staticText, identifier: name).firstMatch.waitForExistence(timeout: 5))
     }
 
+    private func dismissKeyboard(usingReturn: Bool = false) {
+        let done = app.buttons["estimate.keyboardDone"]
+        guard done.exists else {
+            if app.keyboards.firstMatch.exists || app.popovers.containing(.key, identifier: "1").firstMatch.exists {
+                screenshot("keyboard-done-unavailable")
+                XCTFail("The editor keyboard has no Done control")
+            }
+            return
+        }
+        // Numeric inputs also support hardware Return; text uses the bottom Done action.
+        if usingReturn { app.typeText("\n") } else { done.tap() }
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            !self.app.buttons["estimate.keyboardDone"].exists &&
+            !self.app.keyboards.firstMatch.exists && !self.app.popovers.containing(.key, identifier: "1").firstMatch.exists
+        }, object: nil)
+        let result = XCTWaiter.wait(for: [dismissed], timeout: 3)
+        if result != .completed { screenshot("keyboard-after-done") }
+        XCTAssertEqual(result, .completed, app.debugDescription)
+    }
+
     private func replace(_ field: XCUIElement, with value: String) {
-        field.tap()
-        let current = field.value as? String ?? ""
-        if !current.isEmpty {
+        if field.identifier == "estimate.name" { field.tap() }
+        else { field.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap() }
+        guard let current = field.value as? String else {
+            XCTFail("Field value is unavailable: \(field.identifier)")
+            return
+        }
+        if !current.isEmpty, current != field.placeholderValue {
             if field.identifier == "estimate.name" {
-                // Exercise the visible touch editing menu instead of a hardware modifier.
                 field.press(forDuration: 1)
-                let selectAll = app.descendants(matching: .any)["Select All"].firstMatch
-                if !selectAll.waitForExistence(timeout: 3) { screenshot("name-selection-menu") }
-                XCTAssertTrue(selectAll.isHittable, app.debugDescription)
+                let selectAll = app.menuItems["Select All"]
+                guard selectAll.waitForExistence(timeout: 3), selectAll.isEnabled, selectAll.isHittable else {
+                    screenshot("name-selection-menu")
+                    XCTFail("Native Select All is unavailable: \(app.debugDescription)")
+                    return
+                }
                 selectAll.tap()
                 field.typeText(XCUIKeyboardKey.delete.rawValue)
-                let empty = field.value as? String ?? ""
-                XCTAssertTrue(empty.isEmpty || empty == field.placeholderValue, "Name must be empty before replacement: \(empty)")
             } else {
-                field.typeKey("a", modifierFlags: .command)
+                // Amounts are short, ungrouped text. The trailing input edge places
+                // the caret after the value; native deletion must empty it before typing.
+                field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
             }
+            guard let empty = field.value as? String, empty.isEmpty || empty == field.placeholderValue else {
+                screenshot("incomplete-field-selection")
+                XCTFail("Field must be empty before replacement: \(String(describing: field.value))")
+                return
+            }
+        }
+        if value.isEmpty {
+            guard let empty = field.value as? String else {
+                XCTFail("Field value is unavailable after clearing")
+                return
+            }
+            XCTAssertTrue(empty.isEmpty || empty == field.placeholderValue)
+            return
         }
         field.typeText(value)
         XCTAssertEqual(field.value as? String, value)
+    }
+
+    private func scrollEditorTo(_ element: XCUIElement) {
+        let form = app.collectionViews["estimate.form"]
+        XCTAssertTrue(form.exists)
+        for _ in 0..<5 where !element.isHittable { form.swipeUp() }
+        XCTAssertTrue(element.isHittable)
     }
 
     private func open(_ name: String) {
@@ -79,13 +126,13 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["monthlyTotal"].exists)
         app.buttons["editEstimate"].tap()
         replace(app.descendants(matching: .any)["estimate.name"].firstMatch, with: "Cancelled name")
-        if app.buttons["Done"].exists { app.buttons["Done"].tap() }
+        dismissKeyboard()
         app.buttons["Cancel"].tap()
         app.buttons["Discard changes"].tap()
         XCTAssertFalse(app.staticTexts["Cancelled name"].exists)
         app.buttons["editEstimate"].tap()
         replace(app.descendants(matching: .any)["estimate.name"].firstMatch, with: "Updated Home")
-        if app.buttons["Done"].exists { app.buttons["Done"].tap() }
+        dismissKeyboard()
         app.buttons["estimate.save"].tap()
         app.terminate()
         app.launch()
@@ -110,12 +157,18 @@ final class MortgageUITests: XCTestCase {
         name.tap()
         name.typeText("Invalid input")
         replace(app.textFields["estimate.property"], with: "0")
-        if app.buttons["Done"].exists { app.buttons["Done"].tap() }
+        dismissKeyboard(usingReturn: true)
         app.buttons["estimate.save"].tap()
         XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
         app.alerts.buttons["OK"].tap()
         XCTAssertEqual(app.textFields["estimate.property"].value as? String, "0")
-        if app.buttons["Done"].exists { app.buttons["Done"].tap() }
+        replace(app.textFields["estimate.property"], with: "")
+        dismissKeyboard(usingReturn: true)
+        app.buttons["estimate.save"].tap()
+        XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
+        app.alerts.buttons["OK"].tap()
+        replace(app.textFields["estimate.property"], with: "500000")
+        dismissKeyboard(usingReturn: true)
         app.buttons["estimate.cancel"].tap()
         XCTAssertTrue(app.buttons["Discard changes"].waitForExistence(timeout: 3))
         app.buttons["Discard changes"].tap()
@@ -165,18 +218,18 @@ final class MortgageUITests: XCTestCase {
         name.tap()
         name.typeText("Zinnia Cash Purchase")
         replace(app.textFields["estimate.property"], with: "250000")
-        app.buttons["Done"].tap()
+        dismissKeyboard()
         app.buttons["estimate.downpaymentUnit"].tap()
         app.buttons["%"].tap()
         XCTAssertEqual(app.textFields["estimate.downpayment"].value as? String, "40")
         replace(app.textFields["estimate.downpayment"], with: "100")
-        app.buttons["Done"].tap()
+        dismissKeyboard()
         let taxUnit = app.buttons["estimate.taxUnit"]
-        for _ in 0..<4 where !taxUnit.isHittable { app.swipeUp() }
+        scrollEditorTo(taxUnit)
         taxUnit.tap()
         app.buttons["%"].tap()
         let tax = app.textFields["estimate.tax"]
-        for _ in 0..<3 where !tax.exists { app.swipeUp() }
+        scrollEditorTo(tax)
         XCTAssertEqual(tax.value as? String, "3")
         screenshot("native-units")
         app.buttons["estimate.save"].tap()
@@ -233,7 +286,6 @@ final class MortgageUITests: XCTestCase {
     }
 
     func testAccessibilityAudit() throws {
-        continueAfterFailure = true
         create("Accessible Home")
         open("Accessible Home")
         try accessibilityAudit()
@@ -243,6 +295,8 @@ final class MortgageUITests: XCTestCase {
         screenshot("purchase-and-loan")
         app.buttons["editEstimate"].tap()
         try accessibilityAudit()
+        app.textFields["estimate.property"].tap()
+        screenshot("numeric-focused-input")
     }
 
     func testPeriodsAboutAndShareSheet() throws {
@@ -271,13 +325,13 @@ final class MortgageUITests: XCTestCase {
         app.buttons["newEstimate"].tap()
         app.descendants(matching: .any)["estimate.name"].firstMatch.tap()
         app.descendants(matching: .any)["estimate.name"].firstMatch.typeText("Cupertino Home")
-        if app.buttons["Done"].exists { app.buttons["Done"].tap() }
+        dismissKeyboard()
         let address = app.descendants(matching: .any)["estimate.address"].firstMatch
-        for _ in 0..<5 where !address.isHittable { app.swipeUp() }
-        XCTAssertTrue(address.isHittable)
+        scrollEditorTo(address)
         address.tap()
         address.typeText("1 Apple Park Way, Cupertino, CA 95014")
-        if app.buttons["Done"].exists { app.buttons["Done"].tap() }
+        dismissKeyboard()
+        XCTAssertEqual(address.value as? String, "1 Apple Park Way, Cupertino, CA 95014")
         app.buttons["Find address"].tap()
         XCTAssertTrue(app.navigationBars["Find address"].waitForExistence(timeout: 5))
         screenshot("address-search")
@@ -298,9 +352,9 @@ final class MortgageUITests: XCTestCase {
         app.buttons["newEstimate"].tap()
         app.descendants(matching: .any)["estimate.name"].firstMatch.tap()
         app.descendants(matching: .any)["estimate.name"].firstMatch.typeText("Cupertino Home")
-        if app.buttons["Done"].exists { app.buttons["Done"].tap() }
+        dismissKeyboard()
         let find = app.buttons["Find address"]
-        for _ in 0..<5 where !find.isHittable { app.swipeUp() }
+        scrollEditorTo(find)
         find.tap()
         let search = app.searchFields.firstMatch
         search.tap()
@@ -345,9 +399,19 @@ final class MortgageUITests: XCTestCase {
     }
 
     func testDarkAppearanceAndLargestText() throws {
-        continueAfterFailure = true
         app.terminate()
         app.launchEnvironment["EMM_TEST_APPEARANCE"] = "dark"
+        app.launch()
+        create("Dark Home")
+        open("Dark Home")
+        app.buttons["editEstimate"].tap()
+        let regularProperty = app.textFields["estimate.property"]
+        regularProperty.tap()
+        screenshot("dark-normal-focused-input")
+        dismissKeyboard()
+        XCTAssertEqual(regularProperty.value as? String, "500000")
+        app.terminate()
+        app.launchEnvironment["EMM_TEST_STORE"] = UUID().uuidString
         app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
         create("Large Text Home")
@@ -365,6 +429,18 @@ final class MortgageUITests: XCTestCase {
         app.buttons["editEstimate"].tap()
         screenshot("dark-large-text-editor")
         try accessibilityAudit()
+        let property = app.textFields["estimate.property"]
+        scrollEditorTo(property)
+        replace(property, with: "450000")
+        screenshot("dark-large-text-focused-input")
+        let done = app.buttons["estimate.keyboardDone"]
+        XCTAssertGreaterThanOrEqual(done.frame.width, 44)
+        XCTAssertGreaterThanOrEqual(done.frame.height, 44)
+        dismissKeyboard()
+        XCTAssertEqual(property.value as? String, "450000")
+        let downpayment = app.textFields["estimate.downpayment"]
+        scrollEditorTo(downpayment)
+        XCTAssertEqual(downpayment.value as? String, "100000")
     }
 
     func testLandscapeLayout() throws {
@@ -381,8 +457,8 @@ final class MortgageUITests: XCTestCase {
             return frame.width > frame.height
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [landscape], timeout: 5), .completed)
-        try accessibilityAudit()
         screenshot("landscape-details")
+        try accessibilityAudit()
     }
 
     func testScreenshotsNativeFlows() throws {
@@ -426,7 +502,7 @@ final class MortgageUITests: XCTestCase {
         row.press(forDuration: 1)
         app.buttons["editEstimateFromList"].tap()
         replace(app.descendants(matching: .any)["estimate.name"].firstMatch, with: "Birch Condo")
-        if app.buttons["Done"].exists { app.buttons["Done"].tap() }
+        dismissKeyboard()
         app.buttons["estimate.save"].tap()
         XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.navigationBars["Birch Condo"].exists)

@@ -90,12 +90,14 @@ struct CreateMortgageView: View {
                 Section {
                     AddressInput(address: $vm.draft.address, city: $vm.draft.city,
                                  state: $vm.draft.state, zip: $vm.draft.zip, focus: $focusedField)
+                        .id(MortgageEditorField.address)
                 } header: {
                     Text("Property address").foregroundStyle(Color.primary)
                 } footer: {
                     Text("Optional.").foregroundStyle(Color.primary)
                 }
             }
+            .accessibilityIdentifier("estimate.form")
             .presentationDetents([.large])
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle(vm.isNew ? "New estimate" : "Edit estimate")
@@ -114,9 +116,22 @@ struct CreateMortgageView: View {
                         .tint(.indigo)
                         .accessibilityIdentifier("estimate.save")
                 }
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") { focusedField = nil }
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if focusedField != nil {
+                    HStack {
+                        Spacer()
+                        Button { focusedField = nil } label: {
+                            Text("Done")
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                        .tint(Color.primary)
+                        .accessibilityIdentifier("estimate.keyboardDone")
+                    }
+                    .padding(.horizontal)
+                    .background(.bar)
                 }
             }
             .interactiveDismissDisabled(vm.hasChanges)
@@ -150,6 +165,8 @@ struct CreateMortgageView: View {
             TextField(title, text: text)
                 .frame(minHeight: 44)
                 .keyboardType(keyboard)
+                .submitLabel(.done)
+                .onSubmit { focusedField = nil }
                 .focused($focusedField, equals: field)
                 .accessibilityLabel("\(title), \(unit)")
                 .accessibilityIdentifier("estimate.\(String(describing: field))")

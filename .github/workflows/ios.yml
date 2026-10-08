@@ -3,6 +3,7 @@ name: iOS 27 build and tests
 on:
   push:
     branches: [main]
+    paths-ignore: ["docs/**", "README.md", "PrivacyPolicy.md", "LICENSE"]
   pull_request:
     branches: [main]
 
@@ -16,7 +17,7 @@ concurrency:
 jobs:
   test:
     runs-on: xcode-27
-    timeout-minutes: 25
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
@@ -45,6 +46,8 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('uuid=' + matches[0]['udid'] + '\n')
           PY
+      - name: Wait for simulator readiness
+        run: xcrun simctl bootstatus '${{ steps.simulator.outputs.uuid }}' -b
       - name: Build and test
         run: ./scripts/test-ios.sh '${{ steps.simulator.outputs.uuid }}' "$RUNNER_TEMP/Tests.xcresult"
       - uses: actions/upload-artifact@v7.0.2
