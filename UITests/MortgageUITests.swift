@@ -89,18 +89,20 @@ final class MortgageUITests: XCTestCase {
         }
         // Native snapshots have separate costs. Require every dismissed state
         // independently so one hierarchy query cannot consume another's allowance.
-        let requirements: [(String, () -> Bool)] = [
-            ("focus control", { !done.exists }),
-            ("software keyboard", {
+        let requirements: [(String, TimeInterval, () -> Bool)] = [
+            ("focus control", 5, { !done.exists }),
+            ("software keyboard", 5, {
                 !self.app.keyboards.allElementsBoundByIndex.contains(where: self.isOnscreen)
             }),
-            ("numeric preview", { !self.hasVisibleNumericPreview() })
+            // An iPad preview lookup exhausted five seconds after visible dismissal.
+            // Allow another bounded snapshot while still requiring its absence.
+            ("numeric preview", 15, { !self.hasVisibleNumericPreview() })
         ]
-        for (name, condition) in requirements {
+        for (name, allowance, condition) in requirements {
             let dismissed = XCTNSPredicateExpectation(
                 predicate: NSPredicate { _, _ in condition() }, object: nil
             )
-            let result = XCTWaiter.wait(for: [dismissed], timeout: 5)
+            let result = XCTWaiter.wait(for: [dismissed], timeout: allowance)
             if result != .completed { screenshot("keyboard-after-done-" + name) }
             XCTAssertEqual(result, .completed, "Undismissed \(name): \(app.debugDescription)")
         }
@@ -422,12 +424,18 @@ final class MortgageUITests: XCTestCase {
         // The hosted audit capture shows this native button unobscured while its
         // hittability lookup stalls. Test its real screen target and outcome.
         tapScreenCenter(app.buttons["estimate.cancel"], requireHittable: false)
-        for identifier in ["estimate.cancel", "estimate.form"] {
+        // A hosted Cancel lookup exhausted five seconds after the editor closed.
+        // Keep each absence check separate and query its native control type.
+        let closedControls: [(XCUIElement, TimeInterval)] = [
+            (app.buttons["estimate.cancel"], 15),
+            (app.collectionViews["estimate.form"], 5)
+        ]
+        for (control, allowance) in closedControls {
             let closed = XCTNSPredicateExpectation(
                 predicate: NSPredicate(format: "exists == false"),
-                object: app.descendants(matching: .any)[identifier].firstMatch
+                object: control
             )
-            XCTAssertEqual(XCTWaiter.wait(for: [closed], timeout: 5), .completed)
+            XCTAssertEqual(XCTWaiter.wait(for: [closed], timeout: allowance), .completed)
         }
         XCTAssertTrue(app.navigationBars["Accessible Home"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
