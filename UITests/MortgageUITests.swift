@@ -388,7 +388,7 @@ final class MortgageUITests: XCTestCase {
     private func requirePreview(_ text: String, excluding staleAmounts: [String] = []) {
         let form = app.collectionViews["estimate.form"]
         func currentPreview() -> XCUIElement {
-            form.descendants(matching: .any).matching(identifier: "estimate.preview").firstMatch
+            form.staticTexts["estimate.preview"].firstMatch
         }
         let preview = currentPreview()
         for _ in 0..<5 {
