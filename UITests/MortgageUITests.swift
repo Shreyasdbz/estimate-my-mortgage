@@ -23,7 +23,10 @@ final class MortgageUITests: XCTestCase {
         app.launchEnvironment["EMM_TEST_APPEARANCE"] = name.contains("testDarkLargestTextEditorEditAndCancel") ? "dark" : "light"
         if name.contains("testSearchFiltersSavedEstimates") || name.contains("testComparisonOfSavedEstimates")
             || name.contains("testIPadSelectionResetsOpenSchedule") || name.contains("testDarkLargestTextEditorEditAndCancel")
-            || name.contains("testWholeYearInlineCorrectionAndSave") {
+            || name.contains("testWholeYearInlineCorrectionAndSave")
+            || name.contains("testEditCancelPreservesSavedEstimate")
+            || name.contains("testEditSaveAndRelaunchPersistsEstimate")
+            || name.contains("testDuplicateDeleteAndRelaunch") {
             app.launchEnvironment["EMM_TEST_FIXTURE"] = "search"
         }
         if name.contains("testWholeYearInlineCorrectionAndSave") {
@@ -290,25 +293,16 @@ final class MortgageUITests: XCTestCase {
             XCTFail("Field value is unavailable: \(field.identifier)")
             return
         }
-        if !current.isEmpty, current != placeholder {
-            // The trailing input edge places the caret after these short fixture values.
-            field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
-        }
-        // Resolve the current identified control after keyboard/layout changes.
-        // Require a real empty value; an unavailable value never counts as cleared.
-        let cleared = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard let text = self.editorInput(identifier: identifier, nativeType: nativeType).value as? String else { return false }
-            return text.isEmpty || text == placeholder
-        }, object: nil)
-        // Hosted Name and numeric queries exhausted five seconds despite empty input.
-        // Give each identified control another bounded snapshot opportunity.
-        let result = XCTWaiter.wait(for: [cleared], timeout: 15)
-        if result != .completed { screenshot("incomplete-field-selection") }
-        XCTAssertEqual(result, .completed, "Field must be empty before replacement: \(identifier)")
-        guard result == .completed, !value.isEmpty else { return }
+        let deletionKeys = current == placeholder ? "" : String(
+            repeating: XCUIKeyboardKey.delete.rawValue, count: current.count
+        )
         let input = editorInput(identifier: identifier, nativeType: nativeType)
         XCTAssertEqual(input.elementType, nativeType, "Replacement must retain the identified native control")
-        input.typeText(value)
+        // One native typing operation performs the setup replacement. Nonempty
+        // replacements no longer stop to observe their transient cleared state.
+        input.typeText(deletionKeys + value)
+        // Exact raw String equality also covers explicit empty replacements;
+        // an unavailable value or a placeholder label cannot satisfy that check.
         waitForTypedValue(value, identifier: identifier, nativeType: nativeType)
     }
 
@@ -334,9 +328,68 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(fullyVisible(), "The entire input must be visible before editing")
     }
 
+    /// Reveal a complete native row title clear of navigation and search before one action.
+    private func revealEstimateTitle(_ name: String) -> XCUIElement? {
+        let list = app.collectionViews.containing(.staticText, identifier: name).firstMatch
+        let title = list.cells.containing(.staticText, identifier: name).staticTexts[name].firstMatch
+        XCTAssertTrue(list.waitForExistence(timeout: 5))
+        var targetFrame = CGRect.zero
+        var viewport = CGRect.zero
+        func fullyVisible() -> Bool {
+            guard title.exists else { return false }
+            targetFrame = title.frame
+            viewport = list.frame.intersection(app.frame)
+            let navigation = app.navigationBars["Estimates"]
+            if navigation.exists {
+                let frame = navigation.frame
+                if viewport.intersects(frame) { viewport.origin.y = frame.maxY; viewport.size.height = max(0, list.frame.intersection(app.frame).maxY - frame.maxY) }
+            }
+            let search = app.searchFields.firstMatch
+            if search.exists {
+                let frame = search.frame
+                // Native search glass can extend beyond its editable SearchField.
+                // Use its smallest containing native wrapper, rather than a device-specific inset.
+                let wrappers = app.otherElements.containing(.searchField, identifier: search.label).allElementsBoundByIndex
+                let chrome = wrappers.map { $0.frame }.filter { !$0.isEmpty && $0.contains(frame) && $0.height > frame.height }.min { $0.width * $0.height < $1.width * $1.height } ?? frame
+                if viewport.intersects(chrome) {
+                    if chrome.midY < viewport.midY {
+                        let bottom = viewport.maxY
+                        viewport.origin.y = max(viewport.minY, chrome.maxY)
+                        viewport.size.height = max(0, bottom - viewport.minY)
+                    } else {
+                        viewport.size.height = max(0, min(viewport.maxY, chrome.minY) - viewport.minY)
+                    }
+                }
+            }
+            return !targetFrame.isEmpty && !viewport.isEmpty
+                && viewport.insetBy(dx: -Self.geometryTolerance, dy: -Self.geometryTolerance).contains(targetFrame)
+                && title.isHittable
+        }
+        var ready = fullyVisible()
+        for _ in 0..<5 {
+            if ready { break }
+            guard !viewport.isEmpty else { break }
+            let listFrame = list.frame
+            let upper = list.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: viewport.midX - listFrame.minX, dy: viewport.minY + viewport.height * 0.25 - listFrame.minY))
+            let lower = list.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: viewport.midX - listFrame.minX, dy: viewport.minY + viewport.height * 0.75 - listFrame.minY))
+            if !targetFrame.isEmpty && targetFrame.minY < viewport.minY {
+                upper.press(forDuration: 0.1, thenDragTo: lower, withVelocity: .slow, thenHoldForDuration: 0)
+            } else {
+                lower.press(forDuration: 0.1, thenDragTo: upper, withVelocity: .slow, thenHoldForDuration: 0)
+            }
+            ready = fullyVisible()
+        }
+        print("Open estimate target: \(targetFrame); unobscured list viewport: \(viewport)")
+        screenshot("estimate-row-before-opening")
+        XCTAssertTrue(ready, "The complete estimate title must be visible clear of native navigation and search before opening")
+        guard ready else { return nil }
+        return title
+    }
+
     private func open(_ name: String) {
         if app.navigationBars[name].exists, app.buttons["editEstimate"].exists { return }
-        app.cells.containing(.staticText, identifier: name).staticTexts[name].firstMatch.tap()
+        guard let title = revealEstimateTitle(name) else { return }
+        title.tap()
         XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.navigationBars[name].exists)
     }
@@ -589,16 +642,31 @@ final class MortgageUITests: XCTestCase {
         screenshot("chart-scroll-to-schedule")
     }
 
-    func testCreateEditCancelDuplicateDeleteAndRelaunch() throws {
+    func testCreateAndRelaunchPersistsEstimate() throws {
         create("Cedar Home")
         open("Cedar Home")
         XCTAssertTrue(app.staticTexts["monthlyTotal"].exists)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Cedar Home"].firstMatch.waitForExistence(timeout: 5))
+    }
+
+    func testEditCancelPreservesSavedEstimate() throws {
+        XCTAssertTrue(app.staticTexts["Cedar Home"].firstMatch.waitForExistence(timeout: 5))
+        open("Cedar Home")
         app.buttons["editEstimate"].tap()
         replace(editorName(), with: "Cancelled name")
         dismissKeyboard()
         app.buttons["Cancel"].tap()
         app.buttons["Discard changes"].tap()
         XCTAssertFalse(app.staticTexts["Cancelled name"].exists)
+        app.buttons["editEstimate"].tap()
+        XCTAssertEqual(editorName().value as? String, "Cedar Home")
+    }
+
+    func testEditSaveAndRelaunchPersistsEstimate() throws {
+        XCTAssertTrue(app.staticTexts["Cedar Home"].firstMatch.waitForExistence(timeout: 5))
+        open("Cedar Home")
         app.buttons["editEstimate"].tap()
         replace(editorName(), with: "Updated Home")
         dismissKeyboard()
@@ -607,16 +675,25 @@ final class MortgageUITests: XCTestCase {
         app.terminate()
         app.launch()
         XCTAssertTrue(app.staticTexts["Updated Home"].firstMatch.waitForExistence(timeout: 5))
-        let row = app.staticTexts["Updated Home"].firstMatch
+    }
+
+    func testDuplicateDeleteAndRelaunch() throws {
+        XCTAssertTrue(app.staticTexts["Cedar Home"].firstMatch.waitForExistence(timeout: 5))
+        guard let row = revealEstimateTitle("Cedar Home") else { return }
         row.press(forDuration: 1)
         app.buttons["Duplicate"].tap()
-        XCTAssertTrue(app.staticTexts["Updated Home copy"].firstMatch.waitForExistence(timeout: 5))
-        app.staticTexts["Updated Home copy"].firstMatch.swipeLeft()
+        XCTAssertTrue(app.staticTexts["Cedar Home copy"].firstMatch.waitForExistence(timeout: 5))
+        guard let copy = revealEstimateTitle("Cedar Home copy") else { return }
+        copy.swipeLeft()
         app.buttons["Delete"].firstMatch.tap()
         app.buttons["Delete Estimate"].tap()
-        XCTAssertTrue(app.staticTexts["Updated Home copy"].waitForNonExistence(timeout: 5),
+        XCTAssertTrue(app.staticTexts["Cedar Home copy"].waitForNonExistence(timeout: 5),
                       "The confirmed duplicate deletion must finish")
-        XCTAssertTrue(app.staticTexts["Updated Home"].firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["Cedar Home"].firstMatch.exists)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Cedar Home"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Cedar Home copy"].exists)
     }
 
     func testNameInlineCorrectionAndDiscard() throws {

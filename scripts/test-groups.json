@@ -5,7 +5,10 @@
   "ui-core": {
     "target": "EstimateMyMortgageUITests",
     "tests": [
-      "MortgageUITests/testCreateEditCancelDuplicateDeleteAndRelaunch",
+      "MortgageUITests/testCreateAndRelaunchPersistsEstimate",
+      "MortgageUITests/testEditCancelPreservesSavedEstimate",
+      "MortgageUITests/testEditSaveAndRelaunchPersistsEstimate",
+      "MortgageUITests/testDuplicateDeleteAndRelaunch",
       "MortgageUITests/testValidationPreventsDismissalAndKeepsInvalidInput",
       "MortgageUITests/testNameInlineCorrectionAndDiscard",
       "MortgageUITests/testSearchFiltersSavedEstimates",
