@@ -338,12 +338,18 @@ final class MortgageUITests: XCTestCase {
 
     /// Bring the native combined preview into view before checking its current contents.
     private func requirePreview(_ text: String, excluding staleAmounts: [String] = []) {
-        let preview = app.descendants(matching: .any).matching(identifier: "estimate.preview").firstMatch
         let form = app.collectionViews["estimate.form"]
-        for _ in 0..<5 where !preview.isHittable { form.swipeDown() }
+        func currentPreview() -> XCUIElement {
+            form.descendants(matching: .any).matching(identifier: "estimate.preview").firstMatch
+        }
+        let preview = currentPreview()
+        for _ in 0..<5 {
+            if preview.isHittable { break }
+            form.swipeDown()
+        }
         XCTAssertTrue(preview.isHittable, "The preview must be visible before reading its amount")
         let updated = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            let label = preview.label
+            let label = currentPreview().label
             return label.contains(text) && staleAmounts.allSatisfy { !label.contains($0) }
         }, object: nil)
         let result = XCTWaiter.wait(for: [updated], timeout: 15)
@@ -504,7 +510,8 @@ final class MortgageUITests: XCTestCase {
         app.staticTexts["Updated Home copy"].firstMatch.swipeLeft()
         app.buttons["Delete"].firstMatch.tap()
         app.buttons["Delete Estimate"].tap()
-        XCTAssertFalse(app.staticTexts["Updated Home copy"].exists)
+        XCTAssertTrue(app.staticTexts["Updated Home copy"].waitForNonExistence(timeout: 5),
+                      "The confirmed duplicate deletion must finish")
         XCTAssertTrue(app.staticTexts["Updated Home"].firstMatch.exists)
     }
 
