@@ -22,6 +22,8 @@ jobs:
       groups: ${{ steps.groups.outputs.groups }}
     steps:
       - uses: actions/checkout@v7.0.1
+      - name: Verify keyboard fixture helper
+        run: python3 -B -m unittest discover -s scripts -p 'test_configure_simulator_keyboard.py'
       - name: Validate and read test groups
         id: groups
         run: |
@@ -44,60 +46,6 @@ jobs:
         run: |
           xcodebuild -version
           xcodebuild -version | head -1 | grep -q '^Xcode 27\.'
-      - name: Configure software keyboard fixture
-        run: |
-          set -euo pipefail
-          keyboard_plist="$HOME/Library/Containers/com.apple.dt.Devices/Data/Library/Preferences/com.apple.dt.Devices.plist"
-          keyboard_key=alwaysSimulateHardwareKeyboard
-          frontend_running=false
-          if frontend_pids=$(pgrep -x DeviceHub); then
-            printf 'DeviceHub frontend before boot: running (PIDs %s)\n' "$frontend_pids"
-            frontend_running=true
-          else
-            process_status=$?
-            if [[ "$process_status" -ne 1 ]]; then
-              echo '::error::Cannot determine DeviceHub frontend state before configuring the keyboard fixture.'
-              exit 1
-            fi
-            echo 'DeviceHub frontend before boot: not running'
-          fi
-          if [[ "$frontend_running" == true ]]; then
-            echo '::error::DeviceHub is already running and may cache keyboard preferences. Use a fresh disposable runner before configuring this fixture.'
-            exit 1
-          fi
-          # Cold disposable runners have no registered container; initialize its preference directory directly.
-          # https://github.com/appium/appium-ios/blob/main/packages/simulator/lib/extensions/settings.ts
-          if ! mkdir -p "${keyboard_plist%/*}"; then
-            echo '::error::Cannot initialize the DeviceHub preference directory on this disposable runner.'
-            exit 1
-          fi
-          if [[ ! -e "$keyboard_plist" ]]; then
-            printf 'DeviceHub %s before: absent (no preference file)\n' "$keyboard_key"
-          elif [[ ! -f "$keyboard_plist" || ! -r "$keyboard_plist" ]] || ! plutil -lint "$keyboard_plist"; then
-            echo '::error::The existing DeviceHub preference file is unreadable or malformed; refusing to modify it.'
-            exit 1
-          elif before_value=$(defaults read "$keyboard_plist" "$keyboard_key" 2>&1); then
-            printf 'DeviceHub %s before: %s\n' "$keyboard_key" "$before_value"
-          elif [[ "$before_value" == *"Could not find key '$keyboard_key' in domain '$keyboard_plist'."* ]]; then
-            printf 'DeviceHub %s before: absent\n' "$keyboard_key"
-          else
-            printf '::error::DeviceHub %s before: not readable: %s\n' "$keyboard_key" "$before_value"
-            exit 1
-          fi
-          # Configure the global intent before boot; this workflow does not explicitly launch the frontend.
-          # https://github.com/appium/appium-ios/blob/main/packages/simulator/README.md#hardware-keyboard
-          if ! defaults write "$keyboard_plist" "$keyboard_key" -bool false; then
-            echo '::error::Cannot configure the DeviceHub keyboard fixture on this disposable runner.'
-            exit 1
-          fi
-          after_value=$(defaults read "$keyboard_plist" "$keyboard_key")
-          after_type=$(defaults read-type "$keyboard_plist" "$keyboard_key")
-          printf 'DeviceHub %s after: %s (%s)\n' "$keyboard_key" "$after_value" "$after_type"
-          if [[ "$after_value" != 0 || "$after_type" != 'Type is boolean' ]]; then
-            echo '::error::The DeviceHub keyboard fixture must read back as the boolean false.'
-            exit 1
-          fi
-          echo 'Configured intent verified; native UI tests still require a visible software keyboard.'
       - name: Select an iOS 27 simulator
         id: simulator
         env:
@@ -114,6 +62,10 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('uuid=' + matches[0]['udid'] + '\n')
           PY
+      - name: Configure software keyboard fixture
+        env:
+          SELECTED_SIMULATOR: ${{ steps.simulator.outputs.uuid }}
+        run: python3 -B scripts/configure-simulator-keyboard.py "$SELECTED_SIMULATOR"
       - name: Wait for simulator readiness
         run: xcrun simctl bootstatus '${{ steps.simulator.outputs.uuid }}' -b
       - name: Record frontend before testing
