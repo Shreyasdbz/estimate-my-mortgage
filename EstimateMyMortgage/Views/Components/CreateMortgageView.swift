@@ -273,18 +273,12 @@ struct CreateMortgageView: View {
     private func present(_ error: Error, title: String, using proxy: ScrollViewProxy) {
         if let issue = error as? CreateMortgageViewModel.InputError, let field = issue.field {
             inputError = issue
-            focusedField = nil
-            // Position the correction before restoring focus.
-            // Run for every failure, including an unchanged value submitted again.
-            Task { @MainActor in
-                await Task.yield()
-                guard focusedField == nil, inputError?.field == field,
-                      inputError?.message == issue.message else { return }
-                proxy.scrollTo(field, anchor: .center)
-                focusedField = field
-            }
+            // Preserve the responder during failed validation and request the correction directly.
+            proxy.scrollTo(field, anchor: .center)
+            focusedField = field
         } else {
             inputError = nil
+            focusedField = nil
             errorTitle = title
             saveError = error.localizedDescription
             errorPresented = true
@@ -301,9 +295,10 @@ struct CreateMortgageView: View {
     }
 
     private func save(using proxy: ScrollViewProxy) {
-        focusedField = nil
         do {
-            onSaved(try vm.save())
+            let savedID = try vm.save()
+            focusedField = nil
+            onSaved(savedID)
             dismiss()
         } catch {
             present(error, title: "Unable to save", using: proxy)

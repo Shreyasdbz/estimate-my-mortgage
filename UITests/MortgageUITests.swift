@@ -35,15 +35,18 @@ final class MortgageUITests: XCTestCase {
             let frame = focusedName.frame
             let viewport = app.collectionViews["estimate.form"].frame.intersection(app.frame)
             let done = app.buttons["estimate.keyboardDone"]
-            print("Focused Name bounds: \(frame); Form viewport: \(viewport); Done: \(done.frame); navigation: \(app.navigationBars.firstMatch.frame)")
-            screenshot("large-text-focused-name")
             XCTAssertTrue(done.exists)
+            // These bounds describe one stable layout; no action occurs between checks.
+            let doneFrame = done.frame
+            let navigationFrame = app.navigationBars.firstMatch.frame
+            print("Focused Name bounds: \(frame); Form viewport: \(viewport); Done: \(doneFrame); navigation: \(navigationFrame)")
+            screenshot("large-text-focused-name")
             XCTAssertFalse(frame.isEmpty)
-            XCTAssertFalse(done.frame.isEmpty)
+            XCTAssertFalse(doneFrame.isEmpty)
             XCTAssertTrue(viewport.insetBy(dx: -Self.geometryTolerance, dy: -Self.geometryTolerance).contains(frame),
                           "The complete focused Name must remain inside the Form")
-            XCTAssertLessThanOrEqual(frame.maxY, done.frame.minY + Self.geometryTolerance, "The focused Name must remain above the keyboard bar")
-            XCTAssertGreaterThanOrEqual(frame.minY, app.navigationBars.firstMatch.frame.maxY - Self.geometryTolerance,
+            XCTAssertLessThanOrEqual(frame.maxY, doneFrame.minY + Self.geometryTolerance, "The focused Name must remain above the keyboard bar")
+            XCTAssertGreaterThanOrEqual(frame.minY, navigationFrame.maxY - Self.geometryTolerance,
                                         "The focused Name must remain below the navigation bar")
         }
         if scrollFromName {
@@ -1068,8 +1071,7 @@ final class MortgageUITests: XCTestCase {
     }
 
     func testDarkAppearanceAndLargestText() throws {
-        // Largest text already uses an independent store and launch. Keep its
-        // audits separate from the regular-size journey's execution budget.
+        // Create and inspect at largest text; editing has its own complete journey.
         app.terminate()
         app.launchEnvironment["EMM_TEST_APPEARANCE"] = "dark"
         app.launchEnvironment["EMM_TEST_STORE"] = UUID().uuidString
@@ -1103,6 +1105,19 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(firstMonth.waitForExistence(timeout: 5))
         screenshot("dark-large-text-monthly-amortization")
         app.navigationBars["Amortization"].buttons.firstMatch.tap()
+        XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
+    }
+
+    func testDarkLargestTextEditorEditAndCancel() throws {
+        app.terminate()
+        app.launchEnvironment["EMM_TEST_APPEARANCE"] = "dark"
+        app.launch()
+        create("Large Text Home")
+        // Keep the saved fixture while changing only the native text-size override.
+        app.terminate()
+        app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        open("Large Text Home")
         app.buttons["editEstimate"].tap()
         screenshot("dark-large-text-editor")
         try accessibilityAudit()
@@ -1118,6 +1133,20 @@ final class MortgageUITests: XCTestCase {
         let downpayment = app.textFields["estimate.downpayment"]
         scrollEditorTo(downpayment)
         XCTAssertEqual(downpayment.value as? String, "100000")
+        tapScreenCenter(app.buttons["estimate.cancel"], requireHittable: false)
+        XCTAssertTrue(app.buttons["Discard changes"].waitForExistence(timeout: 3))
+        app.buttons["Discard changes"].tap()
+        XCTAssertTrue(app.collectionViews["estimate.form"].waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Large Text Home"].waitForExistence(timeout: 5))
+        app.buttons["editEstimate"].tap()
+        let savedProperty = app.textFields["estimate.property"]
+        scrollEditorTo(savedProperty)
+        XCTAssertEqual(savedProperty.value as? String, "500000", "Discard must preserve the saved home price")
+        let savedDownpayment = app.textFields["estimate.downpayment"]
+        scrollEditorTo(savedDownpayment)
+        XCTAssertEqual(savedDownpayment.value as? String, "100000", "Discard must preserve the saved down payment")
+        tapScreenCenter(app.buttons["estimate.cancel"], requireHittable: false)
+        XCTAssertTrue(app.collectionViews["estimate.form"].waitForNonExistence(timeout: 5))
     }
 
     func testLandscapeLayout() throws {

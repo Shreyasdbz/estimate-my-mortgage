@@ -22,6 +22,7 @@
       "MortgageUITests/testLargestTextInlineCorrectionAndDiscard",
       "MortgageUITests/testDarkAppearanceNativeInput",
       "MortgageUITests/testDarkAppearanceAndLargestText",
+      "MortgageUITests/testDarkLargestTextEditorEditAndCancel",
       "MortgageUITests/testLandscapeLayout",
       "MortgageUITests/testScreenshotsNativeFlows"
     ]
