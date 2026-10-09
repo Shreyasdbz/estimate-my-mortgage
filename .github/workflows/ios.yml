@@ -44,6 +44,49 @@ jobs:
         run: |
           xcodebuild -version
           xcodebuild -version | head -1 | grep -q '^Xcode 27\.'
+      - name: Configure software keyboard fixture
+        run: |
+          set -euo pipefail
+          keyboard_domain=com.apple.dt.Devices
+          keyboard_key=alwaysSimulateHardwareKeyboard
+          frontend_running=false
+          if frontend_pids=$(pgrep -x DeviceHub); then
+            printf 'DeviceHub frontend before boot: running (PIDs %s)\n' "$frontend_pids"
+            frontend_running=true
+          else
+            process_status=$?
+            if [[ "$process_status" -ne 1 ]]; then
+              echo '::error::Cannot determine DeviceHub frontend state before configuring the keyboard fixture.'
+              exit 1
+            fi
+            echo 'DeviceHub frontend before boot: not running'
+          fi
+          if before_value=$(defaults -container "$keyboard_domain" read "$keyboard_domain" "$keyboard_key" 2>&1); then
+            printf 'DeviceHub %s before: %s\n' "$keyboard_key" "$before_value"
+          elif [[ "$before_value" == *'does not exist'* ]]; then
+            printf 'DeviceHub %s before: absent\n' "$keyboard_key"
+          else
+            printf '::error::DeviceHub %s before: not readable: %s\n' "$keyboard_key" "$before_value"
+            exit 1
+          fi
+          if [[ "$frontend_running" == true ]]; then
+            echo '::error::DeviceHub is already running and may cache keyboard preferences. Use a fresh disposable runner before configuring this fixture.'
+            exit 1
+          fi
+          # DeviceHub caches this global mode; configure it before its frontend starts.
+          # https://github.com/appium/appium-ios/blob/main/packages/simulator/README.md#hardware-keyboard
+          if ! defaults -container "$keyboard_domain" write "$keyboard_domain" "$keyboard_key" -bool false; then
+            echo '::error::Cannot configure the DeviceHub keyboard fixture on this disposable runner.'
+            exit 1
+          fi
+          after_value=$(defaults -container "$keyboard_domain" read "$keyboard_domain" "$keyboard_key")
+          after_type=$(defaults -container "$keyboard_domain" read-type "$keyboard_domain" "$keyboard_key")
+          printf 'DeviceHub %s after: %s (%s)\n' "$keyboard_key" "$after_value" "$after_type"
+          if [[ "$after_value" != 0 || "$after_type" != 'Type is boolean' ]]; then
+            echo '::error::The DeviceHub keyboard fixture must read back as the boolean false.'
+            exit 1
+          fi
+          echo 'Configured intent verified; native UI tests still require a visible software keyboard.'
       - name: Select an iOS 27 simulator
         id: simulator
         env:
@@ -60,6 +103,38 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('uuid=' + matches[0]['udid'] + '\n')
           PY
+      - name: Start DeviceHub frontend
+        env:
+          SELECTED_SIMULATOR: ${{ steps.simulator.outputs.uuid }}
+        run: |
+          set -euo pipefail
+          devicehub_app="$DEVELOPER_DIR/../Applications/DeviceHub.app"
+          devicehub_info="$devicehub_app/Contents/Info.plist"
+          bundle_id=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$devicehub_info")
+          frontend_version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$devicehub_info")
+          if [[ "$bundle_id" != com.apple.dt.Devices || "$frontend_version" != 27.* ]]; then
+            echo '::error::The selected Xcode must contain its Xcode 27 DeviceHub frontend.'
+            exit 1
+          fi
+          printf 'Selected simulator: %s; DeviceHub: %s (%s)\n' "$SELECTED_SIMULATOR" "$devicehub_app" "$frontend_version"
+          # Match the current maintainer lifecycle; no selected-device argument is documented.
+          # https://github.com/appium/appium-ios/blob/main/packages/simulator/lib/extensions/ui-client.ts
+          open -Fn "$devicehub_app"
+          deadline=$((SECONDS + 30))
+          while true; do
+            if frontend_pids=$(pgrep -x DeviceHub); then
+              break
+            else
+              process_status=$?
+            fi
+            if [[ "$process_status" -ne 1 || "$SECONDS" -ge "$deadline" ]]; then
+              echo '::error::DeviceHub did not become discoverable within 30 seconds, or its process state could not be read.'
+              exit 1
+            fi
+            sleep 1
+          done
+          printf 'DeviceHub frontend before boot: running (PIDs %s)\n' "$frontend_pids"
+          echo 'Frontend readiness does not establish device-screen presentation or effective keyboard mode; native UI assertions remain required.'
       - name: Wait for simulator readiness
         run: xcrun simctl bootstatus '${{ steps.simulator.outputs.uuid }}' -b
       - name: Build and test

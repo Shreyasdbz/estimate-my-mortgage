@@ -373,7 +373,21 @@ final class MortgageUITests: XCTestCase {
         XCTAssertFalse(app.alerts.firstMatch.exists, "Field validation must allow direct inline correction")
         XCTAssertTrue(app.buttons["estimate.save"].exists)
         XCTAssertTrue(app.buttons["estimate.keyboardDone"].exists, "Validation must focus its corrective input")
-        XCTAssertTrue(hasVisibleKeyboard(), "The corrective input must show its software keyboard")
+        let keyboardVisible = hasVisibleKeyboard()
+        if !keyboardVisible {
+            screenshot("inline-error-keyboard-missing-" + field)
+            let input = editorInput(identifier: "estimate." + field, nativeType: nativeType)
+            let error = currentError()
+            let doneFrame = app.buttons["estimate.keyboardDone"].frame
+            let windowFrames = app.windows.allElementsBoundByIndex.prefix(4).map { $0.frame }
+            let keyboardFrames = app.keyboards.allElementsBoundByIndex.prefix(3).map { $0.frame }
+            let numericPreviewFrames = app.descendants(matching: .any)
+                .matching(identifier: "UIKeyboardLayoutStar Preview").allElementsBoundByIndex
+                .prefix(3).map { $0.frame }
+            print("Missing correction keyboard \(field): state \(app.state); app \(app.frame); windows \(windowFrames); Form \(form.frame); input \(input.frame); error \(error.frame); Done \(doneFrame); keyboards \(keyboardFrames); numeric previews \(numericPreviewFrames)")
+            print("Corrective input native description: \(input.debugDescription.prefix(4000))")
+        }
+        XCTAssertTrue(keyboardVisible, "The corrective input must show its software keyboard")
         XCTAssertEqual(app.state, .runningForeground)
         return editorInput(identifier: "estimate." + field, nativeType: nativeType)
     }
