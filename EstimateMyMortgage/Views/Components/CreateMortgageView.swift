@@ -273,12 +273,15 @@ struct CreateMortgageView: View {
     private func present(_ error: Error, title: String, using proxy: ScrollViewProxy) {
         if let issue = error as? CreateMortgageViewModel.InputError, let field = issue.field {
             inputError = issue
-            focusedField = field
-            // Defer correction so the inline row and focused input can enter SwiftUI layout.
+            focusedField = nil
+            // Position the correction before restoring focus.
             // Run for every failure, including an unchanged value submitted again.
             Task { @MainActor in
                 await Task.yield()
+                guard focusedField == nil, inputError?.field == field,
+                      inputError?.message == issue.message else { return }
                 proxy.scrollTo(field, anchor: .center)
+                focusedField = field
             }
         } else {
             inputError = nil
