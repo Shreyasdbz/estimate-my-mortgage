@@ -341,8 +341,7 @@ final class MortgageUITests: XCTestCase {
 
     /// Require field-bound recovery without scrolling or tapping to repair the app's focus.
     private func requireInlineError(_ message: String, field: String,
-                                    nativeType: XCUIElement.ElementType = .textField,
-                                    requireSoftwareKeyboard: Bool = true) -> XCUIElement {
+                                    nativeType: XCUIElement.ElementType = .textField) -> XCUIElement {
         let form = app.collectionViews["estimate.form"]
         XCTAssertTrue(form.waitForExistence(timeout: 5))
         func currentError() -> XCUIElement {
@@ -371,9 +370,7 @@ final class MortgageUITests: XCTestCase {
         XCTAssertFalse(app.alerts.firstMatch.exists, "Field validation must allow direct inline correction")
         XCTAssertTrue(app.buttons["estimate.save"].exists)
         XCTAssertTrue(app.buttons["estimate.keyboardDone"].exists, "Validation must focus its corrective input")
-        if requireSoftwareKeyboard {
-            XCTAssertTrue(hasVisibleKeyboard(), "The corrective input must show its software keyboard")
-        }
+        XCTAssertTrue(hasVisibleKeyboard(), "The corrective input must show its software keyboard")
         XCTAssertEqual(app.state, .runningForeground)
         return editorInput(identifier: "estimate." + field, nativeType: nativeType)
     }
@@ -567,9 +564,7 @@ final class MortgageUITests: XCTestCase {
         app.buttons["newEstimate"].tap()
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         let name = editorName()
-        // Native typeText requires keyboard focus even when the software keyboard is not painted.
-        _ = requireInlineError("Enter a name for this estimate.", field: "name", nativeType: name.elementType,
-                               requireSoftwareKeyboard: false)
+        _ = requireInlineError("Enter a name for this estimate.", field: "name", nativeType: name.elementType)
         name.typeText("Invalid input")
         waitForTypedValue("Invalid input", identifier: "estimate.name", nativeType: name.elementType)
         requireInlineErrorCleared("name")
@@ -663,15 +658,15 @@ final class MortgageUITests: XCTestCase {
         app.buttons["%"].tap()
         let invalidProperty = requireInlineError("Enter a positive property price before changing the unit.", field: "property")
         XCTAssertEqual(invalidProperty.value as? String, "0")
-        let retainedUnit = app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"]
-        XCTAssertEqual(retainedUnit.label, "Down payment unit, USD")
-        XCTAssertEqual(retainedUnit.value as? String, "USD", "A failed conversion must retain the original unit")
-        XCTAssertEqual(editorInput(identifier: "estimate.downpayment", nativeType: .textField).value as? String, "100000", "A failed conversion must retain the original amount")
         screenshot("inline-error-unit-conversion")
         replace(invalidProperty, with: "500000", tappingInput: false)
         requireInlineErrorCleared("property")
         dismissKeyboard(numericInput: true)
         scrollEditorTo(unit)
+        let retainedUnit = app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"]
+        XCTAssertEqual(retainedUnit.label, "Down payment unit, USD")
+        XCTAssertEqual(retainedUnit.value as? String, "USD", "A failed conversion must retain the original unit")
+        XCTAssertEqual(editorInput(identifier: "estimate.downpayment", nativeType: .textField).value as? String, "100000", "A failed conversion must retain the original amount")
         unit.tap()
         app.buttons["%"].tap()
         let convertedUnit = app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"]
