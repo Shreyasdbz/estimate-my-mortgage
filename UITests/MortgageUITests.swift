@@ -21,7 +21,7 @@ final class MortgageUITests: XCTestCase {
         app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchEnvironment["EMM_TEST_STORE"] = UUID().uuidString
         app.launchEnvironment["EMM_TEST_APPEARANCE"] = "light"
-        if name.contains("testSearchFiltersSavedEstimates") {
+        if name.contains("testSearchFiltersSavedEstimates") || name.contains("testComparisonOfSavedEstimates") {
             app.launchEnvironment["EMM_TEST_FIXTURE"] = "search"
         }
         app.launch()
@@ -808,8 +808,8 @@ final class MortgageUITests: XCTestCase {
     }
 
     func testComparisonOfSavedEstimates() throws {
-        create("Cedar Home")
-        create("Birch Condo")
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Birch Condo").firstMatch.waitForExistence(timeout: 5))
         app.buttons["Estimate Actions"].tap()
         app.buttons["Compare Estimates"].tap()
         XCTAssertTrue(app.navigationBars["Compare"].waitForExistence(timeout: 3))
