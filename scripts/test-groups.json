@@ -19,6 +19,7 @@
     "tests": [
       "MortgageUITests/testDetailAndScheduleAccessibilityAudit",
       "MortgageUITests/testEditorAccessibilityAudit",
+      "MortgageUITests/testLargestTextInlineCorrectionAndDiscard",
       "MortgageUITests/testDarkAppearanceNativeInput",
       "MortgageUITests/testDarkAppearanceAndLargestText",
       "MortgageUITests/testLandscapeLayout",
@@ -30,6 +31,7 @@
     "tests": [
       "MortgageUITests/testNativeUnitsAndSorting",
       "MortgageUITests/testCommaDecimalAndWholeYearEntry",
+      "MortgageUITests/testFailedUnitConversionInlineCorrectionAndSave",
       "MortgageUITests/testPeriodsAboutAndShareSheet",
       "MortgageUITests/testManualAddressAndSearchCancellation",
       "MortgageUITests/testLiveAppleMapsLookupAndHandoff",

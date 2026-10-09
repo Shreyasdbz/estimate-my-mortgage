@@ -251,7 +251,8 @@ final class MortgageUITests: XCTestCase {
         XCTAssertEqual(app.state, .runningForeground)
     }
 
-    private func replace(_ field: XCUIElement, with value: String) {
+    /// Inline recovery skips the touch so native typing also verifies the app's corrective focus.
+    private func replace(_ field: XCUIElement, with value: String, tappingInput: Bool = true) {
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         let identifier = field.identifier
         guard !identifier.isEmpty else {
@@ -268,8 +269,10 @@ final class MortgageUITests: XCTestCase {
         let placeholder = field.placeholderValue
         // A proportional inset can land before short, trailing-aligned values on iPad.
         // Touch just inside the actual edge to place the caret after the fixture text.
-        field.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
-            .withOffset(CGVector(dx: -1, dy: 0)).tap()
+        if tappingInput {
+            field.coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5))
+                .withOffset(CGVector(dx: -1, dy: 0)).tap()
+        }
         guard let current = field.value as? String else {
             XCTFail("Field value is unavailable: \(field.identifier)")
             return
@@ -334,6 +337,42 @@ final class MortgageUITests: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    /// Require field-bound recovery without scrolling or tapping to repair the app's focus.
+    private func requireInlineError(_ message: String, field: String,
+                                    nativeType: XCUIElement.ElementType = .textField) -> XCUIElement {
+        let form = app.collectionViews["estimate.form"]
+        XCTAssertTrue(form.waitForExistence(timeout: 5))
+        func currentError() -> XCUIElement {
+            form.descendants(matching: .any).matching(identifier: "estimate.error." + field).firstMatch
+        }
+        XCTAssertTrue(currentError().waitForExistence(timeout: 5))
+        let readable = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            let error = currentError()
+            let input = self.editorInput(identifier: "estimate." + field, nativeType: nativeType)
+            let errorFrame = error.frame
+            let inputFrame = input.frame
+            let viewport = form.frame.intersection(self.app.frame)
+                .insetBy(dx: -Self.geometryTolerance, dy: -Self.geometryTolerance)
+            return !viewport.isEmpty && error.label == message && !errorFrame.isEmpty && !inputFrame.isEmpty &&
+                viewport.contains(errorFrame) && viewport.contains(inputFrame) && input.isHittable
+        }, object: nil)
+        let result = XCTWaiter.wait(for: [readable], timeout: 15)
+        if result != .completed { screenshot("inline-error-not-readable-" + field) }
+        XCTAssertEqual(result, .completed, "The complete error and corrective input must be visible together")
+        XCTAssertFalse(app.alerts.firstMatch.exists, "Field validation must allow direct inline correction")
+        XCTAssertTrue(app.buttons["estimate.save"].exists)
+        XCTAssertTrue(app.buttons["estimate.keyboardDone"].exists, "Validation must focus its corrective input")
+        XCTAssertTrue(hasVisibleKeyboard(), "The corrective input must be ready for typing")
+        XCTAssertEqual(app.state, .runningForeground)
+        return editorInput(identifier: "estimate." + field, nativeType: nativeType)
+    }
+
+    private func requireInlineErrorCleared(_ field: String) {
+        let error = app.collectionViews["estimate.form"].descendants(matching: .any)
+            .matching(identifier: "estimate.error." + field).firstMatch
+        XCTAssertTrue(error.waitForNonExistence(timeout: 5), "Editing the draft must clear its stale error")
     }
 
     /// Bring the native combined preview into view before checking its current contents.
@@ -518,35 +557,127 @@ final class MortgageUITests: XCTestCase {
     func testValidationPreventsDismissalAndKeepsInvalidInput() throws {
         app.buttons["newEstimate"].tap()
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
-        XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
-        app.alerts.buttons["OK"].tap()
         let name = editorName()
-        name.tap()
+        _ = requireInlineError("Enter a name for this estimate.", field: "name", nativeType: name.elementType)
         name.typeText("Invalid input")
         waitForTypedValue("Invalid input", identifier: "estimate.name", nativeType: name.elementType)
+        requireInlineErrorCleared("name")
         dismissKeyboard()
         let property = app.textFields["estimate.property"]
         scrollEditorTo(property)
         replace(property, with: "0")
         dismissKeyboard(usingReturn: true)
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
-        XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
-        app.alerts.buttons["OK"].tap()
-        XCTAssertEqual(app.textFields["estimate.property"].value as? String, "0")
-        replace(app.textFields["estimate.property"], with: "")
+        let invalidProperty = requireInlineError("Enter a home price greater than zero.", field: "property")
+        XCTAssertEqual(invalidProperty.value as? String, "0")
+        screenshot("inline-error-zero-property")
+        replace(invalidProperty, with: "", tappingInput: false)
+        requireInlineErrorCleared("property")
         dismissKeyboard(usingReturn: true)
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
-        XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
-        app.alerts.buttons["OK"].tap()
-        XCTAssertTrue(app.buttons["estimate.keyboardDone"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.textFields["estimate.property"].label, "Property price, USD")
+        let emptyProperty = requireInlineError("Property price must be a valid number. Use the decimal separator for your region and omit grouping separators.", field: "property")
+        XCTAssertEqual(emptyProperty.value as? String, "")
+        XCTAssertEqual(emptyProperty.label, "Property price, USD")
         screenshot("empty-numeric-validation")
-        replace(app.textFields["estimate.property"], with: "500000")
+        emptyProperty.typeText("500000")
+        waitForTypedValue("500000", identifier: "estimate.property", nativeType: .textField)
+        requireInlineErrorCleared("property")
         dismissKeyboard(usingReturn: true)
+        requirePreview("$3,396.16")
+        screenshot("inline-error-corrected-preview")
         app.buttons["estimate.cancel"].tap()
         XCTAssertTrue(app.buttons["Discard changes"].waitForExistence(timeout: 3))
         app.buttons["Discard changes"].tap()
         XCTAssertTrue(app.staticTexts["No estimates yet"].exists)
+    }
+
+    func testLargestTextInlineCorrectionAndDiscard() throws {
+        app.terminate()
+        app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        app.buttons["newEstimate"].tap()
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        let name = editorName()
+        let nameType = name.elementType
+        let emptyName = requireInlineError("Enter a name for this estimate.", field: "name", nativeType: nameType)
+        XCTAssertEqual(emptyName.value as? String, "")
+        screenshot("largest-text-inline-error-name")
+        // Repeated Save must restore the same correction even without a draft change.
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        let repeatedName = requireInlineError("Enter a name for this estimate.", field: "name", nativeType: nameType)
+        XCTAssertEqual(repeatedName.value as? String, "")
+        repeatedName.typeText("Inline correction")
+        waitForTypedValue("Inline correction", identifier: "estimate.name", nativeType: nameType)
+        requireInlineErrorCleared("name")
+        dismissKeyboard()
+        let property = editorInput(identifier: "estimate.property", nativeType: .textField)
+        scrollEditorTo(property)
+        replace(property, with: "0")
+        dismissKeyboard(numericInput: true)
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        let invalidProperty = requireInlineError("Enter a home price greater than zero.", field: "property")
+        XCTAssertEqual(invalidProperty.value as? String, "0")
+        screenshot("largest-text-inline-error-property")
+        replace(invalidProperty, with: "500000", tappingInput: false)
+        requireInlineErrorCleared("property")
+        dismissKeyboard(numericInput: true)
+        requirePreview("$3,396.16")
+        screenshot("largest-text-inline-error-corrected-preview")
+        tapScreenCenter(app.buttons["estimate.cancel"], requireHittable: false)
+        XCTAssertTrue(app.buttons["Discard changes"].waitForExistence(timeout: 3))
+        app.buttons["Discard changes"].tap()
+        XCTAssertTrue(app.collectionViews["estimate.form"].waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["No estimates yet"].waitForExistence(timeout: 5))
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.staticTexts["No estimates yet"].waitForExistence(timeout: 5), "Discard must not persist the corrected draft")
+    }
+
+    func testFailedUnitConversionInlineCorrectionAndSave() throws {
+        app.buttons["newEstimate"].tap()
+        let name = editorName()
+        name.tap()
+        name.typeText("Conversion correction")
+        waitForTypedValue("Conversion correction", identifier: "estimate.name", nativeType: name.elementType)
+        dismissKeyboard()
+        let property = editorInput(identifier: "estimate.property", nativeType: .textField)
+        scrollEditorTo(property)
+        replace(property, with: "0")
+        dismissKeyboard(numericInput: true)
+        let unit = app.buttons["estimate.downpaymentUnit"]
+        scrollEditorTo(unit)
+        XCTAssertEqual(unit.label, "USD")
+        unit.tap()
+        app.buttons["%"].tap()
+        let invalidProperty = requireInlineError("Enter a positive property price before changing the unit.", field: "property")
+        XCTAssertEqual(invalidProperty.value as? String, "0")
+        XCTAssertEqual(app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"].label, "USD", "A failed conversion must retain the original unit")
+        XCTAssertEqual(editorInput(identifier: "estimate.downpayment", nativeType: .textField).value as? String, "100000", "A failed conversion must retain the original amount")
+        screenshot("inline-error-unit-conversion")
+        replace(invalidProperty, with: "500000", tappingInput: false)
+        requireInlineErrorCleared("property")
+        dismissKeyboard(numericInput: true)
+        scrollEditorTo(unit)
+        unit.tap()
+        app.buttons["%"].tap()
+        XCTAssertEqual(app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"].label, "%")
+        let downpayment = editorInput(identifier: "estimate.downpayment", nativeType: .textField)
+        scrollEditorTo(downpayment)
+        XCTAssertEqual(downpayment.value as? String, "20")
+        XCTAssertEqual(property.value as? String, "500000")
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        requirePreview("$3,396.16")
+        screenshot("inline-error-unit-conversion-corrected-preview")
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        waitForSavedResult("Conversion correction")
+        XCTAssertEqual(app.staticTexts["monthlyTotal"].label, "$3,396.16")
+        screenshot("inline-error-unit-conversion-saved-result")
+        app.buttons["editEstimate"].tap()
+        scrollEditorTo(downpayment)
+        XCTAssertEqual(downpayment.value as? String, "100000", "The saved estimate must retain the converted dollar amount")
+        XCTAssertEqual(app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"].label, "USD")
+        tapScreenCenter(app.buttons["estimate.cancel"], requireHittable: false)
+        XCTAssertTrue(app.navigationBars["Conversion correction"].waitForExistence(timeout: 5))
     }
 
     func testSearchFiltersSavedEstimates() throws {
@@ -589,10 +720,10 @@ final class MortgageUITests: XCTestCase {
         replace(term, with: "30,5")
         dismissKeyboard(usingReturn: true)
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
-        XCTAssertTrue(app.alerts["Unable to save"].waitForExistence(timeout: 3))
-        app.alerts.buttons["OK"].tap()
-        XCTAssertEqual(term.value as? String, "30,5")
-        replace(term, with: "30")
+        let invalidTerm = requireInlineError("Loan term must be a whole number of years.", field: "term")
+        XCTAssertEqual(invalidTerm.value as? String, "30,5")
+        replace(invalidTerm, with: "30", tappingInput: false)
+        requireInlineErrorCleared("term")
         dismissKeyboard(usingReturn: true)
         // Independent fixed-rate fixture: $400,000 loan, 6.25%, 360 payments,
         // plus the default $13,500 annual ownership costs.

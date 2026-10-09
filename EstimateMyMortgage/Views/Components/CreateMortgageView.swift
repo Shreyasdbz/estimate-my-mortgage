@@ -68,6 +68,7 @@ struct CreateMortgageView: View {
                                 .focused($focusedField, equals: .name)
                                 .accessibilityLabel("Name")
                                 .accessibilityIdentifier("estimate.name")
+                                .accessibilityHint(inputError?.field == .name ? inputError?.message ?? "" : "")
                                 .onGeometryChange(for: CGRect.self) {
                                     tracksNameGeometry ? $0.frame(in: .global) : .zero
                                 } action: { frame in
@@ -83,7 +84,7 @@ struct CreateMortgageView: View {
                         LabeledContent("Down payment unit") {
                             Picker("Down payment unit", selection: Binding(
                                 get: { vm.draft.downpaymentUnit },
-                                set: { unit in changeUnit { try vm.changeDownpaymentUnit(to: unit) } }
+                                set: { unit in changeUnit(using: proxy) { try vm.changeDownpaymentUnit(to: unit) } }
                             )) {
                                 ForEach(AmountInputUnit.allCases) { unit in Text(unit.rawValue).tag(unit) }
                             }
@@ -105,7 +106,7 @@ struct CreateMortgageView: View {
                         LabeledContent("Property tax unit") {
                             Picker("Property tax unit", selection: Binding(
                                 get: { vm.draft.propertyTaxUnit },
-                                set: { unit in changeUnit { try vm.changePropertyTaxUnit(to: unit) } }
+                                set: { unit in changeUnit(using: proxy) { try vm.changePropertyTaxUnit(to: unit) } }
                             )) {
                                 ForEach(AmountInputUnit.allCases) { unit in Text(unit.rawValue).tag(unit) }
                             }
@@ -179,7 +180,7 @@ struct CreateMortgageView: View {
                     .accessibilityIdentifier("estimate.cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", role: saveRole, action: save)
+                    Button("Save", role: saveRole) { save(using: proxy) }
                         .tint(.indigo)
                         .accessibilityIdentifier("estimate.save")
                 }
@@ -190,15 +191,7 @@ struct CreateMortgageView: View {
                 Button("Keep editing", role: .cancel) { }
             }
             .alert(errorTitle, isPresented: $errorPresented) {
-                Button("OK", role: .cancel) {
-                    if let field = inputError?.field {
-                        proxy.scrollTo(field, anchor: .center)
-                        Task { @MainActor in
-                            await Task.yield()
-                            focusedField = field
-                        }
-                    }
-                }
+                Button("OK", role: .cancel) { }
             } message: {
                 Text(saveError ?? "Please try again.")
             }
@@ -235,6 +228,7 @@ struct CreateMortgageView: View {
             .focused($focusedField, equals: field)
             .accessibilityLabel("\(title), \(unit)")
             .accessibilityIdentifier("estimate.\(String(describing: field))")
+            .accessibilityHint(inputError?.field == field ? inputError?.message ?? "" : "")
         return VStack(alignment: .leading, spacing: 6) {
             // Native label/value rows use the iPad's width; large text keeps stacked inputs.
             if widthClass == .regular && !textSize.isAccessibilitySize {
@@ -257,21 +251,41 @@ struct CreateMortgageView: View {
         if let inputError, inputError.field == field {
             Label {
                 Text(inputError.message).foregroundStyle(Color.primary)
+                    .fixedSize(horizontal: false, vertical: true)
             } icon: {
                 Image(systemName: "exclamationmark.circle").foregroundStyle(.red)
             }
             .font(.footnote)
             .accessibilityElement(children: .combine)
+            .accessibilityLabel(inputError.message)
+            .accessibilityIdentifier("estimate.error.\(String(describing: field))")
         }
     }
 
-    private func changeUnit(_ change: () throws -> Void) {
+    private func changeUnit(using proxy: ScrollViewProxy, _ change: () throws -> Void) {
         do {
             try change()
         } catch {
-            errorTitle = "Unable to change unit"
+            present(error, title: "Unable to change unit", using: proxy)
+        }
+    }
+
+    /// Correctable field errors retain the draft and lead straight to the input.
+    /// Fieldless stale-record and storage failures still require an explicit alert.
+    private func present(_ error: Error, title: String, using proxy: ScrollViewProxy) {
+        if let issue = error as? CreateMortgageViewModel.InputError, let field = issue.field {
+            inputError = issue
+            // Defer correction so the inline row can enter SwiftUI layout.
+            // Run for every failure, including an unchanged value submitted again.
+            Task { @MainActor in
+                await Task.yield()
+                proxy.scrollTo(field, anchor: .center)
+                focusedField = field
+            }
+        } else {
+            inputError = nil
+            errorTitle = title
             saveError = error.localizedDescription
-            inputError = error as? CreateMortgageViewModel.InputError
             errorPresented = true
         }
     }
@@ -285,16 +299,13 @@ struct CreateMortgageView: View {
         textSize.isAccessibilitySize && widthClass == .compact ? .vertical : .horizontal
     }
 
-    private func save() {
+    private func save(using proxy: ScrollViewProxy) {
         focusedField = nil
         do {
             onSaved(try vm.save())
             dismiss()
         } catch {
-            errorTitle = "Unable to save"
-            saveError = error.localizedDescription
-            inputError = error as? CreateMortgageViewModel.InputError
-            errorPresented = true
+            present(error, title: "Unable to save", using: proxy)
         }
     }
 }
