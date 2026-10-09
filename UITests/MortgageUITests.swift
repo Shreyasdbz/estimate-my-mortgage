@@ -546,7 +546,8 @@ final class MortgageUITests: XCTestCase {
             return (preview.label, !viewport.isEmpty && !preview.frame.isEmpty && viewport.contains(preview.frame))
         }
         for _ in 0..<5 {
-            guard let state = previewState(), !state.visible else { break }
+            if let state = previewState(), state.visible { break }
+            // Offscreen Form rows can be absent from the native snapshot.
             form.swipeDown()
         }
         let updated = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
@@ -769,14 +770,14 @@ final class MortgageUITests: XCTestCase {
         let property = app.textFields["estimate.property"]
         scrollEditorTo(property)
         replace(property, with: "0")
-        dismissKeyboard(usingReturn: true)
+        dismissKeyboard(numericInput: true)
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         let invalidProperty = requireInlineError("Enter a home price greater than zero.", field: "property")
         XCTAssertEqual(invalidProperty.value as? String, "0")
         screenshot("inline-error-zero-property")
         replace(invalidProperty, with: "", tappingInput: false)
         requireInlineErrorCleared("property")
-        dismissKeyboard(usingReturn: true)
+        dismissKeyboard(numericInput: true)
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         let emptyProperty = requireInlineError("Property price must be a valid number. Use the decimal separator for your region and omit grouping separators.", field: "property")
         XCTAssertEqual(emptyProperty.value as? String, "")
@@ -785,7 +786,7 @@ final class MortgageUITests: XCTestCase {
         emptyProperty.typeText("500000")
         waitForTypedValue("500000", identifier: "estimate.property", nativeType: .textField)
         requireInlineErrorCleared("property")
-        dismissKeyboard(usingReturn: true)
+        dismissKeyboard(numericInput: true)
         requirePreview("$3,396.16")
         screenshot("inline-error-corrected-preview")
         app.buttons["estimate.cancel"].tap()
