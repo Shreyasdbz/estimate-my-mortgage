@@ -84,7 +84,7 @@ jobs:
             printf '::error::DeviceHub %s before: not readable: %s\n' "$keyboard_key" "$before_value"
             exit 1
           fi
-          # DeviceHub caches this global mode; configure it before its frontend starts.
+          # Configure the global intent before boot; this workflow does not explicitly launch the frontend.
           # https://github.com/appium/appium-ios/blob/main/packages/simulator/README.md#hardware-keyboard
           if ! defaults write "$keyboard_plist" "$keyboard_key" -bool false; then
             echo '::error::Cannot configure the DeviceHub keyboard fixture on this disposable runner.'
@@ -114,42 +114,44 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('uuid=' + matches[0]['udid'] + '\n')
           PY
-      - name: Start DeviceHub frontend
+      - name: Wait for simulator readiness
+        run: xcrun simctl bootstatus '${{ steps.simulator.outputs.uuid }}' -b
+      - name: Record frontend before testing
         env:
           SELECTED_SIMULATOR: ${{ steps.simulator.outputs.uuid }}
         run: |
           set -euo pipefail
-          devicehub_app="$DEVELOPER_DIR/../Applications/DeviceHub.app"
-          devicehub_info="$devicehub_app/Contents/Info.plist"
-          bundle_id=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$devicehub_info")
-          frontend_version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$devicehub_info")
-          if [[ "$bundle_id" != com.apple.dt.Devices || "$frontend_version" != 27.* ]]; then
-            echo '::error::The selected Xcode must contain its Xcode 27 DeviceHub frontend.'
-            exit 1
-          fi
-          printf 'Selected simulator: %s; DeviceHub: %s (%s)\n' "$SELECTED_SIMULATOR" "$devicehub_app" "$frontend_version"
-          # Match the current maintainer lifecycle; no selected-device argument is documented.
-          # https://github.com/appium/appium-ios/blob/main/packages/simulator/lib/extensions/ui-client.ts
-          open -Fn "$devicehub_app"
-          deadline=$((SECONDS + 30))
-          while true; do
-            if frontend_pids=$(pgrep -x DeviceHub); then
-              break
-            else
-              process_status=$?
-            fi
-            if [[ "$process_status" -ne 1 || "$SECONDS" -ge "$deadline" ]]; then
-              echo '::error::DeviceHub did not become discoverable within 30 seconds, or its process state could not be read.'
+          printf 'Selected simulator after boot/before test: %s\n' "$SELECTED_SIMULATOR"
+          if frontend_pids=$(pgrep -x DeviceHub); then
+            printf 'DeviceHub frontend before test: running (PIDs %s)\n' "$frontend_pids"
+          else
+            process_status=$?
+            if [[ "$process_status" -ne 1 ]]; then
+              echo '::error::Cannot determine DeviceHub frontend state before testing.'
               exit 1
             fi
-            sleep 1
-          done
-          printf 'DeviceHub frontend before boot: running (PIDs %s)\n' "$frontend_pids"
-          echo 'Frontend readiness does not establish device-screen presentation or effective keyboard mode; native UI assertions remain required.'
-      - name: Wait for simulator readiness
-        run: xcrun simctl bootstatus '${{ steps.simulator.outputs.uuid }}' -b
+            echo 'DeviceHub frontend before test: not running'
+          fi
+          echo 'No explicit frontend launch; observed process state does not establish effective keyboard mode or failure cause.'
       - name: Build and test
         run: ./scripts/test-ios.sh '${{ steps.simulator.outputs.uuid }}' "$RUNNER_TEMP/Tests.xcresult" '${{ matrix.group }}'
+      - name: Record frontend after test attempt
+        if: always()
+        env:
+          SELECTED_SIMULATOR: ${{ steps.simulator.outputs.uuid }}
+        run: |
+          set -euo pipefail
+          printf 'Selected simulator after test attempt: %s\n' "$SELECTED_SIMULATOR"
+          if frontend_pids=$(pgrep -x DeviceHub); then
+            printf 'DeviceHub frontend after test attempt: running (PIDs %s)\n' "$frontend_pids"
+          else
+            process_status=$?
+            if [[ "$process_status" -ne 1 ]]; then
+              echo '::error::Cannot determine DeviceHub frontend state after the test attempt.'
+              exit 1
+            fi
+            echo 'DeviceHub frontend after test attempt: not running'
+          fi
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:

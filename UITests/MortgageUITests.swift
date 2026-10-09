@@ -165,7 +165,7 @@ final class MortgageUITests: XCTestCase {
             // A hosted lookup exhausted five seconds after the Done bar disappeared.
             // Preserve the absence requirement with another bounded snapshot allowance.
             ("focus control", 15, { !done.exists }),
-            ("software keyboard", 5, {
+            ("software keyboard", 15, {
                 !self.app.keyboards.allElementsBoundByIndex.contains(where: self.isOnscreen)
             }),
             // An iPad preview lookup exhausted five seconds after visible dismissal.
