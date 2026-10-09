@@ -21,6 +21,9 @@ final class MortgageUITests: XCTestCase {
         app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchEnvironment["EMM_TEST_STORE"] = UUID().uuidString
         app.launchEnvironment["EMM_TEST_APPEARANCE"] = "light"
+        if name.contains("testSearchFiltersSavedEstimates") {
+            app.launchEnvironment["EMM_TEST_FIXTURE"] = "search"
+        }
         app.launch()
     }
 
@@ -342,6 +345,21 @@ final class MortgageUITests: XCTestCase {
         add(attachment)
     }
 
+    /// Collect exact typed descendants; correction checks require one match for each control.
+    private func inlineCorrectionSnapshots(in form: any XCUIElementSnapshot, errorIdentifier: String,
+                                           inputIdentifier: String, inputType: XCUIElement.ElementType)
+        -> (errors: [any XCUIElementSnapshot], inputs: [any XCUIElementSnapshot]) {
+        var errors: [any XCUIElementSnapshot] = []
+        var inputs: [any XCUIElementSnapshot] = []
+        var remaining = form.children
+        while let node = remaining.popLast() {
+            if node.elementType == .staticText && node.identifier == errorIdentifier { errors.append(node) }
+            if node.elementType == inputType && node.identifier == inputIdentifier { inputs.append(node) }
+            remaining.append(contentsOf: node.children)
+        }
+        return (errors, inputs)
+    }
+
     /// Require field-bound recovery without scrolling or tapping to repair the app's focus.
     private func requireInlineError(_ message: String, field: String,
                                     nativeType: XCUIElement.ElementType = .textField) -> XCUIElement {
@@ -351,18 +369,36 @@ final class MortgageUITests: XCTestCase {
             form.staticTexts["estimate.error." + field].firstMatch
         }
         XCTAssertTrue(currentError().waitForExistence(timeout: 5))
+        var lastReadabilityIssue = "No Form snapshot evaluation completed"
         let readable = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            let error = currentError()
-            let input = self.editorInput(identifier: "estimate." + field, nativeType: nativeType)
-            let errorFrame = error.frame
-            let inputFrame = input.frame
-            let viewport = form.frame.intersection(self.app.frame)
-                .insetBy(dx: -Self.geometryTolerance, dy: -Self.geometryTolerance)
-            return !viewport.isEmpty && error.label == message && !errorFrame.isEmpty && !inputFrame.isEmpty &&
-                viewport.contains(errorFrame) && viewport.contains(inputFrame) && input.isHittable
+            do {
+                let snapshot = try form.snapshot()
+                let nodes = self.inlineCorrectionSnapshots(in: snapshot, errorIdentifier: "estimate.error." + field,
+                                                          inputIdentifier: "estimate." + field, inputType: nativeType)
+                guard nodes.errors.count == 1 && nodes.inputs.count == 1 else {
+                    lastReadabilityIssue = "Form snapshot requires exactly one typed error and input; found \(nodes.errors.count) errors and \(nodes.inputs.count) inputs for \(field)"
+                    return false
+                }
+                let error = nodes.errors[0]
+                let errorFrame = error.frame
+                let inputFrame = nodes.inputs[0].frame
+                let viewport = snapshot.frame.intersection(self.app.frame)
+                    .insetBy(dx: -Self.geometryTolerance, dy: -Self.geometryTolerance)
+                lastReadabilityIssue = "Form snapshot \(snapshot.frame); viewport \(viewport); input \(inputFrame); error \(errorFrame); label \(error.label); expected \(message)"
+                guard !viewport.isEmpty && error.label == message && !errorFrame.isEmpty && !inputFrame.isEmpty &&
+                    viewport.contains(errorFrame) && viewport.contains(inputFrame) else { return false }
+                let input = self.editorInput(identifier: "estimate." + field, nativeType: nativeType)
+                let hittable = input.isHittable
+                lastReadabilityIssue += "; live input hittable \(hittable)"
+                return hittable
+            } catch {
+                lastReadabilityIssue = "Form snapshot failed for \(field): \(error.localizedDescription)"
+                return false
+            }
         }, object: nil)
         let result = XCTWaiter.wait(for: [readable], timeout: 15)
         if result != .completed {
+            print("Last inline correction evaluation: \(lastReadabilityIssue)")
             screenshot("inline-error-not-readable-" + field)
             let input = editorInput(identifier: "estimate." + field, nativeType: nativeType)
             let error = currentError()
@@ -710,8 +746,8 @@ final class MortgageUITests: XCTestCase {
     }
 
     func testSearchFiltersSavedEstimates() throws {
-        create("Cedar Home")
-        create("Birch Condo")
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Birch Condo").firstMatch.waitForExistence(timeout: 5))
         let search = app.searchFields.firstMatch
         search.tap()
         search.typeText("Cedar")

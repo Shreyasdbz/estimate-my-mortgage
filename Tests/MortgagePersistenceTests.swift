@@ -268,4 +268,90 @@ final class MortgagePersistenceTests: XCTestCase {
             for store in coordinator.persistentStores { try coordinator.remove(store) }
         }
     }
+
+    #if DEBUG
+    func testSearchUITestFixturePersistsValidDefaultsAndRejectsReusedStore() throws {
+        let identifier = UUID().uuidString
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("UITest-\(identifier).sqlite")
+        defer {
+            for suffix in ["", "-wal", "-shm"] {
+                try? FileManager.default.removeItem(at: URL(fileURLWithPath: url.path + suffix))
+            }
+        }
+        let environment = ["EMM_TEST_STORE": identifier, "EMM_TEST_FIXTURE": "search"]
+        try autoreleasepool {
+            let provider = try XCTUnwrap(EstimateMyMortgageApp.uiTestProvider(arguments: ["--ui-testing"], environment: environment))
+            XCTAssertNil(provider.loadError)
+            let mortgages = try provider.viewContext.fetch(Mortgage.all())
+            XCTAssertEqual(mortgages.map(\.name), ["Birch Condo", "Cedar Home"])
+            for mortgage in mortgages {
+                XCTAssertFalse(mortgage.objectID.isTemporaryID)
+                XCTAssertEqual(mortgage.terms, MortgageTerms())
+                XCTAssertTrue(mortgage.terms.isValid)
+                XCTAssertEqual(mortgage.formattedAddressString, "")
+            }
+            XCTAssertFalse(provider.viewContext.hasChanges)
+            let coordinator = try XCTUnwrap(provider.viewContext.persistentStoreCoordinator)
+            XCTAssertEqual(coordinator.persistentStores.first?.url, url)
+            provider.viewContext.reset()
+            for store in coordinator.persistentStores { try coordinator.remove(store) }
+        }
+        // Re-requesting a fixture may not duplicate or replace already persisted records.
+        try autoreleasepool {
+            XCTAssertThrowsError(try EstimateMyMortgageApp.uiTestProvider(arguments: ["--ui-testing"], environment: environment))
+        }
+        try autoreleasepool {
+            // A valid UUID without a fixture retains the existing isolated-store loading behavior.
+            let provider = try XCTUnwrap(EstimateMyMortgageApp.uiTestProvider(arguments: ["--ui-testing"],
+                                                                           environment: ["EMM_TEST_STORE": identifier]))
+            XCTAssertNil(provider.loadError)
+            let mortgages = try provider.viewContext.fetch(Mortgage.all())
+            XCTAssertEqual(mortgages.map(\.name), ["Birch Condo", "Cedar Home"])
+            XCTAssertTrue(mortgages.allSatisfy { $0.terms == MortgageTerms() })
+            let coordinator = try XCTUnwrap(provider.viewContext.persistentStoreCoordinator)
+            provider.viewContext.reset()
+            for store in coordinator.persistentStores { try coordinator.remove(store) }
+        }
+    }
+
+    func testSearchUITestFixtureGatesRequestsAndPreservesUnreadableStore() throws {
+        let identifier = UUID().uuidString
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("UITest-\(identifier).sqlite")
+        let invalidIdentifier = "invalid-\(identifier)"
+        let invalidURL = FileManager.default.temporaryDirectory.appendingPathComponent("UITest-\(invalidIdentifier).sqlite")
+        defer {
+            for storeURL in [url, invalidURL] {
+                for suffix in ["", "-wal", "-shm"] {
+                    try? FileManager.default.removeItem(at: URL(fileURLWithPath: storeURL.path + suffix))
+                }
+            }
+        }
+        // An environment variable alone never activates the UI-test store or fixture.
+        for fixture in ["search", "unsupported"] {
+            XCTAssertNil(try EstimateMyMortgageApp.uiTestProvider(arguments: [],
+                                                                 environment: ["EMM_TEST_STORE": identifier, "EMM_TEST_FIXTURE": fixture]))
+        }
+        for environment in [
+            ["EMM_TEST_FIXTURE": "search"],
+            ["EMM_TEST_STORE": invalidIdentifier, "EMM_TEST_FIXTURE": "search"],
+            ["EMM_TEST_STORE": identifier, "EMM_TEST_FIXTURE": "unsupported"]
+        ] {
+            XCTAssertThrowsError(try EstimateMyMortgageApp.uiTestProvider(arguments: ["--ui-testing"], environment: environment))
+            XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+            XCTAssertFalse(FileManager.default.fileExists(atPath: invalidURL.path))
+        }
+        XCTAssertNil(try EstimateMyMortgageApp.uiTestProvider(arguments: ["--ui-testing"],
+                                                             environment: ["EMM_TEST_STORE": invalidIdentifier]))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: invalidURL.path))
+
+        let original = Data("Unreadable isolated UI-test store".utf8)
+        try original.write(to: url)
+        try autoreleasepool {
+            XCTAssertThrowsError(try EstimateMyMortgageApp.uiTestProvider(arguments: ["--ui-testing"],
+                                                                         environment: ["EMM_TEST_STORE": identifier, "EMM_TEST_FIXTURE": "search"]))
+        }
+        XCTAssertEqual(try Data(contentsOf: url), original, "Fixture loading may not replace an unreadable store")
+    }
+    #endif
 }
