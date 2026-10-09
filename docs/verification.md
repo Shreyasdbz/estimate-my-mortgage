@@ -51,6 +51,8 @@ xcodebuild -version
 xcrun simctl list devices available
 python3 -B -m unittest discover -s scripts -p 'test_configure_simulator_keyboard.py'
 ./scripts/test-ios.sh SIMULATOR_UUID /private/tmp/MortgageTests.xcresult
+# Optional hosted run for the affected group on both devices.
+gh workflow run ios.yml --ref main -f test_group=ui-core -f device=both
 xcodebuild -project EstimateMyMortgage.xcodeproj -scheme EstimateMyMortgage \
   -destination 'generic/platform=iOS' -configuration Release \
   -derivedDataPath /private/tmp/MortgageRelease CODE_SIGNING_ALLOWED=NO build
@@ -74,11 +76,31 @@ The default local command runs the full scheme. Its optional third argument sele
 
 ## Runtime results and media
 
-Published test source `7cc92d4739c02ee64e7d2e0602afc53b1159d86e` is undergoing a [targeted second attempt](https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37944718332/attempts/2). The completed first attempt reconciled all 110 identities: 105 Passed, two Failed and three intended Skipped, with eight empty runtime-warning arrays and matching fixture/native simulator attribution. Only iPad core and iPhone accessibility are rerunning, totaling 20 cases; the six successful original groups retain their 90 identities. Source inputs remain unchanged. Full hosted acceptance is pending. App, project and Release inputs remain identical to `54f9595`; the current changes affect the native test driver. Reviewed media retains its actual capture revisions and separate Passed-case evidence.
+Published test source `2a367c1bb283259c5c383865688fa358de7909cf` Passed all 22 current-source core cases in [targeted CI](https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37957214979): 11 on iPhone and 11 on iPad, with no failures, skips or reported runtime warnings. All three official jobs succeeded. Fresh artifact IDs and downloaded digests match GitHub; native destinations match each keyboard fixture’s selected simulator.
+
+Combining those two core groups with six unchanged successful groups from [`7cc92d4`](https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37944718332/attempts/2) gives **107 Passed, zero Failed and three intended Skipped across all 110 identities**, each exactly once per device. Root independently read all eight native bundles and verified empty runtime-warning arrays and fixture/native attribution. The retained iPhone accessibility group comes from attempt two; the other five retained groups come from attempt one. This is composed hosted evidence, not a full 110-case run at the new revision.
+
+Only the Search test method and manual CI selection changed from `7cc92d4`; other test methods, production/project inputs and native build/test/fixture steps are byte-identical. Search now checks displayed titles in the native list, retaining all six assertions and every search/navigation action. Normal push/PR runs still select all eight groups. App and Release inputs remain identical to `54f9595`; reviewed media retains its actual capture revisions and separate Passed-case evidence.
+
+| Group | iPhone | iPad | Attributed test source |
+| --- | --- | --- | --- |
+| Calculation and persistence | 26 Passed | 26 Passed | `7cc92d4`, attempt one |
+| Core journeys | 11 Passed | 11 Passed | `2a367c1`, targeted run |
+| Accessibility and appearance | 9 Passed | 9 Passed | `7cc92d4`, Phone attempt two; Pad attempt one |
+| Navigation and integrations | 7 Passed, 2 intended Skipped | 8 Passed, 1 intended Skipped | `7cc92d4`, attempt one |
+
+The focused Search follow-up at `2a367c1` Passed once on each device after one generic SDK 27 build: iPhone 15.156 seconds and iPad 17.097 seconds. Root independently read both native bundles: exact case/destination, one Passed, no Failed or Skipped and empty runtime-warning arrays. All 39 frozen inputs and the test-run configuration hash stayed unchanged, and both task-owned simulators shut down successfully. This separate local proof does not erase the earlier hosted failure.
+
+<details>
+<summary>Earlier harness corrections and hosted failures at 7cc92d4</summary>
 
 The reviewed correction keeps scrolling up to five times when an offscreen Form preview row is absent from the snapshot; the previous reveal loop stopped prematurely. Exactly one native preview label, full visibility, current amount, stale-amount exclusion, live hittability and the 15-second assertion remain required. Largest-text correction/discard Passed locally on iPhone (68.767 seconds) and iPad (72.011 seconds). Regular price validation now dismisses the keyboard with the native Done button; zero/empty input, direct untapped correction, software keyboard, error clearance, preview and discard assertions remain. That focused iPad case Passed in 77.833 seconds. Regional decimal and whole-year journeys retain Return coverage. All focused runs had exact selected identities, empty runtime-warning arrays and immutable inputs; these scoped passes do not establish whole-matrix acceptance or explain native timeout causes.
 
-The current first-attempt failures remain recorded. iPad regular validation failed its positive software-keyboard guard in 83.801 seconds at the first zero-price correction: native focus, caret, exact error, input and Done were present, but original pixels and geometry showed no painted keyboard. Direct correction and subsequent empty-price/recovery actions were unattempted. The iPhone largest-text case exceeded 600 seconds during the initial invalid-input Save: the touch was synthesized at 539.47 seconds and the following native idle wait exhausted the allowance before inline-error and corrected-preview assertions. Neither trace establishes an app, SDK or fixture cause. The unchanged-source follow-up retains every assertion and time limit.
+The `7cc92d4` first-attempt failures remain recorded. iPad regular validation failed its positive software-keyboard guard in 83.801 seconds at the first zero-price correction: native focus, caret, exact error, input and Done were present, but original pixels and geometry showed no painted keyboard. Direct correction and subsequent empty-price/recovery actions were unattempted. The iPhone largest-text case exceeded 600 seconds during the initial invalid-input Save: the touch was synthesized at 539.47 seconds and the following native idle wait exhausted the allowance before inline-error and corrected-preview assertions. Neither trace establishes an app, SDK or fixture cause. The unchanged-source second attempt passed both cases with every assertion and time limit retained.
+
+The completed [`7cc92d4` second attempt](https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37944718332/attempts/2), combined with its six unchanged successful groups, reported 106 Passed, one Failed and three intended Skipped across all 110 identities. Both earlier failing cases passed. iPad Search then failed after 266.094 seconds while evaluating the nested cell query for the absent Birch Condo title; this establishes a query-evaluation timeout, without an app-filtering or SDK diagnosis. Its source and failed ledger remain separately attributed.
+
+</details>
 
 <details>
 <summary>Earlier local, compatibility and Release checks</summary>
@@ -174,7 +196,7 @@ The sole existing contrast exception matches native Cancel/Save identifiers and 
 
 ### Reviewed interaction captures
 
-Thirteen screenshots retain their actual `0f46a8d` Passed-case attribution from the failed [predecessor hosted run](https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776). The iPad regular price-error capture comes from a separate Passed focused case at `57f7684`. Every production and project input matches published test source `7cc92d4`; test harness inputs differ. Each capture has verified case identity, failure association, hash and dimensions, with root and independent review of original pixels. Native assertions and static visual evidence remain separate; screenshots do not establish frame rate or physical haptics.
+Thirteen screenshots retain their actual `0f46a8d` Passed-case attribution from the failed [predecessor hosted run](https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776). The iPad regular price-error capture comes from a separate Passed focused case at `57f7684`. Every production and project input matches published test source `2a367c1`; test harness inputs differ. Each capture has verified case identity, failure association, hash and dimensions, with root and independent review of original pixels. Native assertions and static visual evidence remain separate; screenshots do not establish frame rate or physical haptics.
 
 | Current state | iPhone | iPad |
 | --- | --- | --- |
@@ -188,7 +210,7 @@ Thirteen screenshots retain their actual `0f46a8d` Passed-case attribution from 
 
 ### Current native preview recordings — `0f46a8d`
 
-These recordings come from separate Passed local native journeys at their actual `0f46a8d` source revision, with production/project inputs equal to published `7cc92d4`. Each clip shows property-price replacement, the changing monthly preview, Done, Save and matching details. Each uses one contiguous ordinary-speed trim without internal cuts: iPhone 34–58 seconds and iPad 31–55 seconds; the clip starts after Name entry. Root and independent UX review sampled original and delivered interaction/trim-boundary frames, and every raw and delivered frame decoded without errors. This is scripted simulator evidence, without a continuous-playback, frame-rate, latency or physical-haptics claim.
+These recordings come from separate Passed local native journeys at their actual `0f46a8d` source revision, with production/project inputs equal to published `2a367c1`. Each clip shows property-price replacement, the changing monthly preview, Done, Save and matching details. Each uses one contiguous ordinary-speed trim without internal cuts: iPhone 34–58 seconds and iPad 31–55 seconds; the clip starts after Name entry. Root and independent UX review sampled original and delivered interaction/trim-boundary frames, and every raw and delivered frame decoded without errors. This is scripted simulator evidence, without a continuous-playback, frame-rate, latency or physical-haptics claim.
 
 | Recording | Dimensions and duration | Decoded frames: original / delivered |
 | --- | --- | --- |

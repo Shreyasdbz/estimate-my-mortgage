@@ -19,7 +19,8 @@
     "Name editing captures show wrapped input at the largest text size, a short native scroll dismissing the keyboard, and Save followed by matching details. They retain their per-asset source revision, preceding the separate immutable geometry-capture correction.",
     "The inline-correction recordings retain their exact per-asset source revision. The Phone clip continues through matching saved details; the iPad clip ends at the restored preview before Save. Both use one contiguous ordinary-speed trim and independently reviewed frame samples; older media remain separately attributed.",
     "Thirteen current screenshots retain their Passed-case attribution from the failed 0f46a8d hosted run. The iPad price-error capture comes from a Passed focused case at 57f7684. All production and project inputs match the published test source. At initial gallery publication, full hosted acceptance was pending. Root and independent review inspected original captures; earlier assets retain their own revisions.",
-    "The two current preview recordings retain their actual 0f46a8d Passed local journey attribution. Each is a contiguous ordinary-speed excerpt after Name entry (iPhone 34-58 seconds; iPad 31-55 seconds), preserving intermediate navigation states. Every original and delivered frame decoded; root and independent review sampled frames. Continuous playback, frame rate, latency and physical haptics were not measured."
+    "The two current preview recordings retain their actual 0f46a8d Passed local journey attribution. Each is a contiguous ordinary-speed excerpt after Name entry (iPhone 34-58 seconds; iPad 31-55 seconds), preserving intermediate navigation states. Every original and delivered frame decoded; root and independent review sampled frames. Continuous playback, frame rate, latency and physical haptics were not measured.",
+    "Final validation composes 22 current-source core cases with 88 byte-compatible earlier noncore cases: 107 Passed and three intended Skipped across all 110 identities. The targeted run succeeded; no full 110-case run at the new revision is claimed. Capture revisions and all 119 asset entries remain unchanged."
   ],
   "assets": [
     {
@@ -1625,8 +1626,20 @@
     "0f46a8deb77ab9a2a744bc59246672975203abf7",
     "57f7684885d0f709bdd7ab144fce63ceb345df2d"
   ],
-  "pendingValidationRevision": "7cc92d4739c02ee64e7d2e0602afc53b1159d86e",
-  "pendingValidationRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37944718332",
   "wholeHostedAcceptance": false,
-  "currentMediaProductionInputsEquivalentToPublishedSource": true
+  "currentMediaProductionInputsEquivalentToPublishedSource": true,
+  "retainedUnchangedValidationRevision": "7cc92d4739c02ee64e7d2e0602afc53b1159d86e",
+  "acceptedValidationRevision": "2a367c1bb283259c5c383865688fa358de7909cf",
+  "acceptedValidationRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37957214979",
+  "composedHostedAcceptance": true,
+  "validationCoverage": {
+    "nativeCaseIdentities": 110,
+    "passed": 107,
+    "failed": 0,
+    "intendedSkipped": 3,
+    "currentRevisionCoreCases": 22,
+    "retainedUnchangedCases": 88,
+    "retainedRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37944718332/attempts/2",
+    "wholeNewRevisionMatrixRun": false
+  }
 }
