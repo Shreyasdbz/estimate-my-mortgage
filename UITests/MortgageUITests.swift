@@ -911,13 +911,15 @@ final class MortgageUITests: XCTestCase {
     }
 
     func testSearchFiltersSavedEstimates() throws {
-        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.waitForExistence(timeout: 5))
-        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Birch Condo").firstMatch.waitForExistence(timeout: 5))
+        // Match row titles directly inside the native list, avoiding nested cell queries.
+        let estimateList = app.collectionViews.firstMatch
+        XCTAssertTrue(estimateList.staticTexts["Cedar Home"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(estimateList.staticTexts["Birch Condo"].firstMatch.waitForExistence(timeout: 5))
         let search = app.searchFields.firstMatch
         search.tap()
         search.typeText("Cedar")
-        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.exists)
-        XCTAssertFalse(app.cells.containing(.staticText, identifier: "Birch Condo").firstMatch.exists)
+        XCTAssertTrue(estimateList.staticTexts["Cedar Home"].firstMatch.exists)
+        XCTAssertFalse(estimateList.staticTexts["Birch Condo"].firstMatch.exists)
         search.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 5))
         if app.buttons["close"].exists { app.buttons["close"].tap() }
         else if app.buttons["Hide keyboard"].exists { app.buttons["Hide keyboard"].tap() }
@@ -925,8 +927,8 @@ final class MortgageUITests: XCTestCase {
         // On iPad the first toolbar tap otherwise only resigns search focus.
         open("Cedar Home")
         list()
-        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.exists)
-        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Birch Condo").firstMatch.exists)
+        XCTAssertTrue(estimateList.staticTexts["Cedar Home"].firstMatch.exists)
+        XCTAssertTrue(estimateList.staticTexts["Birch Condo"].firstMatch.exists)
     }
 
     func testCommaDecimalAndWholeYearEntry() throws {
