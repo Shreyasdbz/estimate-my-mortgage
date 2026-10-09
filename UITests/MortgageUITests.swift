@@ -20,11 +20,18 @@ final class MortgageUITests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchEnvironment["EMM_TEST_STORE"] = UUID().uuidString
-        app.launchEnvironment["EMM_TEST_APPEARANCE"] = "light"
-        if name.contains("testSearchFiltersSavedEstimates") || name.contains("testComparisonOfSavedEstimates") {
+        app.launchEnvironment["EMM_TEST_APPEARANCE"] = name.contains("testDarkLargestTextEditorEditAndCancel") ? "dark" : "light"
+        if name.contains("testSearchFiltersSavedEstimates") || name.contains("testComparisonOfSavedEstimates")
+            || name.contains("testIPadSelectionResetsOpenSchedule") || name.contains("testDarkLargestTextEditorEditAndCancel")
+            || name.contains("testWholeYearInlineCorrectionAndSave") {
             app.launchEnvironment["EMM_TEST_FIXTURE"] = "search"
         }
+        if name.contains("testWholeYearInlineCorrectionAndSave") {
+            app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "de_DE"]
+        }
         app.launch()
+        // The closed fixture seeds only the initial empty store; subsequent launches retain it.
+        app.launchEnvironment.removeValue(forKey: "EMM_TEST_FIXTURE")
     }
 
     private func create(_ name: String, scrollFromName: Bool = false) {
@@ -612,7 +619,7 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Updated Home"].firstMatch.exists)
     }
 
-    func testValidationPreventsDismissalAndKeepsInvalidInput() throws {
+    func testNameInlineCorrectionAndDiscard() throws {
         app.buttons["newEstimate"].tap()
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         let name = editorName()
@@ -620,6 +627,21 @@ final class MortgageUITests: XCTestCase {
         name.typeText("Invalid input")
         waitForTypedValue("Invalid input", identifier: "estimate.name", nativeType: name.elementType)
         requireInlineErrorCleared("name")
+        dismissKeyboard()
+        app.buttons["estimate.cancel"].tap()
+        XCTAssertTrue(app.buttons["Discard changes"].waitForExistence(timeout: 3))
+        app.buttons["Discard changes"].tap()
+        XCTAssertTrue(app.collectionViews["estimate.form"].waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["No estimates yet"].waitForExistence(timeout: 5))
+    }
+
+    func testValidationPreventsDismissalAndKeepsInvalidInput() throws {
+        app.buttons["newEstimate"].tap()
+        let name = editorName()
+        scrollEditorTo(name)
+        name.tap()
+        name.typeText("Invalid input")
+        waitForTypedValue("Invalid input", identifier: "estimate.name", nativeType: name.elementType)
         dismissKeyboard()
         let property = app.textFields["estimate.property"]
         scrollEditorTo(property)
@@ -649,7 +671,7 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["No estimates yet"].exists)
     }
 
-    func testLargestTextInlineCorrectionAndDiscard() throws {
+    func testLargestTextNameInlineCorrectionAndDiscard() throws {
         app.terminate()
         app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
@@ -667,6 +689,25 @@ final class MortgageUITests: XCTestCase {
         repeatedName.typeText("Inline correction")
         waitForTypedValue("Inline correction", identifier: "estimate.name", nativeType: nameType)
         requireInlineErrorCleared("name")
+        dismissKeyboard()
+        tapScreenCenter(app.buttons["estimate.cancel"], requireHittable: false)
+        XCTAssertTrue(app.buttons["Discard changes"].waitForExistence(timeout: 3))
+        app.buttons["Discard changes"].tap()
+        XCTAssertTrue(app.collectionViews["estimate.form"].waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["No estimates yet"].waitForExistence(timeout: 5))
+    }
+
+    func testLargestTextInlineCorrectionAndDiscard() throws {
+        app.terminate()
+        app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        app.buttons["newEstimate"].tap()
+        let name = editorName()
+        let nameType = name.elementType
+        scrollEditorTo(name)
+        name.tap()
+        name.typeText("Inline correction")
+        waitForTypedValue("Inline correction", identifier: "estimate.name", nativeType: nameType)
         dismissKeyboard()
         let property = editorInput(identifier: "estimate.property", nativeType: .textField)
         scrollEditorTo(property)
@@ -782,6 +823,36 @@ final class MortgageUITests: XCTestCase {
         XCTAssertEqual(interest.value as? String, "6,25")
         let term = app.textFields["estimate.term"]
         scrollEditorTo(term)
+        replace(term, with: "30")
+        dismissKeyboard(usingReturn: true)
+        // Independent fixed-rate fixture: $400,000 loan, 6.25%, 360 payments,
+        // plus the default $13,500 annual ownership costs.
+        let rate = 0.0625 / 12
+        let cost = 400_000 * rate / (1 - pow(1 + rate, -360)) + 13_500.0 / 12
+        // Match the launch's English language and German region, including native US$ disambiguation.
+        let expected = cost.formatted(.currency(code: "USD").locale(Locale(identifier: "en_DE")))
+        requirePreview(expected)
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        waitForSavedResult("Comma decimal")
+        XCTAssertEqual(app.staticTexts["monthlyTotal"].label, expected)
+        screenshot("comma-decimal-saved-result")
+        app.buttons["editEstimate"].tap()
+        scrollEditorTo(interest)
+        XCTAssertEqual(interest.value as? String, "6,25")
+        XCTAssertEqual(term.value as? String, "30")
+    }
+
+    func testWholeYearInlineCorrectionAndSave() throws {
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.waitForExistence(timeout: 5))
+        open("Cedar Home")
+        app.buttons["editEstimate"].tap()
+        let interest = app.textFields["estimate.interest"]
+        scrollEditorTo(interest)
+        replace(interest, with: "6,25")
+        dismissKeyboard(numericInput: true)
+        XCTAssertEqual(interest.value as? String, "6,25")
+        let term = app.textFields["estimate.term"]
+        scrollEditorTo(term)
         replace(term, with: "30,5")
         dismissKeyboard(usingReturn: true)
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
@@ -798,9 +869,9 @@ final class MortgageUITests: XCTestCase {
         let expected = cost.formatted(.currency(code: "USD").locale(Locale(identifier: "en_DE")))
         requirePreview(expected)
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
-        waitForSavedResult("Comma decimal")
+        waitForSavedResult("Cedar Home")
         XCTAssertEqual(app.staticTexts["monthlyTotal"].label, expected)
-        screenshot("comma-decimal-saved-result")
+        screenshot("whole-year-inline-corrected-saved-result")
         app.buttons["editEstimate"].tap()
         scrollEditorTo(interest)
         XCTAssertEqual(interest.value as? String, "6,25")
@@ -1090,8 +1161,8 @@ final class MortgageUITests: XCTestCase {
 
     func testIPadSelectionResetsOpenSchedule() throws {
         guard app.windows.firstMatch.frame.width >= 600 else { throw XCTSkip("Split-view selection requires iPad.") }
-        create("Cedar Home")
-        create("Birch Condo")
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Birch Condo").firstMatch.waitForExistence(timeout: 5))
         open("Cedar Home")
         let schedule = app.buttons["amortization"]
         for _ in 0..<3 where !schedule.isHittable { app.swipeUp() }
@@ -1158,15 +1229,12 @@ final class MortgageUITests: XCTestCase {
     }
 
     func testDarkLargestTextEditorEditAndCancel() throws {
-        app.terminate()
-        app.launchEnvironment["EMM_TEST_APPEARANCE"] = "dark"
-        app.launch()
-        create("Large Text Home")
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.waitForExistence(timeout: 5))
         // Keep the saved fixture while changing only the native text-size override.
         app.terminate()
         app.launchArguments = ["--ui-testing", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
-        open("Large Text Home")
+        open("Cedar Home")
         app.buttons["editEstimate"].tap()
         screenshot("dark-large-text-editor")
         try accessibilityAudit()
@@ -1186,7 +1254,7 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Discard changes"].waitForExistence(timeout: 3))
         app.buttons["Discard changes"].tap()
         XCTAssertTrue(app.collectionViews["estimate.form"].waitForNonExistence(timeout: 5))
-        XCTAssertTrue(app.navigationBars["Large Text Home"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Cedar Home"].waitForExistence(timeout: 5))
         app.buttons["editEstimate"].tap()
         let savedProperty = app.textFields["estimate.property"]
         scrollEditorTo(savedProperty)

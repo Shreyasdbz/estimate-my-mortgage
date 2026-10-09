@@ -13,12 +13,13 @@ trap 'rm -f "$selector_file"' EXIT
 # Process substitution hides validator failures. A nonempty command array also
 # keeps the default full-suite invocation compatible with Bash 3.2 and nounset.
 python3 scripts/test-groups.py "$group" > "$selector_file"
+# The outer600-second cap permits native event-idling overhead; field and Save checks keep their own deadlines.
 command=(xcodebuild -project EstimateMyMortgage.xcodeproj -scheme EstimateMyMortgage
   -destination "platform=iOS Simulator,id=$1"
   -derivedDataPath /private/tmp/estimate-my-mortgage-derived
   -resultBundlePath "$result_path" -parallel-testing-enabled NO -collect-test-diagnostics never
-  -test-timeouts-enabled YES -default-test-execution-time-allowance 300
-  -maximum-test-execution-time-allowance 300)
+  -test-timeouts-enabled YES -default-test-execution-time-allowance 600
+  -maximum-test-execution-time-allowance 600)
 while IFS= read -r selector; do
   command+=("$selector")
 done < "$selector_file"
