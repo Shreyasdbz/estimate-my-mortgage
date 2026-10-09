@@ -348,7 +348,7 @@ final class MortgageUITests: XCTestCase {
         let form = app.collectionViews["estimate.form"]
         XCTAssertTrue(form.waitForExistence(timeout: 5))
         func currentError() -> XCUIElement {
-            form.descendants(matching: .any).matching(identifier: "estimate.error." + field).firstMatch
+            form.staticTexts["estimate.error." + field].firstMatch
         }
         XCTAssertTrue(currentError().waitForExistence(timeout: 5))
         let readable = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
@@ -393,8 +393,7 @@ final class MortgageUITests: XCTestCase {
     }
 
     private func requireInlineErrorCleared(_ field: String) {
-        let error = app.collectionViews["estimate.form"].descendants(matching: .any)
-            .matching(identifier: "estimate.error." + field).firstMatch
+        let error = app.collectionViews["estimate.form"].staticTexts["estimate.error." + field].firstMatch
         XCTAssertTrue(error.waitForNonExistence(timeout: 5), "Editing the draft must clear its stale error")
     }
 
