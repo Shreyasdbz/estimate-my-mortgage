@@ -483,8 +483,11 @@ final class MortgageUITests: XCTestCase {
         XCTAssertFalse(app.alerts.firstMatch.exists, "Field validation must allow direct inline correction")
         XCTAssertTrue(app.buttons["estimate.save"].exists)
         XCTAssertTrue(app.buttons["estimate.keyboardDone"].exists, "Validation must focus its corrective input")
-        let keyboardVisible = hasVisibleKeyboard()
-        if !keyboardVisible {
+        let keyboardReady = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            self.hasVisibleKeyboard()
+        }, object: nil)
+        let keyboardResult = XCTWaiter.wait(for: [keyboardReady], timeout: 15)
+        if keyboardResult != .completed {
             screenshot("inline-error-keyboard-missing-" + field)
             let input = editorInput(identifier: "estimate." + field, nativeType: nativeType)
             let error = currentError()
@@ -497,7 +500,7 @@ final class MortgageUITests: XCTestCase {
             print("Missing correction keyboard \(field): state \(app.state); app \(app.frame); windows \(windowFrames); Form \(form.frame); input \(input.frame); error \(error.frame); Done \(doneFrame); keyboards \(keyboardFrames); numeric previews \(numericPreviewFrames)")
             print("Corrective input native description: \(input.debugDescription.prefix(4000))")
         }
-        XCTAssertTrue(keyboardVisible, "The corrective input must show its software keyboard")
+        XCTAssertEqual(keyboardResult, .completed, "The corrective input must show its software keyboard")
         XCTAssertEqual(app.state, .runningForeground)
         return editorInput(identifier: "estimate." + field, nativeType: nativeType)
     }
@@ -513,23 +516,52 @@ final class MortgageUITests: XCTestCase {
         func currentPreview() -> XCUIElement {
             form.staticTexts["estimate.preview"].firstMatch
         }
-        let preview = currentPreview()
+        // Resolve the changing combined label from one fresh Form snapshot rather
+        // than repeated remote element lookups during its numeric transition.
+        var lastPreviewIssue = "No Form snapshot completed"
+        func previewState() -> (label: String, visible: Bool)? {
+            let snapshot: any XCUIElementSnapshot
+            do {
+                snapshot = try form.snapshot()
+            } catch {
+                lastPreviewIssue = "Form snapshot failed: \(error.localizedDescription)"
+                return nil
+            }
+            var remaining = snapshot.children
+            var previews: [any XCUIElementSnapshot] = []
+            while let node = remaining.popLast() {
+                if node.elementType == .staticText && node.identifier == "estimate.preview" {
+                    previews.append(node)
+                }
+                remaining.append(contentsOf: node.children)
+            }
+            guard previews.count == 1 else {
+                lastPreviewIssue = "Expected one native preview StaticText; found \(previews.count)"
+                return nil
+            }
+            let preview = previews[0]
+            let viewport = snapshot.frame.intersection(app.frame)
+                .insetBy(dx: -Self.geometryTolerance, dy: -Self.geometryTolerance)
+            lastPreviewIssue = "Preview label: \(preview.label); frame: \(preview.frame); viewport: \(viewport)"
+            return (preview.label, !viewport.isEmpty && !preview.frame.isEmpty && viewport.contains(preview.frame))
+        }
         for _ in 0..<5 {
-            if preview.isHittable { break }
+            guard let state = previewState(), !state.visible else { break }
             form.swipeDown()
         }
-        XCTAssertTrue(preview.isHittable, "The preview must be visible before reading its amount")
         let updated = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            let label = currentPreview().label
-            return label.contains(text) && staleAmounts.allSatisfy { !label.contains($0) }
+            guard let state = previewState() else { return false }
+            return state.visible && state.label.contains(text) &&
+                staleAmounts.allSatisfy { !state.label.contains($0) }
         }, object: nil)
         let result = XCTWaiter.wait(for: [updated], timeout: 15)
         if result != .completed {
+            print("\(lastPreviewIssue); expected amount: \(text)")
             screenshot("preview-mismatch")
-            print("Preview label: \(preview.label); expected amount: \(text)")
         }
         XCTAssertEqual(result, .completed,
                        "The native preview must reflect the current financial input")
+        XCTAssertTrue(currentPreview().isHittable, "The preview must be visible before reading its amount")
     }
 
     func testLivePreviewAndSavedCost() throws {

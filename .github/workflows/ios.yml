@@ -30,14 +30,15 @@ jobs:
           groups=$(python3 scripts/test-groups.py --list-groups)
           echo "groups=$groups" >> "$GITHUB_OUTPUT"
   test:
+    name: test (${{ matrix.device }}, ${{ matrix.group }})
     needs: groups
     runs-on: xcode-27
     timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
-        device: [iPhone, iPad]
         group: ${{ fromJSON(needs.groups.outputs.groups) }}
+        device: [iPhone, iPad]
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.0.app/Contents/Developer
     steps:
