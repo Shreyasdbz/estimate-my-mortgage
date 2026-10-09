@@ -1235,8 +1235,17 @@ final class MortgageUITests: XCTestCase {
 
     func testScreenshotsNativeFlows() throws {
         screenshot("empty-state")
-        create("Cedar Home")
-        create("Birch Condo")
+        app.terminate()
+        app.launchEnvironment["EMM_TEST_FIXTURE"] = "search"
+        app.launch()
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Birch Condo").firstMatch.waitForExistence(timeout: 5))
+        app.terminate()
+        // A cold activate replays the last launch environment; seeding requires an empty store.
+        app.launchEnvironment.removeValue(forKey: "EMM_TEST_FIXTURE")
+        app.launch()
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Birch Condo").firstMatch.waitForExistence(timeout: 5))
         screenshot("estimates")
         open("Cedar Home")
         screenshot("payment-details")
