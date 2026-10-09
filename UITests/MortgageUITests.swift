@@ -359,7 +359,13 @@ final class MortgageUITests: XCTestCase {
                 viewport.contains(errorFrame) && viewport.contains(inputFrame) && input.isHittable
         }, object: nil)
         let result = XCTWaiter.wait(for: [readable], timeout: 15)
-        if result != .completed { screenshot("inline-error-not-readable-" + field) }
+        if result != .completed {
+            screenshot("inline-error-not-readable-" + field)
+            let input = editorInput(identifier: "estimate." + field, nativeType: nativeType)
+            let error = currentError()
+            let doneFrame = app.buttons["estimate.keyboardDone"].frame
+            print("Inline correction \(field): Form \(form.frame); input \(input.frame); error \(error.frame); app \(app.frame); Done \(doneFrame); input hittable \(input.isHittable); error label \(error.label)")
+        }
         XCTAssertEqual(result, .completed, "The complete error and corrective input must be visible together")
         XCTAssertFalse(app.alerts.firstMatch.exists, "Field validation must allow direct inline correction")
         XCTAssertTrue(app.buttons["estimate.save"].exists)
@@ -644,14 +650,17 @@ final class MortgageUITests: XCTestCase {
         scrollEditorTo(property)
         replace(property, with: "0")
         dismissKeyboard(numericInput: true)
-        let unit = app.buttons["estimate.downpaymentUnit"]
+        let unit = app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"]
         scrollEditorTo(unit)
-        XCTAssertEqual(unit.label, "USD")
+        XCTAssertEqual(unit.label, "Down payment unit, USD")
+        XCTAssertEqual(unit.value as? String, "USD")
         unit.tap()
         app.buttons["%"].tap()
         let invalidProperty = requireInlineError("Enter a positive property price before changing the unit.", field: "property")
         XCTAssertEqual(invalidProperty.value as? String, "0")
-        XCTAssertEqual(app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"].label, "USD", "A failed conversion must retain the original unit")
+        let retainedUnit = app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"]
+        XCTAssertEqual(retainedUnit.label, "Down payment unit, USD")
+        XCTAssertEqual(retainedUnit.value as? String, "USD", "A failed conversion must retain the original unit")
         XCTAssertEqual(editorInput(identifier: "estimate.downpayment", nativeType: .textField).value as? String, "100000", "A failed conversion must retain the original amount")
         screenshot("inline-error-unit-conversion")
         replace(invalidProperty, with: "500000", tappingInput: false)
@@ -660,7 +669,9 @@ final class MortgageUITests: XCTestCase {
         scrollEditorTo(unit)
         unit.tap()
         app.buttons["%"].tap()
-        XCTAssertEqual(app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"].label, "%")
+        let convertedUnit = app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"]
+        XCTAssertEqual(convertedUnit.label, "Down payment unit, %")
+        XCTAssertEqual(convertedUnit.value as? String, "%")
         let downpayment = editorInput(identifier: "estimate.downpayment", nativeType: .textField)
         scrollEditorTo(downpayment)
         XCTAssertEqual(downpayment.value as? String, "20")
@@ -675,7 +686,9 @@ final class MortgageUITests: XCTestCase {
         app.buttons["editEstimate"].tap()
         scrollEditorTo(downpayment)
         XCTAssertEqual(downpayment.value as? String, "100000", "The saved estimate must retain the converted dollar amount")
-        XCTAssertEqual(app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"].label, "USD")
+        let savedUnit = app.collectionViews["estimate.form"].buttons["estimate.downpaymentUnit"]
+        XCTAssertEqual(savedUnit.label, "Down payment unit, USD")
+        XCTAssertEqual(savedUnit.value as? String, "USD")
         tapScreenCenter(app.buttons["estimate.cancel"], requireHittable: false)
         XCTAssertTrue(app.navigationBars["Conversion correction"].waitForExistence(timeout: 5))
     }

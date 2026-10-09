@@ -60,6 +60,7 @@ struct CreateMortgageView: View {
                     Section {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Name").font(.subheadline).foregroundStyle(Color.primary)
+                            fieldError(.name)
                             TextField("", text: $vm.draft.name, axis: nameAxis)
                                 .lineLimit(1...3)
                                 .frame(minHeight: 44)
@@ -75,24 +76,21 @@ struct CreateMortgageView: View {
                                     nameFrame = frame
                                     revealNameIfNeeded(using: proxy)
                                 }
-                            fieldError(.name)
                         }
                         .id(MortgageEditorField.name)
                     }
                     Section {
                         numberField("Property price", text: $vm.draft.propertyValue, unit: "USD", field: .property)
-                        LabeledContent("Down payment unit") {
-                            Picker("Down payment unit", selection: Binding(
-                                get: { vm.draft.downpaymentUnit },
-                                set: { unit in changeUnit(using: proxy) { try vm.changeDownpaymentUnit(to: unit) } }
-                            )) {
-                                ForEach(AmountInputUnit.allCases) { unit in Text(unit.rawValue).tag(unit) }
-                            }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
-                            .tint(Color.primary)
-                            .accessibilityIdentifier("estimate.downpaymentUnit")
+                        Picker("Down payment unit", selection: Binding(
+                            get: { vm.draft.downpaymentUnit },
+                            set: { unit in changeUnit(using: proxy) { try vm.changeDownpaymentUnit(to: unit) } }
+                        )) {
+                            ForEach(AmountInputUnit.allCases) { unit in Text(unit.rawValue).tag(unit) }
                         }
+                        .pickerStyle(.menu)
+                        .tint(Color.primary)
+                        .accessibilityValue(vm.draft.downpaymentUnit.rawValue)
+                        .accessibilityIdentifier("estimate.downpaymentUnit")
                         numberField("Down payment", text: $vm.draft.downpayment,
                                     unit: vm.draft.downpaymentUnit.rawValue, field: .downpayment)
                         numberField("Annual interest rate", text: $vm.draft.interestRate, unit: "%", field: .interest)
@@ -103,18 +101,16 @@ struct CreateMortgageView: View {
                         Text("Fixed rates; 0% interest and all-cash purchases supported.").foregroundStyle(Color.primary)
                     }
                     Section {
-                        LabeledContent("Property tax unit") {
-                            Picker("Property tax unit", selection: Binding(
-                                get: { vm.draft.propertyTaxUnit },
-                                set: { unit in changeUnit(using: proxy) { try vm.changePropertyTaxUnit(to: unit) } }
-                            )) {
-                                ForEach(AmountInputUnit.allCases) { unit in Text(unit.rawValue).tag(unit) }
-                            }
-                            .pickerStyle(.menu)
-                            .labelsHidden()
-                            .tint(Color.primary)
-                            .accessibilityIdentifier("estimate.taxUnit")
+                        Picker("Property tax unit", selection: Binding(
+                            get: { vm.draft.propertyTaxUnit },
+                            set: { unit in changeUnit(using: proxy) { try vm.changePropertyTaxUnit(to: unit) } }
+                        )) {
+                            ForEach(AmountInputUnit.allCases) { unit in Text(unit.rawValue).tag(unit) }
                         }
+                        .pickerStyle(.menu)
+                        .tint(Color.primary)
+                        .accessibilityValue(vm.draft.propertyTaxUnit.rawValue)
+                        .accessibilityIdentifier("estimate.taxUnit")
                         numberField("Property tax", text: $vm.draft.propertyTax,
                                     unit: vm.draft.propertyTaxUnit.rawValue, field: .tax)
                         numberField("Home insurance", text: $vm.draft.insurance, unit: "USD / year", field: .insurance)
@@ -232,6 +228,7 @@ struct CreateMortgageView: View {
         return VStack(alignment: .leading, spacing: 6) {
             // Native label/value rows use the iPad's width; large text keeps stacked inputs.
             if widthClass == .regular && !textSize.isAccessibilitySize {
+                fieldError(field)
                 LabeledContent {
                     input.multilineTextAlignment(.trailing)
                 } label: {
@@ -239,13 +236,14 @@ struct CreateMortgageView: View {
                 }
             } else {
                 label
+                fieldError(field)
                 input
             }
-            fieldError(field)
         }
         .id(field)
     }
 
+    /// Placed before its input to keep correction guidance above native keyboard avoidance.
     @ViewBuilder
     private func fieldError(_ field: MortgageEditorField) -> some View {
         if let inputError, inputError.field == field {
@@ -275,12 +273,12 @@ struct CreateMortgageView: View {
     private func present(_ error: Error, title: String, using proxy: ScrollViewProxy) {
         if let issue = error as? CreateMortgageViewModel.InputError, let field = issue.field {
             inputError = issue
-            // Defer correction so the inline row can enter SwiftUI layout.
+            focusedField = field
+            // Defer correction so the inline row and focused input can enter SwiftUI layout.
             // Run for every failure, including an unchanged value submitted again.
             Task { @MainActor in
                 await Task.yield()
                 proxy.scrollTo(field, anchor: .center)
-                focusedField = field
             }
         } else {
             inputError = nil
