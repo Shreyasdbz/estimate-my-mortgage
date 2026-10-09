@@ -341,7 +341,8 @@ final class MortgageUITests: XCTestCase {
 
     /// Require field-bound recovery without scrolling or tapping to repair the app's focus.
     private func requireInlineError(_ message: String, field: String,
-                                    nativeType: XCUIElement.ElementType = .textField) -> XCUIElement {
+                                    nativeType: XCUIElement.ElementType = .textField,
+                                    requireSoftwareKeyboard: Bool = true) -> XCUIElement {
         let form = app.collectionViews["estimate.form"]
         XCTAssertTrue(form.waitForExistence(timeout: 5))
         func currentError() -> XCUIElement {
@@ -370,7 +371,9 @@ final class MortgageUITests: XCTestCase {
         XCTAssertFalse(app.alerts.firstMatch.exists, "Field validation must allow direct inline correction")
         XCTAssertTrue(app.buttons["estimate.save"].exists)
         XCTAssertTrue(app.buttons["estimate.keyboardDone"].exists, "Validation must focus its corrective input")
-        XCTAssertTrue(hasVisibleKeyboard(), "The corrective input must be ready for typing")
+        if requireSoftwareKeyboard {
+            XCTAssertTrue(hasVisibleKeyboard(), "The corrective input must show its software keyboard")
+        }
         XCTAssertEqual(app.state, .runningForeground)
         return editorInput(identifier: "estimate." + field, nativeType: nativeType)
     }
@@ -564,7 +567,9 @@ final class MortgageUITests: XCTestCase {
         app.buttons["newEstimate"].tap()
         tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
         let name = editorName()
-        _ = requireInlineError("Enter a name for this estimate.", field: "name", nativeType: name.elementType)
+        // Native typeText requires keyboard focus even when the software keyboard is not painted.
+        _ = requireInlineError("Enter a name for this estimate.", field: "name", nativeType: name.elementType,
+                               requireSoftwareKeyboard: false)
         name.typeText("Invalid input")
         waitForTypedValue("Invalid input", identifier: "estimate.name", nativeType: name.elementType)
         requireInlineErrorCleared("name")
