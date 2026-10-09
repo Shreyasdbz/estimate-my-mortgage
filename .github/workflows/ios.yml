@@ -66,6 +66,48 @@ jobs:
         env:
           SELECTED_SIMULATOR: ${{ steps.simulator.outputs.uuid }}
         run: python3 -B scripts/configure-simulator-keyboard.py "$SELECTED_SIMULATOR"
+      - name: Start active Xcode DeviceHub frontend
+        run: |
+          set -euo pipefail
+          if ! device_hub_app=$(cd "$DEVELOPER_DIR/../Applications/DeviceHub.app" && pwd -P); then
+            echo '::error::The active Xcode must contain DeviceHub at Contents/Applications/DeviceHub.app.'
+            exit 1
+          fi
+          if ! bundle_id=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$device_hub_app/Contents/Info.plist"); then
+            echo '::error::Cannot read the active Xcode DeviceHub bundle identity.'
+            exit 1
+          fi
+          if [[ "$bundle_id" != com.apple.dt.Devices ]]; then
+            echo '::error::The active Xcode frontend must have bundle identifier com.apple.dt.Devices.'
+            exit 1
+          fi
+          # Match the maintainer's normal lifecycle: preferences, frontend, then selected-device boot.
+          # https://github.com/appium/appium-ios/blob/main/packages/simulator/lib/extensions/ui-client.ts
+          printf 'Starting active Xcode frontend: %s (%s)\n' "$device_hub_app" "$bundle_id"
+          if ! open -Fn "$device_hub_app"; then
+            echo '::error::Cannot schedule the active Xcode DeviceHub frontend launch.'
+            exit 1
+          fi
+          frontend_pattern=$(python3 -c 'import re, sys; print("^" + re.escape(sys.argv[1]) + "/Contents/MacOS/")' "$device_hub_app")
+          deadline=$((SECONDS + 30))
+          while true; do
+            if frontend_pids=$(pgrep -f "$frontend_pattern"); then
+              break
+            else
+              process_status=$?
+            fi
+            if [[ "$process_status" -ne 1 ]]; then
+              echo '::error::Cannot discover the active Xcode DeviceHub frontend process.'
+              exit 1
+            fi
+            if [[ "$SECONDS" -ge "$deadline" ]]; then
+              echo '::error::The active Xcode DeviceHub frontend was not discoverable within 30 seconds.'
+              exit 1
+            fi
+            sleep 1
+          done
+          printf 'Active Xcode DeviceHub frontend launched (PIDs %s); selected-device boot follows.\n' "$frontend_pids"
+          echo 'PID discovery proves frontend launch only; it does not establish selected-window presentation, keyboard behavior, or failure cause.'
       - name: Wait for simulator readiness
         run: xcrun simctl bootstatus '${{ steps.simulator.outputs.uuid }}' -b
       - name: Record frontend before testing
@@ -84,7 +126,7 @@ jobs:
             fi
             echo 'DeviceHub frontend before test: not running'
           fi
-          echo 'No explicit frontend launch; observed process state does not establish effective keyboard mode or failure cause.'
+          echo 'Observed process state does not establish selected-window presentation, effective keyboard mode, or failure cause.'
       - name: Build and test
         run: ./scripts/test-ios.sh '${{ steps.simulator.outputs.uuid }}' "$RUNNER_TEMP/Tests.xcresult" '${{ matrix.group }}'
       - name: Record frontend after test attempt

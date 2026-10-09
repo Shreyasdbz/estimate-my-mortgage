@@ -133,7 +133,7 @@ def configure(selected, home):
     print(f"Selected simulator {selected}: Shutdown; DeviceHub and Simulator frontends: not running")
     legacy_path = home / "Library/Preferences/com.apple.iphonesimulator.plist"
     hub_path = home / "Library/Containers/com.apple.dt.Devices/Data/Library/Preferences/com.apple.dt.Devices.plist"
-    # Current maintainer writes all three locations before its headless boot path.
+    # Current maintainer writes all three locations before choosing its boot lifecycle.
     # https://github.com/appium/appium-ios/blob/main/packages/simulator/lib/extensions/settings.ts
     legacy = copy.deepcopy(read_preferences(legacy_path, selected))
     hub = copy.deepcopy(read_preferences(hub_path, selected))
@@ -150,7 +150,7 @@ def configure(selected, home):
             raise FixtureError(f"Cannot initialize {path.parent}: {error}") from error
         import_and_verify(path, preferences, selected)
     print("Verified three typed Boolean false values with all unrelated preferences preserved.")
-    print("Configured intent only; no explicit frontend launch. Native tests must prove keyboard behavior.")
+    print("Configured intent verified before frontend startup; native tests must prove keyboard behavior.")
 
 
 def main():
