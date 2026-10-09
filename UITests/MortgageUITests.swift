@@ -75,12 +75,19 @@ final class MortgageUITests: XCTestCase {
     /// Observe the full delivered text after native event synthesis, rejecting unavailable or partial values.
     private func waitForTypedValue(_ value: String, identifier: String, nativeType: XCUIElement.ElementType) {
         let delivered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard let text = self.app.descendants(matching: nativeType).matching(identifier: identifier).firstMatch.value as? String else { return false }
+            guard let text = self.editorInput(identifier: identifier, nativeType: nativeType).value as? String else { return false }
             return text == value
         }, object: nil)
         let result = XCTWaiter.wait(for: [delivered], timeout: 15)
         if result != .completed { screenshot("incomplete-typed-value-" + identifier) }
         XCTAssertEqual(result, .completed, "The identified input must contain the exact typed value")
+    }
+
+    /// Resolve an editable native control within the Form, excluding keyboard-window nodes.
+    private func editorInput(identifier: String, nativeType: XCUIElement.ElementType) -> XCUIElement {
+        XCTAssertTrue(nativeType == .textField || nativeType == .textView)
+        let form = app.collectionViews["estimate.form"]
+        return nativeType == .textField ? form.textFields[identifier] : form.textViews[identifier]
     }
 
     /// Resolve the current native input; accessibility wrapping can change its editable type.
@@ -144,9 +151,10 @@ final class MortgageUITests: XCTestCase {
                     XCTAssertTrue(done.waitForExistence(timeout: 5))
                 }
             }
-            if done.exists {
-                tapScreenCenter(done, requireHittable: false)
-            }
+            // The initial guard (or post-popover check) already established
+            // existence. Repeating native readiness queries can block for a
+            // full remote snapshot timeout while the button is visibly ready.
+            tapScreenCenter(done, requireHittable: false, existenceAlreadyVerified: true)
         }
         // Native snapshots have separate costs. Require every dismissed state
         // independently so one hierarchy query cannot consume another's allowance.
@@ -189,9 +197,12 @@ final class MortgageUITests: XCTestCase {
         app.keyboards.allElementsBoundByIndex.contains(where: isOnscreen) || hasVisibleNumericPreview()
     }
 
-    /// Touch the visible control's screen bounds without using its activation point.
-    private func tapScreenCenter(_ element: XCUIElement, requireHittable: Bool = true) {
-        XCTAssertTrue(element.waitForExistence(timeout: 5))
+    /// Touch current screen bounds; callers may reuse a just-verified existence check.
+    private func tapScreenCenter(_ element: XCUIElement, requireHittable: Bool = true,
+                                 existenceAlreadyVerified: Bool = false) {
+        if !existenceAlreadyVerified {
+            XCTAssertTrue(element.waitForExistence(timeout: 5))
+        }
         let identifier = element.identifier
         let screen = app.frame
         // Resolve the foreground app's viewport window before button geometry;
@@ -252,11 +263,8 @@ final class MortgageUITests: XCTestCase {
             XCTFail("Replacement must target an editable native control")
             return
         }
-        // Width and Dynamic Type remain fixed during replacement, so the input's
-        // observed native type can identify fresh controls without matching wrappers.
-        func currentField() -> XCUIElement {
-            app.descendants(matching: nativeType).matching(identifier: identifier).firstMatch
-        }
+        // Width and Dynamic Type stay fixed during replacement; reuse the observed
+        // editable type while resolving the control afresh within its Form.
         let placeholder = field.placeholderValue
         // A proportional inset can land before short, trailing-aligned values on iPad.
         // Touch just inside the actual edge to place the caret after the fixture text.
@@ -273,7 +281,7 @@ final class MortgageUITests: XCTestCase {
         // Resolve the current identified control after keyboard/layout changes.
         // Require a real empty value; an unavailable value never counts as cleared.
         let cleared = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard let text = currentField().value as? String else { return false }
+            guard let text = self.editorInput(identifier: identifier, nativeType: nativeType).value as? String else { return false }
             return text.isEmpty || text == placeholder
         }, object: nil)
         // Hosted Name and numeric queries exhausted five seconds despite empty input.
@@ -282,7 +290,7 @@ final class MortgageUITests: XCTestCase {
         if result != .completed { screenshot("incomplete-field-selection") }
         XCTAssertEqual(result, .completed, "Field must be empty before replacement: \(identifier)")
         guard result == .completed, !value.isEmpty else { return }
-        let input = currentField()
+        let input = editorInput(identifier: identifier, nativeType: nativeType)
         XCTAssertEqual(input.elementType, nativeType, "Replacement must retain the identified native control")
         input.typeText(value)
         waitForTypedValue(value, identifier: identifier, nativeType: nativeType)
@@ -298,7 +306,8 @@ final class MortgageUITests: XCTestCase {
             let viewport = form.frame.intersection(app.frame)
             return !frame.isEmpty && !viewport.isEmpty && viewport.insetBy(dx: -Self.geometryTolerance, dy: -Self.geometryTolerance).contains(frame) && element.isHittable
         }
-        for _ in 0..<5 where !fullyVisible() {
+        for _ in 0..<5 {
+            if fullyVisible() { break }
             let viewport = form.frame.intersection(app.frame)
             if element.exists && !element.frame.isEmpty && element.frame.minY < viewport.minY {
                 form.swipeDown()
@@ -700,14 +709,29 @@ final class MortgageUITests: XCTestCase {
         }
     }
 
-    func testAccessibilityAudit() throws {
+    func testDetailAndScheduleAccessibilityAudit() throws {
         create("Accessible Home")
         open("Accessible Home")
         try accessibilityAudit()
-        // Scrolled rows can be partially occluded by native navigation bars. Capture
-        // these states for rendered review rather than auditing offscreen text.
+        // Review partially scrolled content separately from the full-screen audit.
         for _ in 0..<3 { app.swipeUp() }
         screenshot("purchase-and-loan")
+        let schedule = app.buttons["amortization"]
+        for _ in 0..<4 {
+            if schedule.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(schedule.isHittable)
+        schedule.tap()
+        XCTAssertTrue(app.navigationBars["Amortization"].waitForExistence(timeout: 5))
+        try accessibilityAudit()
+    }
+
+    func testEditorAccessibilityAudit() throws {
+        create("Accessible Home")
+        open("Accessible Home")
+        // Preserve the scrolled detail state across opening and cancelling the editor.
+        for _ in 0..<3 { app.swipeUp() }
         app.buttons["editEstimate"].tap()
         screenshot("native-editor-initial")
         if app.frame.width >= 600 {
@@ -752,14 +776,7 @@ final class MortgageUITests: XCTestCase {
         }
         XCTAssertTrue(app.navigationBars["Accessible Home"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["editEstimate"].waitForExistence(timeout: 5))
-        // Cancel preserves the detail's scroll position; its top payment row may
-        // be outside the native List hierarchy. Exercise the visible schedule next.
-        let schedule = app.buttons["amortization"]
-        for _ in 0..<4 where !schedule.isHittable { app.swipeUp() }
-        XCTAssertTrue(schedule.isHittable)
-        schedule.tap()
-        XCTAssertTrue(app.navigationBars["Amortization"].waitForExistence(timeout: 5))
-        try accessibilityAudit()
+        XCTAssertTrue(app.buttons["amortization"].isHittable)
     }
 
     func testPeriodsAboutAndShareSheet() throws {
