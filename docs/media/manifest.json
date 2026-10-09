@@ -2,14 +2,24 @@
   "toolchain": "Xcode 27.0 (27A266a)",
   "runtime": "iOS 27.0 (24A434)",
   "reviewedAppRevision": "6b8f9163d72b15ed562d65475ee29b0756d0a307",
-  "assetCount": 64,
+  "assetCount": 119,
   "notes": [
     "All updated screenshots and recordings use synthetic estimates or a public Apple Park address.",
     "Individual source cases passed; some source bundles contain unrelated failed cases.",
     "The two largest-text iPad detail and costs captures show the same cost-breakdown frame.",
     "Bundle basenames identify local evidence; full result bundles and private provenance are not committed.",
     "Walkthroughs run at ordinary speed with boundary-only trims, end after Cancel returns to details, and exclude the final Home Screen transition. Every frame decoded successfully; visual review sampled interaction boundaries.",
-    "Empty numeric validation captures retain the current blank placeholder and inline error. The native iPad floating keypad partly covers the price label."
+    "Historical empty numeric validation captures retain their blank placeholder and inline error. Their native iPad floating keypad partly covers the price label; later native-editor captures use the full-width keyboard.",
+    "New interaction captures are attributed per asset to the interaction app revision. They show live preview/recovery and tap-based chart inspection, separate from the historical gallery.",
+    "New interaction clips use one contiguous normal-speed segment each, without internal cuts. Every raw/exported frame decoded; visual review sampled interaction and trim boundaries, without a continuous-playback or full-flow claim.",
+    "Native-page locale, rotation, validation, largest-text keyboard and preview captures are attributed per asset to the native-page app revision; they precede the separate annual-footer sizing correction and regular-width native LabeledContent refinement. Older assets and revision attribution are retained.",
+    "The native-page iPad preview clip uses one contiguous normal-speed trim showing price replacement, the updated monthly preview, Done and Save. Every raw/exported frame decoded; visual inspection sampled interaction and trim boundaries.",
+    "The native-editor captures use the later per-asset native-editor app revision, including regular-width native labels and fields, the full-height annual footer and minimum input hit regions. Only Passed source cases were selected; their bundles may contain unrelated failures.",
+    "The later native-editor iPad preview recording shows paired label-and-value input rows, clearing and entering a property price, the live preview, Done and saved details. Its per-asset app revision includes the annual-footer and regular-width native-field refinements; historical recordings remain separately attributed.",
+    "Name editing captures show wrapped input at the largest text size, a short native scroll dismissing the keyboard, and Save followed by matching details. They retain their per-asset source revision, preceding the separate immutable geometry-capture correction.",
+    "The inline-correction recordings retain their exact per-asset source revision. The Phone clip continues through matching saved details; the iPad clip ends at the restored preview before Save. Both use one contiguous ordinary-speed trim and independently reviewed frame samples; older media remain separately attributed.",
+    "Thirteen current screenshots retain their Passed-case attribution from the failed 0f46a8d hosted run. The iPad price-error capture comes from a Passed focused case at 57f7684. All production and project inputs match the published test source. At initial gallery publication, full hosted acceptance was pending. Root and independent review inspected original captures; earlier assets retain their own revisions.",
+    "The two current preview recordings retain their actual 0f46a8d Passed local journey attribution. Each is a contiguous ordinary-speed excerpt after Name entry (iPhone 34-58 seconds; iPad 31-55 seconds), preserving intermediate navigation states. Every original and delivered frame decoded; root and independent review sampled frames. Continuous playback, frame rate, latency and physical haptics were not measured."
   ],
   "assets": [
     {
@@ -77,6 +87,54 @@
       ]
     },
     {
+      "file": "ipad-chart-inspected-year.png",
+      "sha256": "60223ff6eceffc736f5a1749b3d98904e66d9858a7adc21b9c49df5c58ec697f",
+      "sourceBundle": "emm-interaction-ipad-fresh.xcresult",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
+      "file": "ipad-chart-inspection.mp4",
+      "sha256": "164b2da591e70a35afe221cfe229b3099f5fd3466e362d37c6b88aa5d5bd5f28",
+      "sourceBundle": "emm-interaction-ipad-fresh.xcresult",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "dimensions": [
+        960,
+        1280
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51",
+      "testDurationSeconds": 67.33391499519348,
+      "durationSeconds": 10.798333333333334,
+      "trim": {
+        "startSeconds": 55.5,
+        "endSeconds": 66.3,
+        "internalCuts": false,
+        "speedMultiplier": 1
+      },
+      "decodedFrameCount": 48,
+      "rawDecodedFrameCount": 1146,
+      "decodeErrors": 0,
+      "review": "Every raw/exported frame decoded; visual review sampled source and exported trim boundaries and interaction frames. No continuous-playback or full-flow claim."
+    },
+    {
+      "file": "ipad-chart-scroll-to-schedule.png",
+      "sha256": "baa018a29669aa8a528ef56e591950984c11ccaa3797a1280597da88e573e7f1",
+      "sourceBundle": "emm-interaction-ipad-fresh.xcresult",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
       "file": "ipad-comparison-all-cash.png",
       "sha256": "408b3a60ded9297b08e75dc0847a5559e7f77c512f4ce79b9a25c2d056a49a02",
       "sourceBundle": "emm-popup-barrier-ipad.xcresult",
@@ -108,6 +166,150 @@
         2064,
         2752
       ]
+    },
+    {
+      "file": "ipad-current-dark-large-text-name-focused-input.png",
+      "sha256": "ba14f2cd145cac6ff21d74fa9dd4a0ed078bbf8f4a27a8037e62a997ddcaee04",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sourceBundle": "test-results-iPad-ui-accessibility",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 146.13333201408386,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "ipad-current-inline-error.png",
+      "sha256": "d8e033f510c3a362bcb87f3bbd61e961001c723ebeb695966aa8e4de84229e05",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sourceBundle": "result.xcresult",
+      "test": "MortgageUITests/testValidationPreventsDismissalAndKeepsInvalidInput()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "57f7684885d0f709bdd7ab144fce63ceb345df2d",
+      "testDurationSeconds": 71.44097399711609,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "local-native-focused"
+    },
+    {
+      "file": "ipad-current-largest-text-inline-error.png",
+      "sha256": "bca0b7ca67c0b68779bcee3a3e5a24e28abf8af3f4cb839e3d80b389317a9e02",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sourceBundle": "test-results-iPad-ui-accessibility",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testLargestTextInlineCorrectionAndDiscard()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 148.44758689403534,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "ipad-current-live-preview-saved-result.png",
+      "sha256": "83987b61e03ff981264c841c05045c58ad36dc76c5f32dc2ff3ae3d0179e8ba8",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sourceBundle": "test-results-iPad-ui-core",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 113.44902801513672,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "ipad-current-live-preview-updated.png",
+      "sha256": "9c1e983635ad04b0eb744a1d9dcaf2e692bf2400bc67ec90beec34df5100644f",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sourceBundle": "test-results-iPad-ui-core",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 113.44902801513672,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "ipad-current-live-preview.mp4",
+      "sha256": "cb0621dca9162f071583b041dba16fb37d406f34cb9b2ebdaa596920432fac12",
+      "sourceBundle": "emm-0f46a8d-recorded-preview-ipad.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 45.16415500640869,
+      "durationSeconds": 24,
+      "dimensions": [
+        960,
+        1280
+      ],
+      "trim": {
+        "startSeconds": 31,
+        "endSeconds": 55,
+        "durationSeconds": 24,
+        "speed": 1,
+        "internalCuts": false,
+        "startsAfterNameEntry": true
+      },
+      "decodedFrameCount": 380,
+      "rawDecodedFrameCount": 965,
+      "decodeErrors": 0,
+      "review": "Every original and delivered frame decoded; root and independent UX review sampled original/exported entry, preview, Done, Save, saved detail and trim boundaries. Scripted simulator evidence; no continuous-playback, frame-rate, latency or physical-haptics claim."
+    },
+    {
+      "file": "ipad-current-name-focused-input.png",
+      "sha256": "0973df2d956e3d46be472e97daa697e75df17236406b0f5b213f3d1c5d69bf21",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sourceBundle": "test-results-iPad-ui-navigation",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 95.84012496471405,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "ipad-current-name-scroll-next-input.png",
+      "sha256": "c188166c49b36b1713975e40ea48f83157b359992fe082883b90fa554f8d88da",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sourceBundle": "test-results-iPad-ui-navigation",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 95.84012496471405,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
     },
     {
       "file": "ipad-dark-large-text-amortization.png",
@@ -231,6 +433,30 @@
       ]
     },
     {
+      "file": "ipad-inline-correction.mp4",
+      "sha256": "4bb54dfdaa1be5a629b861463ce29a80313b02d23c0fe027129feef7a92a1fd4",
+      "sourceBundle": "emm-fcd-recorded-inline-correction-ipad.xcresult",
+      "test": "MortgageUITests/testFailedUnitConversionInlineCorrectionAndSave()",
+      "testResult": "Passed",
+      "appRevision": "fcd5c6ba7cb2f656910b6f7e22a70e36273d8ff7",
+      "testDurationSeconds": 81.95593702793121,
+      "durationSeconds": 22,
+      "dimensions": [
+        960,
+        1280
+      ],
+      "trim": {
+        "startSeconds": 87.5,
+        "endSeconds": 109.5,
+        "internalCuts": false,
+        "speedMultiplier": 1
+      },
+      "decodedFrameCount": 459,
+      "rawDecodedFrameCount": 1621,
+      "decodeErrors": 0,
+      "review": "Sampled frames show the inline error and retained dollar amount, direct price correction, percentage conversion and restored monthly preview. The clip ends before Save. Every raw/exported frame decoded; independent visual review sampled interaction and trim boundaries. One contiguous ordinary-speed segment; no continuous-playback claim."
+    },
+    {
       "file": "ipad-journey.mp4",
       "sha256": "2b5e0fbdc9df5ef47da6aa2c096474021ad5db85f553b0455285a4456e9de53a",
       "sourceBundle": "emm-final-isolated-ipad.xcresult",
@@ -266,6 +492,30 @@
       ]
     },
     {
+      "file": "ipad-live-preview.mp4",
+      "sha256": "2b8f30554252dce2d93f12b48285081d24b37768ecb04a3f078851bf18ad84a0",
+      "sourceBundle": "emm-interaction-ipad-fresh.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "dimensions": [
+        960,
+        1280
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51",
+      "testDurationSeconds": 57.8755419254303,
+      "durationSeconds": 6,
+      "trim": {
+        "startSeconds": 28,
+        "endSeconds": 34,
+        "internalCuts": false,
+        "speedMultiplier": 1
+      },
+      "decodedFrameCount": 173,
+      "rawDecodedFrameCount": 753,
+      "decodeErrors": 0,
+      "review": "Every raw/exported frame decoded; visual review sampled source and exported trim boundaries and interaction frames. No continuous-playback or full-flow claim."
+    },
+    {
       "file": "ipad-monthly-amortization.png",
       "sha256": "9fd9c392f02e4dc6bc58f1b586facd7768ba874c48531fe7e24cf4736a054234",
       "sourceBundle": "emm-scaled-native-chart-ipad.xcresult",
@@ -277,6 +527,66 @@
       ]
     },
     {
+      "file": "ipad-native-editor-comma-decimal-focused-input.png",
+      "sha256": "f02f1006b3b1b3bded33eeae4035823fe5486b5a0d78b17523e4a33c1710e9ed",
+      "sourceBundle": "emm-native-rows-caret-entry-ipad.xcresult",
+      "test": "MortgageUITests/testCommaDecimalAndWholeYearEntry()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "aade6f5038408c467106f3b4ee9804657f017213"
+    },
+    {
+      "file": "ipad-native-editor-empty-numeric-validation.png",
+      "sha256": "c70fcff07389e3dd1a4bb818e017962862f10ae151bd7523e89dd6a3d855769c",
+      "sourceBundle": "emm-native-rows-caret-entry-ipad.xcresult",
+      "test": "MortgageUITests/testValidationPreventsDismissalAndKeepsInvalidInput()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "aade6f5038408c467106f3b4ee9804657f017213"
+    },
+    {
+      "file": "ipad-native-editor-initial.png",
+      "sha256": "3318c5267f2ccd3ad63ca9c0e3967b6eee210f9689ac74abf270177ef5f4abdc",
+      "sourceBundle": "emm-native-rows-hit-target-ipad.xcresult",
+      "test": "MortgageUITests/testAccessibilityAudit()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "aade6f5038408c467106f3b4ee9804657f017213"
+    },
+    {
+      "file": "ipad-native-editor-live-preview.mp4",
+      "sha256": "f16e012d1577bd4194b93eafc5d2266db5b620993bd54e75dba42cfe06977bfa",
+      "sourceBundle": "emm-final-native-fields-preview-ipad.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "appRevision": "aade6f5038408c467106f3b4ee9804657f017213",
+      "testDurationSeconds": 53.076992988586426,
+      "durationSeconds": 23,
+      "dimensions": [
+        960,
+        1280
+      ],
+      "trim": {
+        "startSeconds": 38,
+        "endSeconds": 61,
+        "internalCuts": false,
+        "speedMultiplier": 1
+      },
+      "decodedFrameCount": 367,
+      "rawDecodedFrameCount": 1030,
+      "decodeErrors": 0,
+      "review": "Every raw/exported frame decoded; visual review sampled editing, preview update, keyboard dismissal, Save, saved result and trim boundaries. One contiguous ordinary-speed segment; no continuous-playback claim."
+    },
+    {
       "file": "ipad-native-editor.png",
       "sha256": "46211ed49dfb048f43ec68e23307add248caedaa50ca195c4b657b45bca96011",
       "sourceBundle": "emm-delivery-native-final-ipad.xcresult",
@@ -286,6 +596,126 @@
         2064,
         2752
       ]
+    },
+    {
+      "file": "ipad-native-page-comma-decimal-focused-input.png",
+      "sha256": "bd797e391cc481be177b5a623f3fceb467bec91c92cf6a8cf11dad2533c97016",
+      "sourceBundle": "emm-final-page-audit-locale-rotation-ipad.xcresult",
+      "test": "MortgageUITests/testCommaDecimalAndWholeYearEntry()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
+    },
+    {
+      "file": "ipad-native-page-comma-decimal-saved-result.png",
+      "sha256": "3395aa062f5c8dc462e8e35216b0851b61111ff02090dbff8ad83d4303c9c0f9",
+      "sourceBundle": "emm-final-page-audit-locale-rotation-ipad.xcresult",
+      "test": "MortgageUITests/testCommaDecimalAndWholeYearEntry()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
+    },
+    {
+      "file": "ipad-native-page-dark-large-text-focused-input.png",
+      "sha256": "a85820b8961add3aebdecb24f0a2816826b4ce5327ce0eee01069917d3659361",
+      "sourceBundle": "emm-native-keyboard-page-ipad.xcresult",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
+    },
+    {
+      "file": "ipad-native-page-empty-numeric-validation.png",
+      "sha256": "6b0aec1bf8227ab67417cb04bc5bf9ea1fbf0601345a3c9aec268e9607250e12",
+      "sourceBundle": "emm-final-page-audit-locale-rotation-ipad.xcresult",
+      "test": "MortgageUITests/testValidationPreventsDismissalAndKeepsInvalidInput()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
+    },
+    {
+      "file": "ipad-native-page-landscape-editor.png",
+      "sha256": "958e227d03d17390a91c712edf1468c99c9a3a4b78b7e8e16a422680daffac82",
+      "sourceBundle": "emm-final-page-audit-locale-rotation-ipad.xcresult",
+      "test": "MortgageUITests/testLandscapeLayout()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
+    },
+    {
+      "file": "ipad-native-page-live-preview-focused-input.png",
+      "sha256": "1517a383c6aceb8f23d0bad00116bca1e723bcca8cafeb8ab3366b3006cf9674",
+      "sourceBundle": "emm-final-native-page-preview-video-ipad.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
+    },
+    {
+      "file": "ipad-native-page-live-preview-updated.png",
+      "sha256": "465af607ed528f968d7c6ef137c911bc0819d9ef433bcf169a72d60306cf8183",
+      "sourceBundle": "emm-final-native-page-preview-video-ipad.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
+    },
+    {
+      "file": "ipad-native-page-live-preview.mp4",
+      "sha256": "bf072791bf8db57ade7cf64f19049731450bc825704ca5502c91e567c3e7e7ad",
+      "sourceBundle": "emm-final-native-page-preview-video-ipad.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021",
+      "testDurationSeconds": 52.09668505191803,
+      "durationSeconds": 20.5,
+      "dimensions": [
+        960,
+        1280
+      ],
+      "trim": {
+        "startSeconds": 53,
+        "endSeconds": 73.5,
+        "internalCuts": false,
+        "speedMultiplier": 1
+      },
+      "decodedFrameCount": 337,
+      "rawDecodedFrameCount": 1053,
+      "decodeErrors": 0,
+      "review": "Every raw/exported frame decoded; visual review sampled source and exported boundaries and interaction frames. Shows price replacement, preview update, Done and saved details; no continuous-playback claim."
+    },
+    {
+      "file": "ipad-native-page-portrait-editor-retained-draft.png",
+      "sha256": "267255ec083dcd986904daca28da33be61ada4aeb9b7cfcf1cb436d5152af13d",
+      "sourceBundle": "emm-final-page-audit-locale-rotation-ipad.xcresult",
+      "test": "MortgageUITests/testLandscapeLayout()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
     },
     {
       "file": "ipad-native-units.png",
@@ -319,6 +749,66 @@
         2064,
         2752
       ]
+    },
+    {
+      "file": "ipad-preview-focused-input.png",
+      "sha256": "c1f09440c06447e83ebad814823e3c0f28d2f63a2f69fb3a9a616dcc04017a54",
+      "sourceBundle": "emm-interaction-ipad-fresh.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
+      "file": "ipad-preview-incomplete.png",
+      "sha256": "044b738f74818e1c5614eed9ffd50b9ee52b50dddd8d9f1f801e857300f53bd0",
+      "sourceBundle": "emm-interaction-ipad-fresh.xcresult",
+      "test": "MortgageUITests/testIncompletePreviewAndRecovery()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
+      "file": "ipad-preview-recovered-result.png",
+      "sha256": "f0d5354ccbb74f9902dbd94c356dbf4bfd0fb87ab47ea10ae0386c879002a8f9",
+      "sourceBundle": "emm-interaction-ipad-fresh.xcresult",
+      "test": "MortgageUITests/testIncompletePreviewAndRecovery()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
+      "file": "ipad-preview-saved-result.png",
+      "sha256": "4d3e62649ea7f04afbb4deb9107caab24416a3f6dc61f7c6147a03c0da1871d6",
+      "sourceBundle": "emm-interaction-ipad-fresh.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
+      "file": "ipad-preview-updated.png",
+      "sha256": "d39961d368f885cdbc992529a12f440534d6a8dc5ff4fdf51ecac7e9ae201720",
+      "sourceBundle": "emm-interaction-ipad-fresh.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
     },
     {
       "file": "ipad-property-map.png",
@@ -442,6 +932,54 @@
       ]
     },
     {
+      "file": "iphone-chart-inspected-year.png",
+      "sha256": "4bea25395624d7c0bae884c172693e45a4c4b9ad5945b2e9f6843d503d2bb8da",
+      "sourceBundle": "emm-interaction-phone-v4.xcresult",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
+      "file": "iphone-chart-inspection.mp4",
+      "sha256": "38c7dbd9e63f16dd9b1a9622002fbd1b75475c89d0784c782a1474572cc69983",
+      "sourceBundle": "emm-interaction-phone-v4.xcresult",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "dimensions": [
+        588,
+        1280
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51",
+      "testDurationSeconds": 76.23566496372223,
+      "durationSeconds": 13.798333333333334,
+      "trim": {
+        "startSeconds": 62,
+        "endSeconds": 75.8,
+        "internalCuts": false,
+        "speedMultiplier": 1
+      },
+      "decodedFrameCount": 289,
+      "rawDecodedFrameCount": 1808,
+      "decodeErrors": 0,
+      "review": "Every raw/exported frame decoded; visual review sampled source and exported trim boundaries and interaction frames. No continuous-playback or full-flow claim."
+    },
+    {
+      "file": "iphone-chart-scroll-to-schedule.png",
+      "sha256": "fb9822e32b9937f752ad719447cef4452fd244ef3028bfeb4324fb280769950d",
+      "sourceBundle": "emm-interaction-phone-v4.xcresult",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
       "file": "iphone-comparison-all-cash.png",
       "sha256": "60cfbdd1273bfc93eaab3b5b77cb0c7b79aec60cc313ba56f1d3e75ae498dab6",
       "sourceBundle": "emm-native-region-phone.xcresult",
@@ -473,6 +1011,151 @@
         1206,
         2622
       ]
+    },
+    {
+      "file": "iphone-current-dark-large-text-name-focused-input.png",
+      "sha256": "6ca747c053e067af7848dda1e008dd8ce33345fe8fcd0f547bbddbdffde0eef5",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sourceBundle": "test-results-iPhone-ui-accessibility",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testDarkAppearanceAndLargestText()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 142.12867403030396,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "iphone-current-inline-error.png",
+      "sha256": "03a1d292d6ad0da8acd6a034d580e696cef1b7ce383e6ecc18c2cbfd7eb99733",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sourceBundle": "test-results-iPhone-ui-core",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testValidationPreventsDismissalAndKeepsInvalidInput()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 98.22662794589996,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "iphone-current-largest-text-inline-error.png",
+      "sha256": "1417d986eaa9a0197cb0d3a9d8bfedbd77a4112d5c7c804bf56b9db9d2dd8869",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sourceBundle": "test-results-iPhone-ui-accessibility",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testLargestTextInlineCorrectionAndDiscard()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 118.2939031124115,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "iphone-current-live-preview-saved-result.png",
+      "sha256": "1c371eab96e406e0907a31895d553fee3606e6db884b6f81488e54bff7096feb",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sourceBundle": "test-results-iPhone-ui-core",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 58.918789982795715,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "iphone-current-live-preview-updated.png",
+      "sha256": "b509ee001e70835e6ff50dda402ebef9b1ec5fd59b87f3f7d6b35803cb0c33b6",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sourceBundle": "test-results-iPhone-ui-core",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 58.918789982795715,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "iphone-current-live-preview.mp4",
+      "sha256": "3e23ca49493ab76ce00aeb40c1657ba9c501d0267e4e145e1511d5b5df69915b",
+      "sourceBundle": "emm-0f46a8d-recorded-preview-phone.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 40.01067006587982,
+      "durationSeconds": 24,
+      "dimensions": [
+        588,
+        1280
+      ],
+      "trim": {
+        "startSeconds": 34,
+        "endSeconds": 58,
+        "durationSeconds": 24,
+        "speed": 1,
+        "internalCuts": false,
+        "startsAfterNameEntry": true
+      },
+      "decodedFrameCount": 410,
+      "rawDecodedFrameCount": 894,
+      "decodeErrors": 0,
+      "review": "Every original and delivered frame decoded; root and independent UX review sampled original/exported entry, preview, Done, Save, saved detail and trim boundaries. Scripted simulator evidence; no continuous-playback, frame-rate, latency or physical-haptics claim."
+    },
+    {
+      "file": "iphone-current-name-focused-input.png",
+      "sha256": "214b02243f431fa89a749a3ae96d682f3feffa2e373ac55d0871ebd29efd4511",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sourceBundle": "test-results-iPhone-ui-navigation",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 152.99712300300598,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
+    },
+    {
+      "file": "iphone-current-name-scroll-next-input.png",
+      "sha256": "74dc6a77b3086f4a567b49906ceb466f812ff7d4c21122413f36c6a9f44de082",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sourceBundle": "test-results-iPhone-ui-navigation",
+      "sourceRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37921913776",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "isAssociatedWithFailure": false,
+      "appRevision": "0f46a8deb77ab9a2a744bc59246672975203abf7",
+      "testDurationSeconds": 152.99712300300598,
+      "review": "Root and independent UX review inspected the original native capture. Static pixels are separate from native interaction assertions.",
+      "sourceKind": "hosted-native"
     },
     {
       "file": "iphone-dark-large-text-amortization.png",
@@ -596,6 +1279,30 @@
       ]
     },
     {
+      "file": "iphone-inline-correction.mp4",
+      "sha256": "b7728b1700e701b08c8effa8f915eea5fb48296fea24d312c560ca8452b20a2c",
+      "sourceBundle": "emm-fcd-recorded-inline-correction-phone.xcresult",
+      "test": "MortgageUITests/testFailedUnitConversionInlineCorrectionAndSave()",
+      "testResult": "Passed",
+      "appRevision": "fcd5c6ba7cb2f656910b6f7e22a70e36273d8ff7",
+      "testDurationSeconds": 80.7692220211029,
+      "durationSeconds": 31,
+      "dimensions": [
+        588,
+        1280
+      ],
+      "trim": {
+        "startSeconds": 88.5,
+        "endSeconds": 119.5,
+        "internalCuts": false,
+        "speedMultiplier": 1
+      },
+      "decodedFrameCount": 564,
+      "rawDecodedFrameCount": 1591,
+      "decodeErrors": 0,
+      "review": "Sampled frames show the inline error and retained dollar amount, direct price correction, percentage conversion, restored monthly preview, Save and matching saved details. Every raw/exported frame decoded; independent visual review sampled interaction and trim boundaries. One contiguous ordinary-speed segment; no continuous-playback claim."
+    },
+    {
       "file": "iphone-journey.mp4",
       "sha256": "e24d636a6939a66f9a9601fc7cfae63ff2b3c504c7d0a91af47722174c4fa93e",
       "sourceBundle": "emm-final-address-and-media-phone.xcresult",
@@ -631,6 +1338,30 @@
       ]
     },
     {
+      "file": "iphone-live-preview.mp4",
+      "sha256": "093c341abd856ac4739418f06111359894ad8f8d249c72282de347dcbf473004",
+      "sourceBundle": "emm-interaction-phone-v4.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "dimensions": [
+        588,
+        1280
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51",
+      "testDurationSeconds": 51.28032600879669,
+      "durationSeconds": 7,
+      "trim": {
+        "startSeconds": 23,
+        "endSeconds": 30,
+        "internalCuts": false,
+        "speedMultiplier": 1
+      },
+      "decodedFrameCount": 238,
+      "rawDecodedFrameCount": 771,
+      "decodeErrors": 0,
+      "review": "Every raw/exported frame decoded; visual review sampled source and exported trim boundaries and interaction frames. No continuous-playback or full-flow claim."
+    },
+    {
       "file": "iphone-monthly-amortization.png",
       "sha256": "fe969049effbfe26c8b748fe6799b10ee057985b9dacc9d82631374d77f287d0",
       "sourceBundle": "emm-scaled-native-chart-phone.xcresult",
@@ -651,6 +1382,90 @@
         1206,
         2622
       ]
+    },
+    {
+      "file": "iphone-native-name-focused-input.png",
+      "sha256": "8704afd2e6e0173d66e3f1f6884b628b3a44585f89a44b394cefb1158bef9cfe",
+      "sourceBundle": "emm-61711c6-recorded-chart-phone.xcresult",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "61711c6bcdabf8598d8a39387153af586646c4a7"
+    },
+    {
+      "file": "iphone-native-name-scroll-next-input.png",
+      "sha256": "fb11c459038b4a411bf24bb801abd216d49b1bcc63514ff7c91f6ee9966af362",
+      "sourceBundle": "emm-61711c6-recorded-chart-phone.xcresult",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "61711c6bcdabf8598d8a39387153af586646c4a7"
+    },
+    {
+      "file": "iphone-native-name-scroll-save.mp4",
+      "sha256": "cc8d9571e1264a811b6d86bc9fa34a33c519a9607714113d0824415f1c7176d0",
+      "sourceBundle": "emm-61711c6-recorded-chart-phone.xcresult",
+      "test": "MortgageUITests/testChartInspectionAndScrolling()",
+      "testResult": "Passed",
+      "appRevision": "61711c6bcdabf8598d8a39387153af586646c4a7",
+      "testDurationSeconds": 79.27821505069733,
+      "durationSeconds": 19.5,
+      "dimensions": [
+        588,
+        1280
+      ],
+      "trim": {
+        "startSeconds": 41.5,
+        "endSeconds": 61,
+        "internalCuts": false,
+        "speedMultiplier": 1
+      },
+      "decodedFrameCount": 357,
+      "rawDecodedFrameCount": 2021,
+      "decodeErrors": 0,
+      "review": "Every raw/exported frame decoded; visual review sampled Name entry and wrapping, scrolling with keyboard dismissal, return to Name, Save, matching saved details and trim boundaries. One contiguous ordinary-speed segment; no continuous-playback claim."
+    },
+    {
+      "file": "iphone-native-page-comma-decimal-focused-input.png",
+      "sha256": "e100171dbb512768662b1e8d3eebcf460639360ae74a8d9dda4b6aa6adb0ca4c",
+      "sourceBundle": "emm-locale-rotation-corrected-phone.xcresult",
+      "test": "MortgageUITests/testCommaDecimalAndWholeYearEntry()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
+    },
+    {
+      "file": "iphone-native-page-comma-decimal-saved-result.png",
+      "sha256": "94e61a298c7c8f5828e12b332c1712e49871481a8a48c4098e0b435be7da064c",
+      "sourceBundle": "emm-locale-rotation-corrected-phone.xcresult",
+      "test": "MortgageUITests/testCommaDecimalAndWholeYearEntry()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
+    },
+    {
+      "file": "iphone-native-page-landscape-editor.png",
+      "sha256": "2a2364d63a1bb5bb6aca444ee740528fb91b8d5ab6eed7db04bacc3fc0c72612",
+      "sourceBundle": "emm-locale-rotation-corrected-phone.xcresult",
+      "test": "MortgageUITests/testLandscapeLayout()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "993a042cc5603bdcd264a893b042fcc3096c5021"
     },
     {
       "file": "iphone-native-units.png",
@@ -684,6 +1499,66 @@
         1206,
         2622
       ]
+    },
+    {
+      "file": "iphone-preview-focused-input.png",
+      "sha256": "fb2416cc39635c72de2e73cd328d0332aa17a96283291b81d09827ee260c4b11",
+      "sourceBundle": "emm-interaction-phone-v4.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
+      "file": "iphone-preview-incomplete.png",
+      "sha256": "d9be6c8b3f4b545797a3c69dddb1198ef6cb20df44934656c3c391e2b4900a96",
+      "sourceBundle": "emm-interaction-phone-v4.xcresult",
+      "test": "MortgageUITests/testIncompletePreviewAndRecovery()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
+      "file": "iphone-preview-recovered-result.png",
+      "sha256": "1c830549c7b00e88c186b110fb2196fee6ab762881e4a19a005d273a3f451ea8",
+      "sourceBundle": "emm-interaction-phone-v4.xcresult",
+      "test": "MortgageUITests/testIncompletePreviewAndRecovery()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
+      "file": "iphone-preview-saved-result.png",
+      "sha256": "d3792ff209cd622d451e7c7f8a6afb143cbfefaa3c8a3f29fbd954d3ee457c36",
+      "sourceBundle": "emm-interaction-phone-v4.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
+    },
+    {
+      "file": "iphone-preview-updated.png",
+      "sha256": "cf591a6a6cd1eb82440ebae7f7b3b47c1bffa915e9f86b011805a07086f6d8a3",
+      "sourceBundle": "emm-interaction-phone-v4.xcresult",
+      "test": "MortgageUITests/testLivePreviewAndSavedCost()",
+      "testResult": "Passed",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "appRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51"
     },
     {
       "file": "iphone-property-map.png",
@@ -740,5 +1615,18 @@
         2622
       ]
     }
-  ]
+  ],
+  "interactionAppRevision": "e9f2d01607cabf3346377ec951febb4a0545fb51",
+  "nativePageAppRevision": "993a042cc5603bdcd264a893b042fcc3096c5021",
+  "nativeEditorAppRevision": "aade6f5038408c467106f3b4ee9804657f017213",
+  "nameEditingAppRevision": "61711c6bcdabf8598d8a39387153af586646c4a7",
+  "inlineCorrectionAppRevision": "fcd5c6ba7cb2f656910b6f7e22a70e36273d8ff7",
+  "currentInteractionAppRevisions": [
+    "0f46a8deb77ab9a2a744bc59246672975203abf7",
+    "57f7684885d0f709bdd7ab144fce63ceb345df2d"
+  ],
+  "pendingValidationRevision": "7cc92d4739c02ee64e7d2e0602afc53b1159d86e",
+  "pendingValidationRunURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/actions/runs/37944718332",
+  "wholeHostedAcceptance": false,
+  "currentMediaProductionInputsEquivalentToPublishedSource": true
 }

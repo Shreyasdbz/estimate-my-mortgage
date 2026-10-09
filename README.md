@@ -2,7 +2,7 @@
 
 A native iPhone and iPad app for saving and comparing fixed-rate mortgage estimates in US dollars. Version 2.0 uses SwiftUI forms, system navigation, SF Symbols, semantic colors and Dynamic Type. Building with the iOS 27 SDK adopts the current system appearance. The deployment target remains iOS 17; verified runtime coverage is recorded in the delivery report.
 
-The app supports creating, editing, duplicating, deleting, searching, sorting, comparing and sharing estimates. Saving from the list opens the calculated result. Detail views include monthly and yearly ownership costs, cash at closing, loan totals, an amortization chart and monthly/yearly schedules. Optional Apple Maps address search and property maps have manual-entry and failure states.
+The app supports creating, editing, duplicating, deleting, searching, sorting, comparing and sharing estimates. The editor previews validated monthly costs without saving, and saving from the list opens the calculated result. Detail views include monthly and yearly ownership costs, cash at closing, loan totals, an interactive amortization chart and monthly/yearly schedules. Optional Apple Maps address search and property maps have manual-entry and failure states. Input errors keep their guidance visible and focus the affected field directly; failed unit changes preserve the entered values. Exact verification status is recorded in the delivery report.
 
 Calculations support zero interest and all-cash purchases. Property tax, home insurance, HOA fees and upkeep are **annual amounts**, preserving the original saved-data meaning. Closing costs are one-time amounts. Estimates assume constant costs and a fixed rate; mortgage insurance and future rate/cost changes are excluded. Confirm actual costs with a lender.
 
@@ -13,9 +13,13 @@ Open `EstimateMyMortgage.xcodeproj` in Xcode 27 and select the shared `EstimateM
 ```sh
 xcrun simctl list devices available
 ./scripts/test-ios.sh SIMULATOR_UUID /private/tmp/MortgageTests.xcresult
+# Optional: run one test group.
+./scripts/test-ios.sh SIMULATOR_UUID /private/tmp/MortgageCoreTests.xcresult ui-core
+# Verify the disposable CI keyboard fixture without native commands.
+python3 -B -m unittest discover -s scripts -p 'test_configure_simulator_keyboard.py'
 ```
 
-The shared scheme includes independent calculation tests, isolated Core Data persistence tests and end-to-end UI journeys. Debug UI tests use unique disposable on-disk stores inside the app container; they never reset normal user estimates. GitHub Actions runs the same scheme for iOS 27 iPhone and iPad and retains result bundles.
+Omit the third argument to run the full shared scheme. Available groups are `units`, `ui-core`, `ui-accessibility` and `ui-navigation`. The shared scheme includes 26 calculation/persistence tests and 29 UI journeys, including comma-decimal entry, draft retention across rotation and separate search, comparison, regular dark and largest-text dark checks. Debug UI tests use unique disposable on-disk stores; search, comparison, split-view selection, largest-text editing and whole-year recovery use fixed estimates in an empty isolated store, while four focused CRUD journeys exercise native creation/relaunch, canceled edits, saved edits/relaunch and duplicate/delete/relaunch. Test fixtures never reset normal user estimates. GitHub Actions runs all four groups on iOS 27 iPhone and iPad and retains result bundles. Group validation rejects missing, duplicate or unexpected test identities and reported failures. The 14 Python fixture tests run separately from the native suite and exercise preservation and failure boundaries with private files and fake commands.
 
 ## Saved-data compatibility
 
