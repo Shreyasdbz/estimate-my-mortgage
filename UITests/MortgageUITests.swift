@@ -335,6 +335,9 @@ final class MortgageUITests: XCTestCase {
         XCTAssertTrue(list.waitForExistence(timeout: 5))
         var targetFrame = CGRect.zero
         var viewport = CGRect.zero
+        var navigationFrame = CGRect.zero
+        var searchFrame = CGRect.zero
+        var searchChrome = CGRect.zero
         func fullyVisible() -> Bool {
             guard title.exists else { return false }
             targetFrame = title.frame
@@ -342,15 +345,26 @@ final class MortgageUITests: XCTestCase {
             let navigation = app.navigationBars["Estimates"]
             if navigation.exists {
                 let frame = navigation.frame
-                if viewport.intersects(frame) { viewport.origin.y = frame.maxY; viewport.size.height = max(0, list.frame.intersection(app.frame).maxY - frame.maxY) }
+                navigationFrame = frame
+                // A full-height native sidebar/container is not navigation chrome.
+                if !frame.isEmpty, frame.height < viewport.height, viewport.intersects(frame) {
+                    let bottom = viewport.maxY
+                    viewport.origin.y = max(viewport.minY, frame.maxY)
+                    viewport.size.height = max(0, bottom - viewport.minY)
+                }
             }
             let search = app.searchFields.firstMatch
             if search.exists {
                 let frame = search.frame
+                searchFrame = frame
                 // Native search glass can extend beyond its editable SearchField.
                 // Use its smallest containing native wrapper, rather than a device-specific inset.
                 let wrappers = app.otherElements.containing(.searchField, identifier: search.label).allElementsBoundByIndex
-                let chrome = wrappers.map { $0.frame }.filter { !$0.isEmpty && $0.contains(frame) && $0.height > frame.height }.min { $0.width * $0.height < $1.width * $1.height } ?? frame
+                let chrome = wrappers.map { $0.frame }.filter {
+                    !$0.isEmpty && $0.contains(frame) && $0.height > frame.height
+                        && $0.height < viewport.height && !$0.contains(viewport)
+                }.min { $0.width * $0.height < $1.width * $1.height } ?? frame
+                searchChrome = chrome
                 if viewport.intersects(chrome) {
                     if chrome.midY < viewport.midY {
                         let bottom = viewport.maxY
@@ -379,7 +393,7 @@ final class MortgageUITests: XCTestCase {
             }
             ready = fullyVisible()
         }
-        print("Open estimate target: \(targetFrame); unobscured list viewport: \(viewport)")
+        print("Estimate row geometry: list=\(list.frame), navigation=\(navigationFrame), search=\(searchFrame), chrome=\(searchChrome), target=\(targetFrame), viewport=\(viewport)")
         screenshot("estimate-row-before-opening")
         XCTAssertTrue(ready, "The complete estimate title must be visible clear of native navigation and search before opening")
         guard ready else { return nil }
