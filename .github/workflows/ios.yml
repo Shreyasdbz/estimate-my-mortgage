@@ -47,7 +47,7 @@ jobs:
       - name: Configure software keyboard fixture
         run: |
           set -euo pipefail
-          keyboard_domain=com.apple.dt.Devices
+          keyboard_plist="$HOME/Library/Containers/com.apple.dt.Devices/Data/Library/Preferences/com.apple.dt.Devices.plist"
           keyboard_key=alwaysSimulateHardwareKeyboard
           frontend_running=false
           if frontend_pids=$(pgrep -x DeviceHub); then
@@ -61,26 +61,37 @@ jobs:
             fi
             echo 'DeviceHub frontend before boot: not running'
           fi
-          if before_value=$(defaults -container "$keyboard_domain" read "$keyboard_domain" "$keyboard_key" 2>&1); then
+          if [[ "$frontend_running" == true ]]; then
+            echo '::error::DeviceHub is already running and may cache keyboard preferences. Use a fresh disposable runner before configuring this fixture.'
+            exit 1
+          fi
+          # Cold disposable runners have no registered container; initialize its preference directory directly.
+          # https://github.com/appium/appium-ios/blob/main/packages/simulator/lib/extensions/settings.ts
+          if ! mkdir -p "${keyboard_plist%/*}"; then
+            echo '::error::Cannot initialize the DeviceHub preference directory on this disposable runner.'
+            exit 1
+          fi
+          if [[ ! -e "$keyboard_plist" ]]; then
+            printf 'DeviceHub %s before: absent (no preference file)\n' "$keyboard_key"
+          elif [[ ! -f "$keyboard_plist" || ! -r "$keyboard_plist" ]] || ! plutil -lint "$keyboard_plist"; then
+            echo '::error::The existing DeviceHub preference file is unreadable or malformed; refusing to modify it.'
+            exit 1
+          elif before_value=$(defaults read "$keyboard_plist" "$keyboard_key" 2>&1); then
             printf 'DeviceHub %s before: %s\n' "$keyboard_key" "$before_value"
-          elif [[ "$before_value" == *'does not exist'* ]]; then
+          elif [[ "$before_value" == *"Could not find key '$keyboard_key' in domain '$keyboard_plist'."* ]]; then
             printf 'DeviceHub %s before: absent\n' "$keyboard_key"
           else
             printf '::error::DeviceHub %s before: not readable: %s\n' "$keyboard_key" "$before_value"
             exit 1
           fi
-          if [[ "$frontend_running" == true ]]; then
-            echo '::error::DeviceHub is already running and may cache keyboard preferences. Use a fresh disposable runner before configuring this fixture.'
-            exit 1
-          fi
           # DeviceHub caches this global mode; configure it before its frontend starts.
           # https://github.com/appium/appium-ios/blob/main/packages/simulator/README.md#hardware-keyboard
-          if ! defaults -container "$keyboard_domain" write "$keyboard_domain" "$keyboard_key" -bool false; then
+          if ! defaults write "$keyboard_plist" "$keyboard_key" -bool false; then
             echo '::error::Cannot configure the DeviceHub keyboard fixture on this disposable runner.'
             exit 1
           fi
-          after_value=$(defaults -container "$keyboard_domain" read "$keyboard_domain" "$keyboard_key")
-          after_type=$(defaults -container "$keyboard_domain" read-type "$keyboard_domain" "$keyboard_key")
+          after_value=$(defaults read "$keyboard_plist" "$keyboard_key")
+          after_type=$(defaults read-type "$keyboard_plist" "$keyboard_key")
           printf 'DeviceHub %s after: %s (%s)\n' "$keyboard_key" "$after_value" "$after_type"
           if [[ "$after_value" != 0 || "$after_type" != 'Type is boolean' ]]; then
             echo '::error::The DeviceHub keyboard fixture must read back as the boolean false.'
