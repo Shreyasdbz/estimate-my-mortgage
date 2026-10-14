@@ -1,5 +1,5 @@
 {
-  "status": "draft",
+  "status": "build uploaded; draft awaits processed-build selection",
   "locale": "en-US",
   "name": "Estimate My Mortgage",
   "subtitle": "Compare home loan payments",
@@ -43,7 +43,6 @@
     ]
   },
   "ownerConfirmationRequired": [
-    "Correct-team signing access and any new signing credential creation",
     "Developer membership renewal and any legal agreements"
   ],
   "appleID": "6463742539",
@@ -74,9 +73,15 @@
     "screenshotFallbacksVerified": true,
     "personalXcodeAccountVerified": true,
     "developmentSignedArchiveVerified": true,
-    "distributionSigningVerified": false,
-    "AppleServerValidationVerified": false,
-    "buildUploadedVerified": false
+    "distributionSigningVerified": true,
+    "AppleServerValidationVerified": true,
+    "buildUploadedVerified": true,
+    "supportURLHTTPVerified": true,
+    "validationDate": "2026-10-13",
+    "buildProcessedVerified": false,
+    "buildSelectedVerified": false,
+    "draftReadyForReviewVerified": false,
+    "uploadDate": "2026-10-13"
   },
   "bundleIdentifier": "shreyassane.EstimateMyMortgage",
   "supportEmail": "shreyasdbz@gmail.com",
