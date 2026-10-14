@@ -29,7 +29,8 @@
       "MortgageUITests/testDarkAppearanceAndLargestText",
       "MortgageUITests/testDarkLargestTextEditorEditAndCancel",
       "MortgageUITests/testLandscapeLayout",
-      "MortgageUITests/testScreenshotsNativeFlows"
+      "MortgageUITests/testScreenshotsNativeFlows",
+      "MortgageUITests/testAppStoreScreenshots"
     ]
   },
   "ui-navigation": {

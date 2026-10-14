@@ -1,0 +1,198 @@
+{
+  "capturedAt": "2026-10-14T02:32:43Z",
+  "baseRevision": "893b91a3ae2ee92f65e474307ad5912ce60426db",
+  "sourceState": "Uncommitted native candidate; all input hashes matched before build and after both runs. Production sources were not changed for capture.",
+  "sourceInputSHA256": {
+    ".github/workflows/ios.yml": "58b56a79b7a1d2b52cb6fb6495cda1c3754d92f4e01f8f0ec509f17d03223ef5",
+    "EstimateMyMortgage.xcodeproj/project.pbxproj": "daaae8cdb1b30449e460d53c7446fec42407ce25822b94769e5db7074686f36b",
+    "EstimateMyMortgage.xcodeproj/project.xcworkspace/contents.xcworkspacedata": "7f3b00b5c3fdb45242d7b87e1e5c4e25d1fa8129a16c94295ecc4e8ea2235c5f",
+    "EstimateMyMortgage.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist": "dfa0f9bb85b95ccba9c6811adadf8cb407fb5d52088e89db83ebc308ec448542",
+    "EstimateMyMortgage.xcodeproj/xcshareddata/xcschemes/EstimateMyMortgage.xcscheme": "87671ab4e9dda7a6a2aa178fc37f7c53467f8c6d42f20b9d7496e22995ffec76",
+    "EstimateMyMortgage.xcodeproj/xcuserdata/shreyassane.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist": "9248b65c376f4a99f377aa82b1e4fc0591f34285867aa99016bbe5d10fea1dee",
+    "EstimateMyMortgage.xcodeproj/xcuserdata/shreyassane.xcuserdatad/xcschemes/xcschememanagement.plist": "13fe5de6ee546a2a069f80de6c94c8cf18ead88d681302c9575319f840ca8d3a",
+    "EstimateMyMortgage/Assets.xcassets/AccentColor.colorset/Contents.json": "4c0ef9cfdc872e9fb07cf3485eb3e3195975a5103c17c1d77adf29eb63e12afe",
+    "EstimateMyMortgage/Assets.xcassets/AppIconModern.appiconset/AppIcon-Dark.png": "be331e21bee2534f02ac41479aebe559cc40ef308c0ba3abc2a444aa4a1267f1",
+    "EstimateMyMortgage/Assets.xcassets/AppIconModern.appiconset/AppIcon-Default.png": "f9c62821949bc84c407c4f074f621a734399fde21b95685b4e2a5cafd372c206",
+    "EstimateMyMortgage/Assets.xcassets/AppIconModern.appiconset/AppIcon-Tinted.png": "5420ed6bdddc7d35f665b4a5d26a0d0b0f88daf2d36d63c225e8ccc296726b39",
+    "EstimateMyMortgage/Assets.xcassets/AppIconModern.appiconset/Contents.json": "7884eaea6d7d9758d3bef7418d6261d14d796d44fc985981278edcf770f9b373",
+    "EstimateMyMortgage/Assets.xcassets/Contents.json": "0fd49ba3c3585c709678e0046a821c3c60685ec7063720d30d3a3448be3a208b",
+    "EstimateMyMortgage/EstimateMyMortgageApp.swift": "ba6e0689c4d4bed19992eda7482c63ba47c91dfd4b6d23429e9047511cb9a65d",
+    "EstimateMyMortgage/Models/Mock/MockData.swift": "9daf1946c1341706376f853a2abe20c07af360311609d116f4893b17db1f1bb9",
+    "EstimateMyMortgage/Models/Mortgage.swift": "45b809c32a641d45b3db5048f80d54f96844721f30b6fd974ccee871d43b8b37",
+    "EstimateMyMortgage/MortgageDataModel.xcdatamodeld/MortgageDataModel.xcdatamodel/contents": "bddcb402ff0e6311d4ebe24a8dc4631eb72ab8130e53b9f57be6de24d28a4103",
+    "EstimateMyMortgage/Preview Content/Preview Assets.xcassets/Contents.json": "0fd49ba3c3585c709678e0046a821c3c60685ec7063720d30d3a3448be3a208b",
+    "EstimateMyMortgage/PrivacyInfo.xcprivacy": "418018c160ded561d379cee1510cfb6e0806573c7221177a5330d76ea4145990",
+    "EstimateMyMortgage/Provider/MortgagesProvider.swift": "e04c5c7a0aa5d791b345a7480183cbdec6f398ba7e50bbc8910e96dd5a59fd44",
+    "EstimateMyMortgage/Utils/CalculationUtils.swift": "af09baee35b304f70e86ea520420bd441802b9a9622e3de480dc2e2b7374c483",
+    "EstimateMyMortgage/Utils/MapUtils.swift": "2b24d05f340ca3e45314879f6e7cb243333c50f867a087b2fc15012a42d69936",
+    "EstimateMyMortgage/ViewModels/CreateMortgageViewModel.swift": "ed934a938be325bc919afd6ed202b5ce6fcd6c862f6a6399705f04346acde85c",
+    "EstimateMyMortgage/ViewModels/HomeScreenViewModel.swift": "f4ba91eb889eda7c05510409e4a5ea4cae8d107b69b51f4d5f47e4e0867c9892",
+    "EstimateMyMortgage/ViewModels/MapSearch.swift": "8e7642a1106cde6534af1e0d14691d6ad60084f36cd064a622e60edd759a1e8f",
+    "EstimateMyMortgage/Views/Components/AddressInput.swift": "cba90c939a3088cbecfdcae8d65d74eb041402f91a64c750c4dd7353cab43739",
+    "EstimateMyMortgage/Views/Components/CreateMortgageView.swift": "a0cbd3ba3857114649cca3dbc9081127874307b535bef918b9092c7b4edb009f",
+    "EstimateMyMortgage/Views/Components/MortgageRowView.swift": "1d91d00347fe2a607580270f522483e16f139f39860ed6e8142c2ce1faf533ef",
+    "EstimateMyMortgage/Views/Components/NoMortgagesView.swift": "2ed2007d05fd338c1cc938e0bd03e64e4300a6d56fb0163516a504550d10e696",
+    "EstimateMyMortgage/Views/Screens/HomeScreen.swift": "e4efe376dd3ee43facf1e3135eeacf032f70495e3a5d5037ad22564f5d1e282c",
+    "EstimateMyMortgage/Views/Screens/MortgageScreen.swift": "3c0b8b35caf0d1e47fe15add817c3d8eff40a5790eb7ba419fa315f70c6e67be",
+    "Tests/MortgageCalculationTests.swift": "b0ce718ed9ec2694390bab04fa105d41ff068f49f66d60653d655c7eaed60832",
+    "Tests/MortgagePersistenceTests.swift": "5299b9d72ab5049b2af24b2f95ba824b8d1d58a3d3e4f3d2cd2b3f5b96820fbe",
+    "UITests/MortgageUITests.swift": "08b498f5d2fd22691446a29168b9cca8bc9c446acd985721500bcfedbffd7339",
+    "scripts/configure-simulator-keyboard.py": "4c1360d2293b6cc49ebe240a11eb94cd5e58e8c4f1d68c342cdaf0bb39735ce7",
+    "scripts/test-groups.json": "df4eb644ac0d49a5613f86d31be7f6dd81e385a61c8ab32983cddc194c1510ec",
+    "scripts/test-groups.py": "e3d462174a7a858400377d8804609b6d0176783f41240841e7b7fd4a042179cc",
+    "scripts/test-ios.sh": "5aaf2875673e826aab197a92fb78ea27478fdecd9703dada681fbd11d97e42c2",
+    "scripts/test_configure_simulator_keyboard.py": "dac16bbfcafd0cb634c3cd1ca9b0d8e4d276875d7c7037135027417aee492f6a"
+  },
+  "case": "EstimateMyMortgageUITests/MortgageUITests/testAppStoreScreenshots",
+  "runnerOptIn": "EMM_STORE_SCREENSHOTS=1",
+  "appearance": "light",
+  "preferredContentSize": "L",
+  "orientation": "portrait",
+  "statusBar": "Native simctl override before capture:9:41, Wi-Fi, charged100%. No pixels edited.",
+  "examples": {
+    "Cedar Home": "$450,000 property; $100,000 down;5.5% fixed;30years; $3,112.26/month including ownership costs.",
+    "Oak Home": "$500,000 property; $100,000 down;6.25% fixed;30years; $3,587.87/month including ownership costs."
+  },
+  "buildWarnings": [
+    "Three AppIntents metadata extraction skipped warnings: no AppIntents.framework dependency."
+  ],
+  "runs": [
+    {
+      "family": "iPhone",
+      "model": "iPhone 17 Pro",
+      "osVersion": "27.0",
+      "caseResult": "Passed",
+      "caseDurationSeconds": 90.57335603237152,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "nativeRuntimeWarnings": [],
+      "ownedSimulatorShutdownExitCode": 0
+    },
+    {
+      "family": "iPad",
+      "model": "iPad Pro 13-inch (M5)",
+      "osVersion": "27.0",
+      "caseResult": "Passed",
+      "caseDurationSeconds": 90.63219594955444,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "nativeRuntimeWarnings": [],
+      "ownedSimulatorShutdownExitCode": 0
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "docs/app-store/captures/iphone-02-compare.png",
+      "sha256": "3e86056f27b9d91c1d581469b277ad923d0719a17132b072100a96eed5a6c486",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "attachmentName": "store-03-comparison",
+      "attachmentTimestamp": 1791945139.461,
+      "associatedWithFailure": false
+    },
+    {
+      "file": "docs/app-store/captures/iphone-05-saved-estimates.png",
+      "sha256": "2fda8197ca8e995eec7f49a39b1f6af8868414e6be0c2009b143a13ef02e9415",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "attachmentName": "store-05-saved-estimates",
+      "attachmentTimestamp": 1791945135.669,
+      "associatedWithFailure": false
+    },
+    {
+      "file": "docs/app-store/captures/iphone-03-balance.png",
+      "sha256": "ce5de60b1174a0624ec415875e87b6a4082bfe60225326fb4a0055acfe3ad1a1",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "attachmentName": "store-04-loan-balance",
+      "attachmentTimestamp": 1791945101.335,
+      "associatedWithFailure": false
+    },
+    {
+      "file": "docs/app-store/captures/iphone-01-costs.png",
+      "sha256": "da1fd6aa961df6c2d49160d928a52ccea743c728cbdc96df53b42d1e949e938a",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "attachmentName": "store-01-monthly-cost",
+      "attachmentTimestamp": 1791945093.376,
+      "associatedWithFailure": false
+    },
+    {
+      "file": "docs/app-store/captures/iphone-04-preview.png",
+      "sha256": "f9f9257c5c7cab4c39a96ea466072eafc94c8c4223927c40eed2b33fc82da9c0",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "attachmentName": "store-02-live-preview",
+      "attachmentTimestamp": 1791945085.045,
+      "associatedWithFailure": false
+    },
+    {
+      "file": "docs/app-store/captures/ipad-02-compare.png",
+      "sha256": "aac43942de8f552d904f47dc939c70acec30dafa26760437a8349ab4fdf04bcd",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "attachmentName": "store-03-comparison",
+      "attachmentTimestamp": 1791945161.191,
+      "associatedWithFailure": false
+    },
+    {
+      "file": "docs/app-store/captures/ipad-05-saved-estimates.png",
+      "sha256": "ee6cfa99098ced1e00a84860039581b28eba3b042f0d564cdca3164c86125681",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "attachmentName": "store-05-saved-estimates",
+      "attachmentTimestamp": 1791945157.069,
+      "associatedWithFailure": false
+    },
+    {
+      "file": "docs/app-store/captures/ipad-03-balance.png",
+      "sha256": "149eb9a1273cc2faccfeb7963d583cdaeca95f243fd51096328c1b295017fdaf",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "attachmentName": "store-04-loan-balance",
+      "attachmentTimestamp": 1791945120.288,
+      "associatedWithFailure": false
+    },
+    {
+      "file": "docs/app-store/captures/ipad-01-costs.png",
+      "sha256": "096031f7dd8d47bfdc46feb01a8bdd8d102322da075c375eb0cd1fe2d80aac6d",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "attachmentName": "store-01-monthly-cost",
+      "attachmentTimestamp": 1791945115.712,
+      "associatedWithFailure": false
+    },
+    {
+      "file": "docs/app-store/captures/ipad-04-preview.png",
+      "sha256": "b3414dbf83626043073c5761b5034097e02e83e46412568b7844cc35a9e152ff",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "attachmentName": "store-02-live-preview",
+      "attachmentTimestamp": 1791945107.241,
+      "associatedWithFailure": false
+    }
+  ],
+  "scope": "Two focused native journeys; no full regression or App Store server validation."
+}

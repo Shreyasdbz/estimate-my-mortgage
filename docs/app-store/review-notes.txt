@@ -1,0 +1,11 @@
+Estimate My Mortgage is a fixed-rate mortgage and ownership-cost calculator in US dollars. No account, credentials, in-app purchase or subscription is required. There is no advertising, analytics service or developer-operated backend.
+
+To review:
+1. In Estimates, tap New Estimate (+). Enter a name such as Review Home and keep the sample figures or enter your own. The monthly-cost preview updates for valid inputs. Tap Done to dismiss the keyboard, then Save to open the result.
+2. The result shows monthly or annual costs, cash at closing and loan totals. Open Amortization Schedule to view yearly or monthly payments; tap the balance chart to inspect a year. Zero-interest loans and all-cash purchases are supported; an all-cash purchase has no loan schedule.
+3. Create a second named estimate, then use Estimate Actions (ellipsis) > Compare Estimates. Search and sorting are available in the list. Edit and Duplicate are available from a saved row's context menu or swipe actions. Canceling an edited draft offers Discard changes and leaves the saved estimate intact.
+4. In the editor, a blank name or invalid amount displays inline guidance and prevents saving. Property tax, home insurance, HOA fees, upkeep and utilities are annual amounts. Closing costs are a one-time amount; down payment and property tax can use dollar or percentage entry.
+5. Address entry is optional. Enter an address manually to calculate without network access. Find address and Show Property Map use Apple MapKit and send the requested query/address to Apple; the app does not request device location access. Map availability depends on Apple's service.
+6. Share Estimate opens the system share sheet. About & Privacy is available from the Estimate Actions menu.
+
+Calculations assume a fixed rate and constant ownership costs. Mortgage insurance (including PMI), adjustable rates, future cost changes and lender fees outside the entered closing costs are excluded. Results are estimates, not lender quotes. Saved estimates are stored locally; device backups may include them.

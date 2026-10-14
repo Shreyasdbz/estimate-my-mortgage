@@ -1,0 +1,133 @@
+{
+  "screenshots": [
+    {
+      "file": "docs/app-store/screenshots/iphone-01-costs.png",
+      "device": "iPhone",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sha256": "54f65729128a000af8e6e270364bd8192839a07f1167e361ee979105e422b63b",
+      "order": 1,
+      "nativeCapture": "docs/app-store/captures/iphone-01-costs.png",
+      "nativeCaptureSHA256": "da1fd6aa961df6c2d49160d928a52ccea743c728cbdc96df53b42d1e949e938a",
+      "captureProvenance": "docs/app-store/captures/manifest.json",
+      "presentation": "docs/app-store/presentation.html",
+      "presentationSHA256": "52bace4de50c86aaa395fb7d58fdd80567c5389e4547721da22b9da9a8f249fc",
+      "export": "Chrome native screenshot of HTML/CSS composition; JPEG capture converted to RGB PNG with sips. Native UI is scaled as a whole inside a frame, not reconstructed."
+    },
+    {
+      "file": "docs/app-store/screenshots/iphone-02-compare.png",
+      "device": "iPhone",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sha256": "6da094d70ddc0304a392111b6bdab2e0b7cb73a5975537abc201019b85d88c25",
+      "order": 2,
+      "nativeCapture": "docs/app-store/captures/iphone-02-compare.png",
+      "nativeCaptureSHA256": "3e86056f27b9d91c1d581469b277ad923d0719a17132b072100a96eed5a6c486",
+      "captureProvenance": "docs/app-store/captures/manifest.json",
+      "presentation": "docs/app-store/presentation.html",
+      "presentationSHA256": "52bace4de50c86aaa395fb7d58fdd80567c5389e4547721da22b9da9a8f249fc",
+      "export": "Chrome native screenshot of HTML/CSS composition; JPEG capture converted to RGB PNG with sips. Native UI is scaled as a whole inside a frame, not reconstructed."
+    },
+    {
+      "file": "docs/app-store/screenshots/iphone-03-balance.png",
+      "device": "iPhone",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sha256": "1b70567156205ee5ad11885c97e4d645aa98380a672887414c0c78d7dc16e9c5",
+      "order": 3,
+      "nativeCapture": "docs/app-store/captures/iphone-03-balance.png",
+      "nativeCaptureSHA256": "ce5de60b1174a0624ec415875e87b6a4082bfe60225326fb4a0055acfe3ad1a1",
+      "captureProvenance": "docs/app-store/captures/manifest.json",
+      "presentation": "docs/app-store/presentation.html",
+      "presentationSHA256": "52bace4de50c86aaa395fb7d58fdd80567c5389e4547721da22b9da9a8f249fc",
+      "export": "Chrome native screenshot of HTML/CSS composition; JPEG capture converted to RGB PNG with sips. Native UI is scaled as a whole inside a frame, not reconstructed."
+    },
+    {
+      "file": "docs/app-store/screenshots/iphone-04-preview.png",
+      "device": "iPhone",
+      "dimensions": [
+        1206,
+        2622
+      ],
+      "sha256": "83bec13c1da8b435ef893b1923d0fcc5632b01c6cc1fbd7845839d0a999e7f9f",
+      "order": 4,
+      "nativeCapture": "docs/app-store/captures/iphone-04-preview.png",
+      "nativeCaptureSHA256": "f9f9257c5c7cab4c39a96ea466072eafc94c8c4223927c40eed2b33fc82da9c0",
+      "captureProvenance": "docs/app-store/captures/manifest.json",
+      "presentation": "docs/app-store/presentation.html",
+      "presentationSHA256": "52bace4de50c86aaa395fb7d58fdd80567c5389e4547721da22b9da9a8f249fc",
+      "export": "Chrome native screenshot of HTML/CSS composition; JPEG capture converted to RGB PNG with sips. Native UI is scaled as a whole inside a frame, not reconstructed."
+    },
+    {
+      "file": "docs/app-store/screenshots/ipad-01-costs.png",
+      "device": "iPad",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sha256": "279aabce3f78f092e5e32103e7fd48a46511246445e28b04283381aed713a4f0",
+      "order": 1,
+      "nativeCapture": "docs/app-store/captures/ipad-01-costs.png",
+      "nativeCaptureSHA256": "096031f7dd8d47bfdc46feb01a8bdd8d102322da075c375eb0cd1fe2d80aac6d",
+      "captureProvenance": "docs/app-store/captures/manifest.json",
+      "presentation": "docs/app-store/presentation.html",
+      "presentationSHA256": "52bace4de50c86aaa395fb7d58fdd80567c5389e4547721da22b9da9a8f249fc",
+      "export": "Chrome native screenshot of HTML/CSS composition; JPEG capture converted to RGB PNG with sips. Native UI is scaled as a whole inside a frame, not reconstructed."
+    },
+    {
+      "file": "docs/app-store/screenshots/ipad-02-compare.png",
+      "device": "iPad",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sha256": "b7717a68867fd6f55007ddacaecbfd34728fcbe5ceee9598a72a9fdd331cb0ee",
+      "order": 2,
+      "nativeCapture": "docs/app-store/captures/ipad-02-compare.png",
+      "nativeCaptureSHA256": "aac43942de8f552d904f47dc939c70acec30dafa26760437a8349ab4fdf04bcd",
+      "captureProvenance": "docs/app-store/captures/manifest.json",
+      "presentation": "docs/app-store/presentation.html",
+      "presentationSHA256": "52bace4de50c86aaa395fb7d58fdd80567c5389e4547721da22b9da9a8f249fc",
+      "export": "Chrome native screenshot of HTML/CSS composition; JPEG capture converted to RGB PNG with sips. Native UI is scaled as a whole inside a frame, not reconstructed."
+    },
+    {
+      "file": "docs/app-store/screenshots/ipad-03-balance.png",
+      "device": "iPad",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sha256": "21554d9063fbc244177bbe997936b6fcaf88815d8103d59f898e6940d744bc39",
+      "order": 3,
+      "nativeCapture": "docs/app-store/captures/ipad-03-balance.png",
+      "nativeCaptureSHA256": "149eb9a1273cc2faccfeb7963d583cdaeca95f243fd51096328c1b295017fdaf",
+      "captureProvenance": "docs/app-store/captures/manifest.json",
+      "presentation": "docs/app-store/presentation.html",
+      "presentationSHA256": "52bace4de50c86aaa395fb7d58fdd80567c5389e4547721da22b9da9a8f249fc",
+      "export": "Chrome native screenshot of HTML/CSS composition; JPEG capture converted to RGB PNG with sips. Native UI is scaled as a whole inside a frame, not reconstructed."
+    },
+    {
+      "file": "docs/app-store/screenshots/ipad-04-preview.png",
+      "device": "iPad",
+      "dimensions": [
+        2064,
+        2752
+      ],
+      "sha256": "ab1cd09aca58eec4961a0c86551d354b1d743bf5acc35d3b91f234b98dcbd0cf",
+      "order": 4,
+      "nativeCapture": "docs/app-store/captures/ipad-04-preview.png",
+      "nativeCaptureSHA256": "b3414dbf83626043073c5761b5034097e02e83e46412568b7844cc35a9e152ff",
+      "captureProvenance": "docs/app-store/captures/manifest.json",
+      "presentation": "docs/app-store/presentation.html",
+      "presentationSHA256": "52bace4de50c86aaa395fb7d58fdd80567c5389e4547721da22b9da9a8f249fc",
+      "export": "Chrome native screenshot of HTML/CSS composition; JPEG capture converted to RGB PNG with sips. Native UI is scaled as a whole inside a frame, not reconstructed."
+    }
+  ],
+  "scope": "New passed native capture journeys on 13 October 2026. Upload compositions retain source provenance and add only presentation text, background and frame."
+}

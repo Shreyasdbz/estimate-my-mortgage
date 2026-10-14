@@ -355,6 +355,7 @@ struct CompareEstimatesView: View {
     }
 }
 
+/// Explains local storage and calculation limits, with public privacy and support destinations.
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
@@ -369,6 +370,13 @@ struct AboutView: View {
                 Text("Estimates stay on this device. The app has no account, advertising or analytics service. Device backups may include your estimates.")
                 Text("Address suggestions and maps send the address you request to Apple's MapKit service. No device location permission is requested. You can enter an address manually and calculate without using maps.")
                 Text("Sharing sends the estimate summary only to the destination you choose in the system share sheet.")
+                Link("Privacy policy", destination: URL(string: "https://github.com/Shreyasdbz/estimate-my-mortgage/blob/main/PrivacyPolicy.md")!)
+                    .accessibilityIdentifier("about.privacy-policy")
+            }
+            Section("Support") {
+                Link("Get support", destination: URL(string: "https://github.com/Shreyasdbz/estimate-my-mortgage/blob/main/Support.md")!)
+                    .accessibilityIdentifier("about.support")
+                Text("Do not include private addresses or financial details in public issues.")
             }
             Section(header: Text("Calculation limits").foregroundStyle(Color.primary)) {
                 Text("Estimates assume a fixed rate, equal monthly payments and constant ownership costs. Mortgage insurance, future expense changes and adjustable rates are not included. Confirm costs and payment details with your lender.")

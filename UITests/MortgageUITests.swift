@@ -10,6 +10,10 @@ final class MortgageUITests: XCTestCase {
 
     override func setUp() async throws {
         continueAfterFailure = false
+        if name.contains("testAppStoreScreenshots"),
+           ProcessInfo.processInfo.environment["EMM_STORE_SCREENSHOTS"] != "1" {
+            throw XCTSkip("Listing capture runs only with EMM_STORE_SCREENSHOTS=1.")
+        }
         // Skip the existing iPad-only journey before unnecessary app-launch work.
         // Unknown idioms still reach that journey's actual split-view width check.
         if name.contains("testIPadSelectionResetsOpenSchedule"),
@@ -1197,6 +1201,19 @@ final class MortgageUITests: XCTestCase {
         app.buttons["Estimate Actions"].tap()
         app.buttons["About & Privacy"].tap()
         XCTAssertTrue(app.navigationBars["About & Privacy"].waitForExistence(timeout: 5))
+        let policy = app.links["about.privacy-policy"]
+        let support = app.links["about.support"]
+        XCTAssertTrue(policy.waitForExistence(timeout: 5))
+        XCTAssertTrue(policy.isHittable)
+        let aboutList = app.collectionViews.containing(.link, identifier: "about.privacy-policy").firstMatch
+        XCTAssertTrue(aboutList.waitForExistence(timeout: 5))
+        XCTAssertTrue(support.waitForExistence(timeout: 5))
+        // Native iPad sheets scroll when the support row extends below their viewport.
+        for _ in 0..<3 where !aboutList.frame.contains(support.frame) {
+            aboutList.swipeUp()
+        }
+        XCTAssertTrue(aboutList.frame.contains(support.frame))
+        XCTAssertTrue(support.isHittable)
         screenshot("about-privacy")
         app.buttons["Done"].tap()
     }
@@ -1425,6 +1442,67 @@ final class MortgageUITests: XCTestCase {
         app.buttons["Discard changes"].tap()
         XCTAssertTrue(app.navigationBars["Landscape Home"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["editEstimate"].exists)
+    }
+
+    /// Opt-in listing capture: real native input, distinct loans, and asserted outcomes.
+    func testAppStoreScreenshots() throws {
+        guard ProcessInfo.processInfo.environment["EMM_STORE_SCREENSHOTS"] == "1" else {
+            throw XCTSkip("Listing capture runs only with EMM_STORE_SCREENSHOTS=1.")
+        }
+        app.buttons["newEstimate"].tap()
+        let name = editorName()
+        name.tap()
+        name.typeText("Cedar Home")
+        waitForTypedValue("Cedar Home", identifier: "estimate.name", nativeType: name.elementType)
+        dismissKeyboard()
+        let property = app.textFields["estimate.property"]
+        scrollEditorTo(property)
+        replace(property, with: "450000")
+        dismissKeyboard(numericInput: true)
+        requirePreview("$3,112.26", excluding: ["$3,396.16"])
+        XCTAssertFalse(hasVisibleKeyboard())
+        screenshot("store-02-live-preview")
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        waitForSavedResult("Cedar Home")
+        XCTAssertEqual(app.staticTexts["monthlyTotal"].label, "$3,112.26")
+        screenshot("store-01-monthly-cost")
+
+        let schedule = app.buttons["amortization"]
+        for _ in 0..<5 where !schedule.isHittable { app.swipeUp() }
+        XCTAssertTrue(schedule.isHittable)
+        schedule.tap()
+        XCTAssertTrue(app.navigationBars["Amortization"].waitForExistence(timeout: 5))
+        let chart = app.descendants(matching: .any).matching(identifier: "amortization.balanceChart").firstMatch
+        XCTAssertTrue(chart.waitForExistence(timeout: 5))
+        XCTAssertTrue(chart.isHittable)
+        screenshot("store-04-loan-balance")
+        app.navigationBars["Amortization"].buttons.firstMatch.tap()
+        list()
+
+        app.buttons["newEstimate"].tap()
+        let secondName = editorName()
+        secondName.tap()
+        secondName.typeText("Oak Home")
+        waitForTypedValue("Oak Home", identifier: "estimate.name", nativeType: secondName.elementType)
+        dismissKeyboard()
+        let rate = app.textFields["estimate.interest"]
+        scrollEditorTo(rate)
+        replace(rate, with: "6.25")
+        dismissKeyboard(numericInput: true)
+        tapScreenCenter(app.buttons["estimate.save"], requireHittable: false)
+        waitForSavedResult("Oak Home")
+        XCTAssertNotEqual(app.staticTexts["monthlyTotal"].label, "$3,112.26")
+        list()
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Cedar Home").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.cells.containing(.staticText, identifier: "Oak Home").firstMatch.exists)
+        screenshot("store-05-saved-estimates")
+        app.buttons["Estimate Actions"].tap()
+        app.buttons["Compare Estimates"].tap()
+        XCTAssertTrue(app.navigationBars["Compare"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Cedar Home has the lower estimated monthly cost."].exists)
+        XCTAssertFalse(app.staticTexts["These estimates have the same monthly cost to the nearest cent."].exists)
+        screenshot("store-03-comparison")
+        app.buttons["Done"].tap()
     }
 
     func testScreenshotsNativeFlows() throws {

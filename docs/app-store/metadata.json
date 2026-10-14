@@ -1,0 +1,99 @@
+{
+  "status": "draft",
+  "locale": "en-US",
+  "name": "Estimate My Mortgage",
+  "subtitle": "Compare home loan payments",
+  "description": "See how a home purchase fits your budget. Estimate My Mortgage calculates fixed-rate loan payments and ownership costs in US dollars, then lets you save and compare your assumptions.\n\n\u2022 Preview the monthly cost as you enter a property price, down payment, interest rate and loan term.\n\u2022 Include property tax, home insurance, HOA fees, upkeep and utilities. These inputs are annual amounts; closing costs are paid once.\n\u2022 Compare saved estimates, view cash at closing and total loan interest, and inspect monthly or yearly amortization schedules. Tap the balance chart to inspect a year.\n\u2022 Edit, duplicate, search, sort and delete estimates. Share a summary using the system share sheet.\n\u2022 Enter an address manually or use optional Apple Maps search and property maps.\n\nDesigned for iPhone and iPad with native controls, system text sizes and adaptive layouts. Estimates stay on your device. No account, ads, in-app purchases or analytics service.\n\nCalculations assume a fixed rate and constant ownership costs. Zero-interest loans and all-cash purchases are supported. Mortgage insurance, including PMI, adjustable rates, future cost changes and lender fees outside the entered closing costs are excluded. Estimates are not lender quotes; confirm actual terms and costs with your lender.",
+  "keywords": "calculator,home,loan,payment,interest,amortization,compare,ownership,budget",
+  "whatsNew": "Version 2.0 refreshes the app with native iPhone and iPad controls and adaptive layouts.\n\n\u2022 Live monthly-cost previews and clear inline input guidance.\n\u2022 Saved-estimate comparison, an interactive loan-balance chart, and monthly or yearly schedules.\n\u2022 Improved draft editing, cancellation and saved-data handling.\n\u2022 Updated address search, property maps and system sharing.",
+  "primaryCategory": "FINANCE",
+  "version": "2.0",
+  "build": "2",
+  "copyright": "2023 Shreyas Sane",
+  "privacyPolicyURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/blob/main/PrivacyPolicy.md",
+  "supportURL": "https://github.com/Shreyasdbz/estimate-my-mortgage/blob/main/Support.md",
+  "marketingURL": null,
+  "privacy": {
+    "recommendedAnswer": "NO_DATA_COLLECTED",
+    "basis": "Estimates are stored locally. There is no developer-operated backend, account, advertising or analytics SDK. Optional Apple MapKit sends the requested address or search text to Apple; optional system sharing sends the summary to the destination the user chooses. No device location permission is requested.",
+    "ownerConfirmationRequired": false,
+    "existingPublishedAnswer": "NO_DATA_COLLECTED",
+    "observedDate": "2026-10-13"
+  },
+  "ageRating": {
+    "expected": "4+",
+    "questionnaireVerified": true,
+    "calculated": "4+",
+    "savedDate": "2026-10-13"
+  },
+  "encryption": {
+    "usesNonExemptEncryptionCandidate": false,
+    "basis": "No custom cryptography or third-party networking dependency is identified; network features use Apple MapKit. Confirm the final binary and export-compliance answers before submission.",
+    "ownerConfirmationRequired": false,
+    "archiveDeclarationVerified": true
+  },
+  "accessibility": {
+    "supportedCopy": "System text sizes and adaptive iPhone/iPad layouts.",
+    "evidence": "Retained native Dynamic Type, largest-text and layout captures and assertions are recorded in docs/verification.md.",
+    "appStoreFeatureLabelsVerified": false,
+    "unverifiedChecks": [
+      "Manual VoiceOver navigation",
+      "System Reduce Motion setting at runtime",
+      "Physical-device haptic output"
+    ]
+  },
+  "ownerConfirmationRequired": [
+    "Correct-team signing access and any new signing credential creation",
+    "Developer membership renewal and any legal agreements"
+  ],
+  "appleID": "6463742539",
+  "existingListing": {
+    "url": "https://apps.apple.com/us/app/estimate-my-mortgage/id6463742539",
+    "observedDate": "2026-10-12",
+    "version": "1.0.1",
+    "price": "Free",
+    "primaryCategory": "FINANCE",
+    "ageRating": "4+",
+    "copyright": "2023 Shreyas Sane",
+    "scope": "Existing public listing metadata; does not establish copyright ownership or an authenticated App Store Connect account."
+  },
+  "submissionChecks": {
+    "appStoreConnectSessionVerified": true,
+    "buildNumberUniquenessVerified": true,
+    "privacyPolicyURLHTTPVerified": true,
+    "versionDraftSavedVerified": true,
+    "appInformationSavedVerified": true,
+    "appPrivacyDisclosureVerified": true,
+    "observedDate": "2026-10-13",
+    "screenshotsUploadedVerified": true,
+    "screenshotFamilies": [
+      "iPhone Dynamic Island medium",
+      "iPad 13 inch"
+    ],
+    "screenshotCountPerFamily": 4,
+    "screenshotFallbacksVerified": true,
+    "personalXcodeAccountVerified": true,
+    "developmentSignedArchiveVerified": true,
+    "distributionSigningVerified": false,
+    "AppleServerValidationVerified": false,
+    "buildUploadedVerified": false
+  },
+  "bundleIdentifier": "shreyassane.EstimateMyMortgage",
+  "supportEmail": "shreyasdbz@gmail.com",
+  "releaseOption": "MANUAL",
+  "buildInventory": {
+    "observedDate": "2026-10-13",
+    "versions": [
+      "1.0.1",
+      "1.0"
+    ],
+    "latestObservedBuild": "1.0.1 (2)",
+    "candidate": "2.0 (2)",
+    "note": "No 2.0 build appears in TestFlight. Apple upload acceptance remains unverified."
+  },
+  "accountNotice": {
+    "appImprovementDeadline": "2026-12-28",
+    "requiredOutcome": "Update submitted and approved before grace period ends",
+    "observedDate": "2026-10-13"
+  }
+}

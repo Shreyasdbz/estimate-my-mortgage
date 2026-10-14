@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estimate My Mortgage — screenshot presentation</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f4f2fb; color: #20202b; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+  main { width: 1206px; height: 2622px; overflow: hidden; position: relative; background: linear-gradient(160deg, #fff 0%, #f0edfb 65%, #e3ddfa 100%); }
+  header { position: absolute; top: 126px; left: 100px; right: 100px; }
+  h1 { margin: 0; font-size: 100px; line-height: 1.06; letter-spacing: -4px; font-weight: 700; }
+  h1 span { color: #5d46cc; }
+  .device { position: absolute; top: 494px; width: 872px; left: 167px; padding: 12px; border-radius: 96px; background: #23232b; border: 2px solid #707078; box-shadow: 0 30px 65px #39304d26; }
+  .device img { display: block; width: 100%; height: auto; border-radius: 82px; }
+  main.ipad { width: 2064px; height: 2752px; }
+  .ipad header { top: 154px; left: 142px; right: 142px; }
+  .ipad h1 { font-size: 132px; letter-spacing: -5px; }
+  .ipad .device { top: 578px; width: 1536px; left: 264px; padding: 22px; border-radius: 72px; }
+  .ipad .device img { border-radius: 50px; }
+  /* These are framed real captures, not reconstructed application controls. */
+  @media (prefers-reduced-motion: reduce) { * { animation: none; } }
+</style>
+<main aria-label="App Store screenshot">
+  <header><h1></h1></header>
+  <div class="device"><img alt=""></div>
+</main>
+<script>
+  // Select only the four reviewed native captures; query strings cannot select arbitrary files.
+  const query = new URLSearchParams(location.search);
+  const family = query.get('device') === 'ipad' ? 'ipad' : 'iphone';
+  const shots = [
+    { file: '01-costs', text: 'See your<br><span>monthly cost.</span>', alt: 'Cedar Home monthly ownership-cost breakdown' },
+    { file: '02-compare', text: 'Compare your<br><span>loan options.</span>', alt: 'Comparison of two different saved loan estimates' },
+    { file: '03-balance', text: 'Follow your<br><span>loan balance.</span>', alt: 'Loan balance chart and yearly repayment schedule' },
+    { file: '04-preview', text: 'Adjust costs.<br><span>See the change.</span>', alt: 'Native estimate editor with live monthly-cost preview' }
+  ];
+  const number = Number(query.get('shot') || 1);
+  const shot = shots[Number.isInteger(number) && number >= 1 && number <= shots.length ? number - 1 : 0];
+  document.querySelector('main').classList.toggle('ipad', family === 'ipad');
+  document.querySelector('h1').innerHTML = shot.text;
+  const image = document.querySelector('img');
+  image.alt = shot.alt;
+  image.src = `captures/${family}-${shot.file}.png`;
+</script>
+</html>
